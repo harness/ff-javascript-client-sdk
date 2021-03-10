@@ -1,210 +1,183 @@
-import jwt_decode from 'jwt-decode';
-import fetch from 'isomorphic-unfetch';
-import browserPlatform from './browserPlatform';
-import { defaultConfiguration, Options } from './configuration';
+import jwt_decode from 'jwt-decode'
+import mitt from 'mitt'
+import { EventSourcePolyfill } from 'event-source-polyfill'
+import { Options, Target, StreamEvent, Event, EventCallback, Result, Evaluation, VariationValue } from './types'
+import { logError, defaultOptions } from './utils'
 
-export interface Target {
-  identifier: string;
-  name?: string;
-  anonymous?: boolean;
-  attributes?: object;
-}
+const fetch = globalThis.fetch || require('node-fetch')
 
-interface AuthResponse {
-  authToken: string;
-}
-
-interface JWTDecoded {
-  environment: string;
-}
-
-export interface Message {
-  event: string;
-  domain: string;
-  identifier: string;
-  version: number;
-}
-
-type Event = 'connected' | 'disconnected' | 'reconnected' | 'changed' | 'error';
-type CallbackEvent = Evaluation[] | Error | undefined;
-
-export type Callback = (event: CustomEvent<CallbackEvent>) => void;
-
-export interface Evaluation {
-  flag: string;
-  value: string;
-}
-
-export interface Result {
-  on: (event: Event, callback: Callback) => void;
-  off: (event: Event, callback: Callback) => void;
-  variation: (identifier: string, defaultValue: any) => string | number | object;
-  close: () => void;
-}
+// event-source-polyfil works great in browsers, but not under node
+// eventsource works great under node, but can't be bundled for browsers
+const EventSource = globalThis.fetch ? EventSourcePolyfill : require('eventsource')
 
 const initialize = (apiKey: string, target: Target, options: Options): Result => {
-  const platform = browserPlatform();
-  const logger = platform.logger;
-  const configurations = { ...defaultConfiguration, ...options };
+  let storage: Record<string, any> = {}
+  const eventBus = mitt()
+  const configurations = { ...defaultOptions, ...options }
+  const logDebug = (message: string, ...args: any[]) => {
+    if (configurations.debug) {
+      // tslint:disable-next-line:no-console
+      console.debug(`[FF-SDK] ${message}`, ...args)
+    }
+  }
 
-  let environment: string;
-  let eventSource: any;
-  let jwtToken: string;
-  let streamConnected = false;
-  let error: Error;
+  const authenticate = async (clientID: string, configuration: Options): Promise<string> => {
+    const response = await fetch(`${configuration.baseUrl}/client/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey: clientID })
+    })
+
+    const data: { authToken: string } = await response.json()
+
+    return data.authToken
+  }
+
+  let environment: string
+  let eventSource: any
+  let jwtToken: string
 
   authenticate(apiKey, configurations)
     .then((token: string) => {
-      jwtToken = token;
-      const decoded: JWTDecoded = jwt_decode(token);
-      if (configurations.debug) logger.info('authenticated');
-      environment = decoded.environment;
-      initialiazitionFinished();
+      jwtToken = token
+      const decoded: { environment: string } = jwt_decode(token)
+
+      logDebug('Authenticated', decoded)
+
+      environment = decoded.environment
+
+      // When authentication is done, fetch all flags
+      fetchFlags()
+        .then(() => {
+          logDebug('Fetch all flags ok', storage)
+        })
+        .then(() => {
+          startStream() // start stream only after we get all evaluations
+        })
+        .then(() => {
+          logDebug('Event stream ready', { storage })
+          eventBus.emit(Event.READY, storage)
+        })
+        .catch(err => {
+          eventBus.emit(Event.ERROR, err)
+        })
     })
-    .catch((err) => {
-      error = err;
-      if (configurations.debug) logger.error('Authentication error: ', error);
-    });
+    .catch(error => {
+      logError('Authentication error: ', error)
+      eventBus.emit(Event.ERROR, error)
+    })
 
   const fetchFlags = async () => {
     try {
-      platform.eventBus.emit('loading', true);
       const res = await fetch(
-        `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations`,
-      );
-      const data = await res.json();
+        `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations`
+      )
+      const data = await res.json()
+
       data.forEach((elem: Evaluation) => {
-        platform.localStorage.set(elem.flag, elem.value);
-      });
-      platform.eventBus.emit('loading', false);
-    } catch (err) {
-      if (configurations.debug) logger.error('Features fetch operation error: ', error);
-      return err;
+        storage[elem.flag] = elem.value
+      })
+    } catch (error) {
+      logError('Features fetch operation error: ', error)
+      eventBus.emit(Event.ERROR, error)
+      return error
     }
-  };
+  }
 
   const fetchFlag = async (identifier: string) => {
     try {
-      platform.eventBus.emit('loading', true);
-      const res = await fetch(
+      const result = await fetch(
         `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations/${identifier}`,
         {
           headers: {
-            Authorization: `Bearer ${jwtToken}`,
-          },
-        },
-      );
-      platform.eventBus.emit('loading', false);
-      return await res.json();
-    } catch (err) {
-      if (configurations.debug) logger.error('Feature fetch operation error: ', error);
-      return err;
+            Authorization: `Bearer ${jwtToken}`
+          }
+        }
+      )
+
+      if (result.ok) {
+        const flagInfo: Evaluation = await result.json()
+        storage[identifier] = flagInfo.value
+        eventBus.emit(Event.CHANGED, flagInfo)
+      } else {
+        eventBus.emit(Event.ERROR, result)
+      }
+    } catch (error) {
+      logError('Feature fetch operation error: ', error)
+      eventBus.emit(Event.ERROR, error)
     }
-  };
+  }
 
   const startStream = () => {
-    if (!configurations.streamEnabled) return;
-    eventSource = platform.eventSource(`${configurations.baseUrl}/stream`, {
+    // TODO: Implement polling when stream is disabled
+    if (!configurations.streamEnabled) {
+      logDebug('Stream is disabled by configuration. Note: Polling is not yet supported')
+      return
+    }
+    eventSource = new EventSource(`${configurations.baseUrl}/stream`, {
       headers: {
         Authorization: `Bearer ${jwtToken}`,
-        'API-Key': apiKey,
-      },
-    });
-    eventSource.onmessage = (event: any) => {
-      logger.info('Msg received', event);
-    };
-    eventSource.onopen = (event: any) => {
-      streamConnected = true;
-      if (configurations.debug) logger.info('Stream connected');
-      platform.eventBus.emit('connected', event);
-    };
-    eventSource.onclose = (event: any) => {
-      streamConnected = false;
-      if (configurations.debug) logger.info('Stream disconnected');
-      platform.eventBus.emit('disconnected', event);
-    };
-    eventSource.onerror = (event: any) => {
-      if (configurations.debug) logger.error(event);
-      platform.eventBus.emit('error', event);
-    };
-    eventSource.addEventListener('*', (msg: any) => {
-      const message: Message = JSON.parse(msg.data);
-      if (configurations.debug) logger.info('received on *: ', message);
-      switch (message.event) {
-        case 'create':
-        case 'patch':
-          fetchFlag(message.identifier).then((data: Evaluation) => {
-            platform.localStorage.set(data.flag, data.value).then(() => {
-              platform.eventBus.emit('changed', data);
-              logger.info('evaluation saved', data.flag, data.value);
-            });
-          });
-          break;
-        case 'delete':
-          platform.localStorage.remove(message.identifier).then(() => {
-            platform.eventBus.emit('changed', message.identifier);
-            logger.info('evaluation removed', message.identifier);
-          });
-          break;
+        'API-Key': apiKey
       }
-    });
-  };
+    })
 
-  const variation = async (flag: string, defaultValue: any): Promise<any> => {
-    return (await platform.localStorage.get(flag)) || defaultValue;
-  };
+    eventSource.onopen = (event: any) => {
+      logDebug('Stream connected', event)
+      eventBus.emit(Event.CONNECTED)
+    }
 
-  const initialiazitionFinished = () => {
-    fetchFlags()
-      .then(() => {
-        // start stream only when we get all evaluations
-        startStream();
-      })
-      .catch((err) => {
-        platform.eventBus.emit('error', err);
-      });
-    if (configurations.debug) logger.info('Finished');
-    platform.eventBus.emit('ready', true);
-  };
+    eventSource.onclose = (event: any) => {
+      logDebug('Stream disconnected')
+      eventBus.emit(Event.DISCONNECTED)
+    }
+
+    eventSource.onerror = (event: any) => {
+      logError('Stream has issue', event)
+      eventBus.emit('error', event)
+    }
+
+    eventSource.addEventListener('*', (msg: any) => {
+      const event: StreamEvent = JSON.parse(msg.data)
+
+      logDebug('Received event from stream: ', event)
+
+      switch (event.event) {
+        case 'create':
+          setTimeout(() => fetchFlag(event.identifier), 1000) // Wait a bit before fetching evaluation due to https://harness.atlassian.net/browse/FFM-583
+          break
+        case 'patch':
+          fetchFlag(event.identifier)
+          break
+        case 'delete':
+          delete storage[event.identifier]
+          eventBus.emit(Event.CHANGED, { flag: event.identifier, value: undefined, deleted: true })
+          logDebug('Evaluation deleted', { message: event, storage })
+          // TODO: Delete flag from storage
+          break
+      }
+    })
+  }
+
+  const on = (event: Event, callback: EventCallback): void => eventBus.on(event, callback)
+
+  const off = (event?: Event, callback?: EventCallback): void => {
+    if (event) {
+      eventBus.off(event, callback)
+    } else {
+      close()
+    }
+  }
+
+  const variation = (flag: string, defaultValue: any) => storage[flag] || defaultValue
 
   const close = () => {
-    eventSource.close();
-    platform.eventBus.off();
-    if (configurations.debug) logger.info('Closing client');
-  };
-
-  const on = (event: Event, callback: Callback): void => {
-    platform.eventBus.on(event, callback);
-  };
-
-  const off = (event?: Event, callback?: Callback): void => {
-    platform.eventBus.on(event, callback);
-  };
-
-  return {
-    on,
-    off,
-    variation,
-    close,
-  };
-};
-
-const authenticate = async (clientID: string, configuration: Options): Promise<string> => {
-  try {
-    const response = await fetch(`${configuration.baseUrl}/client/auth`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        apiKey: clientID,
-      }),
-    });
-    const data: AuthResponse = await response.json();
-    return data.authToken;
-  } catch (error) {
-    return error;
+    logDebug('Closing event stream')
+    storage = {}
+    eventBus.all.clear()
+    eventSource.close()
   }
-};
 
-export { initialize };
+  return { on, off, variation, close }
+}
+
+export { initialize, Options, Target, StreamEvent, Event, EventCallback, Result, Evaluation, VariationValue }

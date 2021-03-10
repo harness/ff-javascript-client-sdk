@@ -1,35 +1,58 @@
 {
-  "name": "js-client-sdk",
-  "version": "1.0.1",
-  "author": "Harness CF team",
-  "license": "MIT",
-  "main": "dist/index.js",
-  "module": "dist/index.es.js",
+  "name": "@harnessio/ff-javascript-client-sdk",
+  "version": "1.0.4",
+  "author": "Harness",
+  "license": "Apache-2.0",
+  "main": "dist/sdk.cjs.js",
+  "module": "dist/sdk.esm.js",
   "files": [
     "dist"
   ],
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "rollup -c",
-    "watch": "rollup -cw",
+    "build:esm": "esbuild ./src/index.ts --bundle  --sourcemap --format=esm --external:url --external:events --external:http --external:https --external:util --outfile=./dist/sdk.esm.js",
+    "build:node": "esbuild ./src/index.ts --bundle  --sourcemap --platform=node --format=cjs --outfile=./dist/sdk.cjs.js",
+    "build": "npm run clean; npm run type; npm run build:esm; npm run build:node",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "tslint -p tsconfig.json"
+    "lint": "tslint -p tsconfig.json",
+    "type": "tsc src/*.ts --declaration --emitDeclarationOnly --outDir dist --lib ES2015",
+    "clean": "rm -rf ./dist",
+    "publish": "npm publish --access public"
   },
   "devDependencies": {
-    "@rollup/plugin-typescript": "^8.0.0",
+    "@types/es6-promise": "^3.3.0",
+    "@types/eventsource": "^1.1.5",
+    "@types/node": "^14.14.33",
+    "esbuild": "^0.9.0",
+    "event-source-polyfill": "^1.0.22",
+    "jwt-decode": "^3.1.2",
+    "mitt": "^2.1.0",
     "prettier": "^2.2.1",
-    "rollup": "^2.34.2",
-    "rollup-plugin-typescript": "^1.0.1",
     "tslib": "^2.0.3",
     "tslint": "^6.1.3",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^4.1.2"
-  },
-  "dependencies": {
-    "@types/eventsource": "^1.1.5",
+    "typescript": "^4.1.2",
     "eventsource": "^1.0.7",
-    "isomorphic-unfetch": "^3.1.0",
-    "jwt-decode": "^3.1.2",
-    "unfetch": "^4.2.0"
-  }
+    "node-fetch": "^2.6.1"
+  },
+  "description": "Basic library for integrating CF into javascript applications.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/drone/ff-javascript-client-sdk.git"
+  },
+  "keywords": [
+    "Harness",
+    "Feature",
+    "Flags",
+    "Continuous",
+    "Features",
+    "CD",
+    "CI",
+    "CF",
+    "Drone"
+  ],
+  "bugs": {
+    "url": "https://github.com/drone/ff-javascript-client-sdk/issues"
+  },
+  "homepage": "https://github.com/drone/ff-javascript-client-sdk#readme"
 }

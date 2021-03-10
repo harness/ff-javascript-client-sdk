@@ -5,79 +5,86 @@ Basic library for integrating CF into javascript applications.
 ## Install
 
 ```
-yarn install https://github.com/wings-software/js-client-sdk
+npm i @harnessio/ff-javascript-client-sdk
+```
+
+or
+
+```
+yarn add @harnessio/ff-javascript-client-sdk
 ```
 
 ## Usage
 
-Import installed library:
-```
-import * as CF from "js-client-sdk";
-```
-
-Initialize SDK with api key and target
-```
-const cf = CF.initialize("2c2a12a1-6599-406e-96c4-031a51c8a51b", "replace with your target", {
-  streamEnabled: true,
-});
+```js
+import { initialize, Event } from '@harnessio/ff-javascript-client-sdk'
 ```
 
-and customize it with configuration options:
-```
-export const defaultConfiguration: Options = {
-  baseUrl: 'http://localhost:3000/api/1.0',
-  streamEnabled: false,
-  allAttributesPrivate: false,
-  privateAttributeNames: [],
-};
+Initialize SDK with api key and target information.
+
+```js
+// Replace with your SDK Key
+const FF_SDK_KEY = "2c2a12a1-6599-406e-96c4-031a51c8a51b"
+
+const cf = initialize(FF_SDK_KEY, {
+    identifier: YOUR-TARGET-IDENTIFIER,      // Target identifier
+    name: YOUR-TARGET-NAME,                  // Optional target name
+    attributes: {                            // Optional target attributes
+      email: 'sample@sample.com'
+    }
+  }, {
+    baseUrl: 'http://40.20.100.200/api/1.0', // Replace with your Feature Flags server
+  });
 ```
 
-attach on connect listener:
-```
-cf.on("connected", () => {
-    setConnected(true); // your custom function
-});
-```
-attach on disconnect listener:
-```
-cf.on("disconnected", () => {
-    setConnected(false); // your custom function
-});
-```
+### Listening to events from the `cf` instance.
 
-attach on reconnect listener:
-```
-cf.on("reconnected", () => {
-    setConnected(true); // your custom function
-});
-```
+```js
+cf.on(Event.READY, flags => {
+  // Event happens when connection to server is established
+  // flags contains all evaluations against SDK key
+})
 
-attach on update listener:
-```
-cf.eventBus.on("changed", ({detail}) => {
-    setFlag(detail); // your custom function
+cf.on(Event.CHANGED, flagInfo => {
+  // Event happens when a changed event is pushed
+  // flagInfo contains information about the updated feature flag
+})
+
+cf.on(Event.DISCONNECTED, () => {
+  // Event happens when connection is disconnected
+})
+
+cf.on(Event.ERROR, () => {
+  // Event happens when connection some error has occurred
 })
 ```
 
-attach on error listener:
-```
-cf.eventBus.on("error", ({detail}) => {
-    setFlag(detail); // your custom function
-})
+### Getting value for a particular feature flag
+
+```js
+const value = cf.variation("dark-theme", false)
 ```
 
-or evaluate flag with concrete function call:
-```
-const value = await cf.variation("bool-flag2", false);
+### Cleaning up
 
-OR 
+Remove a listener of an event by `cf.off`.
 
-cf.variation("bool-flag2", false).then(value => {
-  // ...
-})
+```js
+cf.off(Event.ERROR, YOUR-CLOSURE)
 ```
 
-on closing your application always close the client:
+Remove all listeners:
+
+```js
+cf.off()
 ```
+
+On closing your application, call `cf.close()` to close the stream.
+
+```js
 cf.close();
 ```
+
+## License
+
+Apache version 2.
