@@ -1,35 +1,36 @@
 import jwt_decode from 'jwt-decode'
-import 'cross-fetch'
 import mitt from 'mitt'
-import { EventSourcePolyfill as EventSource } from 'event-source-polyfill'
+import { EventSourcePolyfill } from 'event-source-polyfill'
 import { Options, Target, StreamEvent, Event, EventCallback, Result, Evaluation, VariationValue } from './types'
-import { defaultOptions } from './utils'
+import { logError, defaultOptions } from './utils'
 
-const authenticate = async (clientID: string, configuration: Options): Promise<string> => {
-  try {
-    const response = await fetch(`${configuration.baseUrl}/client/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ apiKey: clientID })
-    })
-    const data: { authToken: string } = await response.json()
-    return data.authToken
-  } catch (error) {
-    return error
-  }
-}
+const fetch = globalThis.fetch || require('node-fetch')
+
+// event-source-polyfil works great in browsers, but not under node
+// eventsource works great under node, but can't be bundled for browsers
+const EventSource = globalThis.fetch ? EventSourcePolyfill : require('eventsource')
 
 const initialize = (apiKey: string, target: Target, options: Options): Result => {
   let storage: Record<string, any> = {}
   const eventBus = mitt()
   const configurations = { ...defaultOptions, ...options }
-  // tslint:disable-next-line:no-console
-  const logError = (message: string, ...args: any[]) => console.error(`[FF-SDK] ${message}`, ...args)
   const logDebug = (message: string, ...args: any[]) => {
     if (configurations.debug) {
       // tslint:disable-next-line:no-console
       console.debug(`[FF-SDK] ${message}`, ...args)
     }
+  }
+
+  const authenticate = async (clientID: string, configuration: Options): Promise<string> => {
+    const response = await fetch(`${configuration.baseUrl}/client/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey: clientID })
+    })
+
+    const data: { authToken: string } = await response.json()
+
+    return data.authToken
   }
 
   let environment: string
@@ -47,6 +48,9 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
 
       // When authentication is done, fetch all flags
       fetchFlags()
+        .then(() => {
+          logDebug('Fetch all flags ok', storage)
+        })
         .then(() => {
           startStream() // start stream only after we get all evaluations
         })
@@ -105,11 +109,11 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
   }
 
   const startStream = () => {
+    // TODO: Implement polling when stream is disabled
     if (!configurations.streamEnabled) {
-      // TODO: Implement polling
+      logDebug('Stream is disabled by configuration. Note: Polling is not yet supported')
       return
     }
-
     eventSource = new EventSource(`${configurations.baseUrl}/stream`, {
       headers: {
         Authorization: `Bearer ${jwtToken}`,
@@ -139,7 +143,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
 
       switch (event.event) {
         case 'create':
-          setTimeout(() => fetchFlag(event.identifier), 1000) // Wait 3s before fetching evaluation due to https://harness.atlassian.net/browse/FFM-583
+          setTimeout(() => fetchFlag(event.identifier), 1000) // Wait a bit before fetching evaluation due to https://harness.atlassian.net/browse/FFM-583
           break
         case 'patch':
           fetchFlag(event.identifier)

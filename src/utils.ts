@@ -7,3 +7,6 @@ export const defaultOptions: Options = {
   allAttributesPrivate: false,
   privateAttributeNames: []
 }
+
+// tslint:disable-next-line:no-console
+export const logError = (message: string, ...args: any[]) => console.error(`[FF-SDK] ${message}`, ...args)
