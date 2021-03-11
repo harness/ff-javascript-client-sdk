@@ -1,6 +1,6 @@
 {
   "name": "@harnessio/ff-javascript-client-sdk",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "author": "Harness",
   "license": "Apache-2.0",
   "main": "dist/sdk.cjs.js",
@@ -17,7 +17,7 @@
     "lint": "tslint -p tsconfig.json",
     "type": "tsc ./src/*.ts --declaration --emitDeclarationOnly --outDir dist --lib ES2015",
     "clean": "rm -rf ./dist",
-    "publish": "npm publish --access public"
+    "publish:public": "npm publish --access public"
   },
   "devDependencies": {
     "@types/es6-promise": "^3.3.0",

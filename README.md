@@ -1,4 +1,4 @@
-# Harness CF Client SDK for JavaScript
+# Harness Feature Flags Client SDK for JavaScript
 
 Basic library for integrating CF into javascript applications.
 
