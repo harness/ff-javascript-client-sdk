@@ -6,12 +6,16 @@ const App = () => {
   const [featureFlags, setFeatureFlags] = useState({})
 
   useEffect(() => {
-    const cf = initialize('e09224be-a463-4e6f-825e-325f101cb7b0', {
-      identifier: 'Harness'
-    }, {
-      baseUrl: 'http://34.82.119.242/api/1.0',
-      debug: true
-    })
+    const cf = initialize(
+      'e09224be-a463-4e6f-825e-325f101cb7b0',
+      {
+        identifier: 'Harness'
+      },
+      {
+        baseUrl: 'http://34.82.119.242/api/1.0',
+        debug: true
+      }
+    )
 
     cf.on(Event.READY, flags => {
       setFeatureFlags(flags)
@@ -21,7 +25,7 @@ const App = () => {
       if (flagInfo.deleted) {
         setFeatureFlags(currentFeatureFlags => {
           delete currentFeatureFlags[flagInfo.flag]
-          return {...currentFeatureFlags}
+          return { ...currentFeatureFlags }
         })
       } else {
         setFeatureFlags(currentFeatureFlags => ({ ...currentFeatureFlags, [flagInfo.flag]: flagInfo.value }))
@@ -29,9 +33,7 @@ const App = () => {
     })
   }, [])
 
-  return (
-    <pre>{JSON.stringify(featureFlags, null, 2)}</pre>
-  )
+  return <pre>{JSON.stringify(featureFlags, null, 2)}</pre>
 }
 
-ReactDOM.render(<App/>, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById('root'))

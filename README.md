@@ -62,7 +62,7 @@ cf.on(Event.ERROR, () => {
 ### Getting value for a particular feature flag
 
 ```js
-const value = cf.variation("dark-theme", false)
+const value = cf.variation("dark-theme", false) // second argument is default value when variation does not exist
 ```
 
 ### Cleaning up
@@ -79,7 +79,7 @@ Remove all listeners:
 cf.off()
 ```
 
-On closing your application, call `cf.close()` to close the stream.
+On closing your application, call `cf.close()` to close the event stream.
 
 ```js
 cf.close();
