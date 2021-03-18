@@ -2,7 +2,7 @@
 # yarn lockfile v1
 
 
-"@harnessio/ff-javascript-client-sdk@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@harnessio/ff-javascript-client-sdk/-/ff-javascript-client-sdk-1.0.4.tgz#10f320d84a5a00fecd0bd4dc8df39165cda046ce"
-  integrity sha512-UpxiciXxLBbhWFWcdu7wbReBOsMZFBsBYuFTBFswjk9jpFC+PGh329tX9P4RDxKNiWGTMj9aO6ihAyuXFeUBcQ==
+"@harnessio/ff-javascript-client-sdk@^1.0.7":
+  "integrity" "sha512-Y7ooTMVBd/ERz1zSsPQFMK59X8DIVVRzlBJ7Ew743m2ZrjYI61A7dE+3CL0lHfwYd7QkdmWDrswQuvcCHtYchg=="
+  "resolved" "https://registry.npmjs.org/@harnessio/ff-javascript-client-sdk/-/ff-javascript-client-sdk-1.0.7.tgz"
+  "version" "1.0.7"
