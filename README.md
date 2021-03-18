@@ -32,8 +32,6 @@ const cf = initialize(FF_SDK_KEY, {
     attributes: {                            // Optional target attributes
       email: 'sample@sample.com'
     }
-  }, {
-    baseUrl: 'http://40.20.100.200/api/1.0', // Replace with your Feature Flags server
   });
 ```
 
