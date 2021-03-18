@@ -12,7 +12,6 @@ const App = () => {
         identifier: 'Harness'
       },
       {
-        baseUrl: 'http://34.82.119.242/api/1.0',
         debug: true
       }
     )
