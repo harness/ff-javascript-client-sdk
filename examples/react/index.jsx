@@ -9,7 +9,11 @@ const App = () => {
     const cf = initialize(
       '62f97de8-9748-447f-b2b5-8f506166643d',
       {
-        identifier: 'Harness'
+        identifier: 'Harness',
+        attributes: {
+          lastUpdated: Date(),
+          host: location.href
+        }
       },
       {
         debug: true
