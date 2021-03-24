@@ -1,7 +1,7 @@
 const { initialize, Event } = require('@harnessio/ff-javascript-client-sdk')
 
 const cf = initialize(
-  'e09224be-a463-4e6f-825e-325f101cb7b0',
+  '62f97de8-9748-447f-b2b5-8f506166643d',
   {
     identifier: 'Harness'
   },
