@@ -25,7 +25,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
     const response = await fetch(`${configuration.baseUrl}/client/auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ apiKey: clientID })
+      body: JSON.stringify({ apiKey: clientID, target })
     })
 
     const data: { authToken: string } = await response.json()

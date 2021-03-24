@@ -39,9 +39,9 @@ export interface Result {
 }
 
 export interface Options {
-  debug: boolean
-  baseUrl: string
-  streamEnabled: boolean
-  allAttributesPrivate: boolean
-  privateAttributeNames: string[]
+  baseUrl?: string
+  streamEnabled?: boolean
+  allAttributesPrivate?: boolean
+  privateAttributeNames?: string[]
+  debug?: boolean
 }

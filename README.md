@@ -1,6 +1,6 @@
 # Harness Feature Flags Client SDK for JavaScript
 
-Basic library for integrating CF into javascript applications.
+Library for integrating Harness Feature Flags into JavaScript applications.
 
 ## Install
 
@@ -16,17 +16,36 @@ yarn add @harnessio/ff-javascript-client-sdk
 
 ## Usage
 
-```js
+```ts
 import { initialize, Event } from '@harnessio/ff-javascript-client-sdk'
 ```
 
 Initialize SDK with api key and target information.
 
-```js
-// Replace with your SDK Key
-const FF_SDK_KEY = "2c2a12a1-6599-406e-96c4-031a51c8a51b"
+```ts
+initialize(FeatureFlagSDKKey: string, target: Target, options?: Options)
+```
 
-const cf = initialize(FF_SDK_KEY, {
+In which `Target` and `Options` are defined as:
+
+```ts
+interface Target {
+  identifier: string
+  name?: string
+  anonymous?: boolean
+  attributes?: object
+}
+
+interface Options {
+  baseUrl?: string
+  debug?: boolean
+}
+```
+
+For example:
+
+```ts
+const cf = initialize('00000000-1111-2222-3333-444444444444', {
     identifier: YOUR-TARGET-IDENTIFIER,      // Target identifier
     name: YOUR-TARGET-NAME,                  // Optional target name
     attributes: {                            // Optional target attributes
@@ -37,7 +56,7 @@ const cf = initialize(FF_SDK_KEY, {
 
 ### Listening to events from the `cf` instance.
 
-```js
+```ts
 cf.on(Event.READY, flags => {
   // Event happens when connection to server is established
   // flags contains all evaluations against SDK key
@@ -59,27 +78,29 @@ cf.on(Event.ERROR, () => {
 
 ### Getting value for a particular feature flag
 
-```js
-const value = cf.variation("dark-theme", false) // second argument is default value when variation does not exist
+```ts
+const value = cf.variation('Dark_Theme', false) // second argument is default value when variation does not exist
 ```
 
 ### Cleaning up
 
 Remove a listener of an event by `cf.off`.
 
-```js
-cf.off(Event.ERROR, YOUR-CLOSURE)
+```ts
+cf.off(Event.ERROR, () => {
+  // Do something when an error occurs
+})
 ```
 
 Remove all listeners:
 
-```js
+```ts
 cf.off()
 ```
 
 On closing your application, call `cf.close()` to close the event stream.
 
-```js
+```ts
 cf.close();
 ```
 
