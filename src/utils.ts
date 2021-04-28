@@ -12,4 +12,4 @@ export const defaultOptions: Options = {
 // tslint:disable-next-line:no-console
 export const logError = (message: string, ...args: any[]) => console.error(`[FF-SDK] ${message}`, ...args)
 
-export const METRICS_FLUSH_INTERVAL = 2 * 60 * 1000 // Flush metrics every 2 minutes
+export const METRICS_FLUSH_INTERVAL = 30 * 1000 // Flush metrics every 30 seconds
