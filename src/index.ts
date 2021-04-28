@@ -169,6 +169,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
       if (globalThis.localStorage && globalThis.localStorage.HARNESS_FF_METRICS) {
         try {
           metrics = JSON.parse(globalThis.localStorage.HARNESS_FF_METRICS)
+          delete globalThis.localStorage.HARNESS_FF_METRICS
           logDebug('Picking up metrics from previous session')
         } catch (error) {}
       }
