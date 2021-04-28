@@ -18,10 +18,11 @@ export declare enum Event {
     CHANGED = "changed",
     ERROR = "error"
 }
-export declare type VariationValue = string | number | object | undefined;
+export declare type VariationValue = boolean | string | number | object | undefined;
 export interface Evaluation {
     flag: string;
     value: VariationValue;
+    kind: string;
     deleted?: boolean;
 }
 export declare type EventCallback = (event?: Evaluation[] | Error) => void;
@@ -32,9 +33,10 @@ export interface Result {
     close: () => void;
 }
 export interface Options {
-    debug: boolean;
-    baseUrl: string;
-    streamEnabled: boolean;
-    allAttributesPrivate: boolean;
-    privateAttributeNames: string[];
+    baseUrl?: string;
+    eventUrl?: string;
+    streamEnabled?: boolean;
+    allAttributesPrivate?: boolean;
+    privateAttributeNames?: string[];
+    debug?: boolean;
 }

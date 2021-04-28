@@ -2,7 +2,7 @@ import jwt_decode from 'jwt-decode'
 import mitt from 'mitt'
 import { EventSourcePolyfill } from 'event-source-polyfill'
 import { Options, Target, StreamEvent, Event, EventCallback, Result, Evaluation, VariationValue } from './types'
-import { logError, defaultOptions } from './utils'
+import { logError, defaultOptions, METRICS_FLUSH_INTERVAL } from './utils'
 
 const fetch = globalThis.fetch || require('node-fetch')
 
@@ -10,8 +10,40 @@ const fetch = globalThis.fetch || require('node-fetch')
 // eventsource works great under node, but can't be bundled for browsers
 const EventSource = globalThis.fetch ? EventSourcePolyfill : require('eventsource')
 
+// Flag to detect is Proxy is supported (not under IE 11)
+const hasProxy = !!globalThis.Proxy
+
+const convertValue = (evaluation: Evaluation) => {
+  let { value } = evaluation
+
+  try {
+    switch (evaluation.kind.toLowerCase()) {
+      case 'int':
+      case 'number':
+        value = Number(value)
+        break
+
+      case 'boolean':
+        value = value.toLocaleString() === 'true'
+        break
+
+      case 'json':
+        value = JSON.parse(value as string)
+        break
+    }
+  } catch (error) {
+    logError(error)
+  }
+
+  return value
+}
+
 const initialize = (apiKey: string, target: Target, options: Options): Result => {
-  let storage: Record<string, any> = {}
+  let environment: string
+  let eventSource: any
+  let jwtToken: string
+  let metricsSchedulerId
+  let metrics: Array<{ featureIdentifier: string; featureValue: string; count: number }> = []
   const eventBus = mitt()
   const configurations = { ...defaultOptions, ...options }
   const logDebug = (message: string, ...args: any[]) => {
@@ -33,9 +65,91 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
     return data.authToken
   }
 
-  let environment: string
-  let eventSource: any
-  let jwtToken: string
+  const scheduleSendingMetrics = () => {
+    if (metrics.length) {
+      logDebug('Sending metrics...', metrics)
+      const payload = {
+        metricsData: metrics.map(entry => (
+          {
+            timestamp: Date.now(),
+            count: entry.count,
+            metricsType: 'FFMETRICS',
+            attributes: [
+              {
+                key: 'featureIdentifier',
+                value: entry.featureIdentifier
+              },
+              {
+                key: 'featureName',
+                value: entry.featureIdentifier
+              },
+              {
+                key: 'featureValue',
+                value: String(entry.featureValue)
+              },
+              {
+                key: 'target',
+                value: JSON.stringify(target)
+              },
+              {
+                key: 'SDK_NAME',
+                value: 'JavaScript'
+              },
+              {
+                key: 'SDK_TYPE',
+                value: 'client'
+              }
+            ]
+        }))
+      }
+
+      fetch(`${options.eventUrl}/metrics/${environment}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwtToken}` },
+        body: JSON.stringify(payload)
+      }).then(() => {
+        metrics = []
+      }).catch(error => {
+        logError(error)
+      }).finally(() => {
+        metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
+      })
+    } else {
+      metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
+    }
+  }
+
+  const creatStorage = function () {
+    return hasProxy
+      ? new Proxy(
+          {},
+          {
+            get(target, featureIdentifier) {
+              if (target.hasOwnProperty(featureIdentifier)) {
+                const featureValue = target[featureIdentifier]
+                const entry = metrics.find(
+                  _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
+                )
+
+                if (entry) {
+                  entry.count++
+                } else {
+                  metrics.push({
+                    featureIdentifier: featureIdentifier as string,
+                    featureValue,
+                    count: 1
+                  })
+                }
+                logDebug('Metrics event: Flag', featureIdentifier, 'has been read with value', featureValue)
+              }
+              return target[featureIdentifier]
+            }
+          }
+        )
+      : {}
+  }
+
+  let storage: Record<string, any> = creatStorage()
 
   authenticate(apiKey, configurations)
     .then((token: string) => {
@@ -43,6 +157,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
       const decoded: { environment: string } = jwt_decode(token)
 
       logDebug('Authenticated', decoded)
+      metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
 
       environment = decoded.environment
 
@@ -57,6 +172,16 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
         .then(() => {
           logDebug('Event stream ready', { storage })
           eventBus.emit(Event.READY, storage)
+
+          if (!hasProxy) {
+            Object.keys(storage).forEach(key => {
+              metrics.push({
+                featureIdentifier: key,
+                featureValue: storage[key],
+                count: 1
+              })
+            })
+          }
         })
         .catch(err => {
           eventBus.emit(Event.ERROR, err)
@@ -70,12 +195,17 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
   const fetchFlags = async () => {
     try {
       const res = await fetch(
-        `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations`
+        `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations`,
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`
+          }
+        }
       )
       const data = await res.json()
 
-      data.forEach((elem: Evaluation) => {
-        storage[elem.flag] = elem.value
+      data.forEach((_evaluation: Evaluation) => {
+        storage[_evaluation.flag] = convertValue(_evaluation)
       })
     } catch (error) {
       logError('Features fetch operation error: ', error)
@@ -97,7 +227,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
 
       if (result.ok) {
         const flagInfo: Evaluation = await result.json()
-        storage[identifier] = flagInfo.value
+        storage[identifier] = convertValue(flagInfo)
         eventBus.emit(Event.CHANGED, flagInfo)
       } else {
         eventBus.emit(Event.ERROR, result)
@@ -168,11 +298,35 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
     }
   }
 
-  const variation = (flag: string, defaultValue: any) => storage[flag] || defaultValue
+  const variation = (flag: string, defaultValue: any) => {
+    const value = storage[flag]
+
+    if (!hasProxy && value !== undefined) {
+      const featureValue = value
+      const featureIdentifier = flag
+
+      const entry = metrics.find(
+        _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
+      )
+
+      if (entry) {
+        entry.count++
+      } else {
+        metrics.push({
+          featureIdentifier: featureIdentifier as string,
+          featureValue,
+          count: 1
+        })
+      }
+    }
+
+    return value !== undefined ? value : defaultValue
+  }
 
   const close = () => {
     logDebug('Closing event stream')
-    storage = {}
+    storage = creatStorage()
+    clearTimeout(metricsSchedulerId)
     eventBus.all.clear()
     eventSource.close()
   }
