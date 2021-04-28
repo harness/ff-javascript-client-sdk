@@ -34,7 +34,7 @@ var require_eventsource = __commonJS((exports, module) => {
   (function(global2) {
     "use strict";
     var setTimeout2 = global2.setTimeout;
-    var clearTimeout = global2.clearTimeout;
+    var clearTimeout2 = global2.clearTimeout;
     var XMLHttpRequest = global2.XMLHttpRequest;
     var XDomainRequest = global2.XDomainRequest;
     var ActiveXObject = global2.ActiveXObject;
@@ -221,7 +221,7 @@ var require_eventsource = __commonJS((exports, module) => {
       var timeout = 0;
       this._abort = function(silent) {
         if (that._sendTimeout !== 0) {
-          clearTimeout(that._sendTimeout);
+          clearTimeout2(that._sendTimeout);
           that._sendTimeout = 0;
         }
         if (state === 1 || state === 2 || state === 3) {
@@ -233,7 +233,7 @@ var require_eventsource = __commonJS((exports, module) => {
           xhr.onreadystatechange = k;
           xhr.abort();
           if (timeout !== 0) {
-            clearTimeout(timeout);
+            clearTimeout2(timeout);
             timeout = 0;
           }
           if (!silent) {
@@ -298,7 +298,7 @@ var require_eventsource = __commonJS((exports, module) => {
         if (state === 1 || state === 2 || state === 3) {
           state = 4;
           if (timeout !== 0) {
-            clearTimeout(timeout);
+            clearTimeout2(timeout);
             timeout = 0;
           }
           that.readyState = 4;
@@ -757,7 +757,7 @@ var require_eventsource = __commonJS((exports, module) => {
                   } else if (field === "heartbeatTimeout") {
                     heartbeatTimeout = parseDuration(value, heartbeatTimeout);
                     if (timeout !== 0) {
-                      clearTimeout(timeout);
+                      clearTimeout2(timeout);
                       timeout = setTimeout2(function() {
                         onTimeout();
                       }, heartbeatTimeout);
@@ -812,7 +812,7 @@ var require_eventsource = __commonJS((exports, module) => {
         if (currentState === OPEN || currentState === CONNECTING) {
           currentState = WAITING;
           if (timeout !== 0) {
-            clearTimeout(timeout);
+            clearTimeout2(timeout);
             timeout = 0;
           }
           timeout = setTimeout2(function() {
@@ -835,7 +835,7 @@ var require_eventsource = __commonJS((exports, module) => {
           abortController = void 0;
         }
         if (timeout !== 0) {
-          clearTimeout(timeout);
+          clearTimeout2(timeout);
           timeout = 0;
         }
         es.readyState = CLOSED;
@@ -1705,17 +1705,44 @@ var Event;
 var defaultOptions = {
   debug: false,
   baseUrl: "https://config.feature-flags.uat.harness.io/api/1.0",
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0",
   streamEnabled: true,
   allAttributesPrivate: false,
   privateAttributeNames: []
 };
 var logError = (message, ...args) => console.error(`[FF-SDK] ${message}`, ...args);
+var METRICS_FLUSH_INTERVAL = 2 * 60 * 1e3;
 
 // src/index.ts
 var fetch = globalThis.fetch || require_browser();
 var EventSource = globalThis.fetch ? import_event_source_polyfill.EventSourcePolyfill : require_eventsource2();
+var hasProxy = !!globalThis.Proxy;
+var convertValue = (evaluation) => {
+  let {value} = evaluation;
+  try {
+    switch (evaluation.kind.toLowerCase()) {
+      case "int":
+      case "number":
+        value = Number(value);
+        break;
+      case "boolean":
+        value = value.toLocaleString() === "true";
+        break;
+      case "json":
+        value = JSON.parse(value);
+        break;
+    }
+  } catch (error) {
+    logError(error);
+  }
+  return value;
+};
 var initialize = (apiKey, target, options) => {
-  let storage = {};
+  let environment;
+  let eventSource;
+  let jwtToken;
+  let metricsSchedulerId;
+  let metrics = [];
   const eventBus = mitt_es_default();
   const configurations = {...defaultOptions, ...options};
   const logDebug = (message, ...args) => {
@@ -1732,13 +1759,84 @@ var initialize = (apiKey, target, options) => {
     const data = await response.json();
     return data.authToken;
   };
-  let environment;
-  let eventSource;
-  let jwtToken;
+  const scheduleSendingMetrics = () => {
+    if (metrics.length) {
+      logDebug("Sending metrics...", metrics);
+      const payload = {
+        metricsData: metrics.map((entry) => ({
+          timestamp: Date.now(),
+          count: entry.count,
+          metricsType: "FFMETRICS",
+          attributes: [
+            {
+              key: "featureIdentifier",
+              value: entry.featureIdentifier
+            },
+            {
+              key: "featureName",
+              value: entry.featureIdentifier
+            },
+            {
+              key: "featureValue",
+              value: String(entry.featureValue)
+            },
+            {
+              key: "target",
+              value: JSON.stringify(target)
+            },
+            {
+              key: "SDK_NAME",
+              value: "JavaScript"
+            },
+            {
+              key: "SDK_TYPE",
+              value: "client"
+            }
+          ]
+        }))
+      };
+      fetch(`${options.eventUrl}/metrics/${environment}`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json", Authorization: `Bearer ${jwtToken}`},
+        body: JSON.stringify(payload)
+      }).then(() => {
+        metrics = [];
+      }).catch((error) => {
+        logError(error);
+      }).finally(() => {
+        metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL);
+      });
+    } else {
+      metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL);
+    }
+  };
+  const creatStorage = function() {
+    return hasProxy ? new Proxy({}, {
+      get(target2, featureIdentifier) {
+        if (target2.hasOwnProperty(featureIdentifier)) {
+          const featureValue = target2[featureIdentifier];
+          const entry = metrics.find((_entry) => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue);
+          if (entry) {
+            entry.count++;
+          } else {
+            metrics.push({
+              featureIdentifier,
+              featureValue,
+              count: 1
+            });
+          }
+          logDebug("Metrics event: Flag", featureIdentifier, "has been read with value", featureValue);
+        }
+        return target2[featureIdentifier];
+      }
+    }) : {};
+  };
+  let storage = creatStorage();
   authenticate(apiKey, configurations).then((token) => {
     jwtToken = token;
     const decoded = jwt_decode_esm_default(token);
     logDebug("Authenticated", decoded);
+    metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL);
     environment = decoded.environment;
     fetchFlags().then(() => {
       logDebug("Fetch all flags ok", storage);
@@ -1747,6 +1845,15 @@ var initialize = (apiKey, target, options) => {
     }).then(() => {
       logDebug("Event stream ready", {storage});
       eventBus.emit(Event.READY, storage);
+      if (!hasProxy) {
+        Object.keys(storage).forEach((key) => {
+          metrics.push({
+            featureIdentifier: key,
+            featureValue: storage[key],
+            count: 1
+          });
+        });
+      }
     }).catch((err) => {
       eventBus.emit(Event.ERROR, err);
     });
@@ -1756,10 +1863,14 @@ var initialize = (apiKey, target, options) => {
   });
   const fetchFlags = async () => {
     try {
-      const res = await fetch(`${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations`);
+      const res = await fetch(`${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations`, {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`
+        }
+      });
       const data = await res.json();
-      data.forEach((elem) => {
-        storage[elem.flag] = elem.value;
+      data.forEach((_evaluation) => {
+        storage[_evaluation.flag] = convertValue(_evaluation);
       });
     } catch (error) {
       logError("Features fetch operation error: ", error);
@@ -1776,8 +1887,44 @@ var initialize = (apiKey, target, options) => {
       });
       if (result.ok) {
         const flagInfo = await result.json();
-        storage[identifier] = flagInfo.value;
-        eventBus.emit(Event.CHANGED, flagInfo);
+        storage[identifier] = convertValue(flagInfo);
+        eventBus.emit(Event.CHANGED, hasProxy ? new Proxy(flagInfo, {
+          get(target2, property) {
+            if (target2.hasOwnProperty(property) && property === "value") {
+              const featureIdentifier = target2.flag;
+              const featureValue = flagInfo.value;
+              const entry = metrics.find((_entry) => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue);
+              if (entry) {
+                entry.count++;
+              } else {
+                metrics.push({
+                  featureIdentifier: property,
+                  featureValue: String(featureValue),
+                  count: 1
+                });
+              }
+              logDebug("Metrics event: Flag", property, "has been read with value via stream update", featureValue);
+            }
+            return property === "value" ? convertValue(flagInfo) : flagInfo[property];
+          }
+        }) : {
+          deleted: flagInfo.deleted,
+          flag: flagInfo.flag,
+          value: convertValue(flagInfo)
+        });
+        if (!hasProxy) {
+          const featureIdentifier = flagInfo.flag;
+          const entry = metrics.find((_entry) => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === flagInfo.value);
+          if (entry) {
+            entry.count++;
+          } else {
+            metrics.push({
+              featureIdentifier,
+              featureValue: String(flagInfo.value),
+              count: 1
+            });
+          }
+        }
       } else {
         eventBus.emit(Event.ERROR, result);
       }
@@ -1835,10 +1982,28 @@ var initialize = (apiKey, target, options) => {
       close();
     }
   };
-  const variation = (flag, defaultValue) => storage[flag] || defaultValue;
+  const variation = (flag, defaultValue) => {
+    const value = storage[flag];
+    if (!hasProxy && value !== void 0) {
+      const featureValue = value;
+      const featureIdentifier = flag;
+      const entry = metrics.find((_entry) => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue);
+      if (entry) {
+        entry.count++;
+      } else {
+        metrics.push({
+          featureIdentifier,
+          featureValue,
+          count: 1
+        });
+      }
+    }
+    return value !== void 0 ? value : defaultValue;
+  };
   const close = () => {
     logDebug("Closing event stream");
-    storage = {};
+    storage = creatStorage();
+    clearTimeout(metricsSchedulerId);
     eventBus.all.clear();
     eventSource.close();
   };

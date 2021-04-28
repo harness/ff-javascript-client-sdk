@@ -21,11 +21,12 @@ export enum Event {
   ERROR = 'error'
 }
 
-export type VariationValue = string | number | object | undefined
+export type VariationValue = boolean | string | number | object | undefined
 
 export interface Evaluation {
   flag: string
   value: VariationValue
+  kind: string // boolean | json | string | int
   deleted?: boolean
 }
 
@@ -40,6 +41,7 @@ export interface Result {
 
 export interface Options {
   baseUrl?: string
+  eventUrl?: string
   streamEnabled?: boolean
   allAttributesPrivate?: boolean
   privateAttributeNames?: string[]
