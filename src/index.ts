@@ -69,37 +69,36 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
     if (metrics.length) {
       logDebug('Sending metrics...', metrics)
       const payload = {
-        metricsData: metrics.map(entry => (
-          {
-            timestamp: Date.now(),
-            count: entry.count,
-            metricsType: 'FFMETRICS',
-            attributes: [
-              {
-                key: 'featureIdentifier',
-                value: entry.featureIdentifier
-              },
-              {
-                key: 'featureName',
-                value: entry.featureIdentifier
-              },
-              {
-                key: 'featureValue',
-                value: String(entry.featureValue)
-              },
-              {
-                key: 'target',
-                value: JSON.stringify(target)
-              },
-              {
-                key: 'SDK_NAME',
-                value: 'JavaScript'
-              },
-              {
-                key: 'SDK_TYPE',
-                value: 'client'
-              }
-            ]
+        metricsData: metrics.map(entry => ({
+          timestamp: Date.now(),
+          count: entry.count,
+          metricsType: 'FFMETRICS',
+          attributes: [
+            {
+              key: 'featureIdentifier',
+              value: entry.featureIdentifier
+            },
+            {
+              key: 'featureName',
+              value: entry.featureIdentifier
+            },
+            {
+              key: 'featureValue',
+              value: String(entry.featureValue)
+            },
+            {
+              key: 'target',
+              value: JSON.stringify(target)
+            },
+            {
+              key: 'SDK_NAME',
+              value: 'JavaScript'
+            },
+            {
+              key: 'SDK_TYPE',
+              value: 'client'
+            }
+          ]
         }))
       }
 
@@ -107,13 +106,16 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwtToken}` },
         body: JSON.stringify(payload)
-      }).then(() => {
-        metrics = []
-      }).catch(error => {
-        logError(error)
-      }).finally(() => {
-        metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
       })
+        .then(() => {
+          metrics = []
+        })
+        .catch(error => {
+          logError(error)
+        })
+        .finally(() => {
+          metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
+        })
     } else {
       metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
     }
@@ -228,7 +230,62 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
       if (result.ok) {
         const flagInfo: Evaluation = await result.json()
         storage[identifier] = convertValue(flagInfo)
-        eventBus.emit(Event.CHANGED, flagInfo)
+
+        eventBus.emit(
+          Event.CHANGED,
+          hasProxy
+            ? new Proxy(flagInfo, {
+                get(target, property) {
+                  if (target.hasOwnProperty(property) && property === 'value') { // only track metric when value is read
+                    const featureIdentifier = target.flag
+                    const featureValue = flagInfo.value
+                    const entry = metrics.find(
+                      _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
+                    )
+
+                    if (entry) {
+                      entry.count++
+                    } else {
+                      metrics.push({
+                        featureIdentifier: property as string,
+                        featureValue: String(featureValue),
+                        count: 1
+                      })
+                    }
+                    logDebug(
+                      'Metrics event: Flag',
+                      property,
+                      'has been read with value via stream update',
+                      featureValue
+                    )
+                  }
+
+                  return property === 'value' ? convertValue(flagInfo) : flagInfo[property]
+                }
+              })
+            : {
+                deleted: flagInfo.deleted,
+                flag: flagInfo.flag,
+                value: convertValue(flagInfo)
+              }
+        )
+
+        if (!hasProxy) {
+          const featureIdentifier = flagInfo.flag
+          const entry = metrics.find(
+            _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === flagInfo.value
+          )
+
+          if (entry) {
+            entry.count++
+          } else {
+            metrics.push({
+              featureIdentifier: featureIdentifier as string,
+              featureValue: String(flagInfo.value),
+              count: 1
+            })
+          }
+        }
       } else {
         eventBus.emit(Event.ERROR, result)
       }

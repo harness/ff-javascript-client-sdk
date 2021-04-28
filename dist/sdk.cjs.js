@@ -2923,7 +2923,43 @@ var initialize = (apiKey, target, options) => {
       if (result.ok) {
         const flagInfo = await result.json();
         storage[identifier] = convertValue(flagInfo);
-        eventBus.emit(Event.CHANGED, flagInfo);
+        eventBus.emit(Event.CHANGED, hasProxy ? new Proxy(flagInfo, {
+          get(target2, property) {
+            if (target2.hasOwnProperty(property) && property === "value") {
+              const featureIdentifier = target2.flag;
+              const featureValue = flagInfo.value;
+              const entry = metrics.find((_entry) => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue);
+              if (entry) {
+                entry.count++;
+              } else {
+                metrics.push({
+                  featureIdentifier: property,
+                  featureValue: String(featureValue),
+                  count: 1
+                });
+              }
+              logDebug("Metrics event: Flag", property, "has been read with value via stream update", featureValue);
+            }
+            return property === "value" ? convertValue(flagInfo) : flagInfo[property];
+          }
+        }) : {
+          deleted: flagInfo.deleted,
+          flag: flagInfo.flag,
+          value: convertValue(flagInfo)
+        });
+        if (!hasProxy) {
+          const featureIdentifier = flagInfo.flag;
+          const entry = metrics.find((_entry) => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === flagInfo.value);
+          if (entry) {
+            entry.count++;
+          } else {
+            metrics.push({
+              featureIdentifier,
+              featureValue: String(flagInfo.value),
+              count: 1
+            });
+          }
+        }
       } else {
         eventBus.emit(Event.ERROR, result);
       }
