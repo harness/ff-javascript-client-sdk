@@ -1711,7 +1711,7 @@ var defaultOptions = {
   privateAttributeNames: []
 };
 var logError = (message, ...args) => console.error(`[FF-SDK] ${message}`, ...args);
-var METRICS_FLUSH_INTERVAL = 2 * 60 * 1e3;
+var METRICS_FLUSH_INTERVAL = 30 * 1e3;
 
 // src/index.ts
 var fetch = globalThis.fetch || require_browser();
@@ -1748,6 +1748,11 @@ var initialize = (apiKey, target, options) => {
   const logDebug = (message, ...args) => {
     if (configurations.debug) {
       console.debug(`[FF-SDK] ${message}`, ...args);
+    }
+  };
+  globalThis.onbeforeunload = () => {
+    if (metrics.length && globalThis.localStorage) {
+      globalThis.localStorage.HARNESS_FF_METRICS = JSON.stringify(metrics);
     }
   };
   const authenticate = async (clientID, configuration) => {
@@ -1836,6 +1841,14 @@ var initialize = (apiKey, target, options) => {
     jwtToken = token;
     const decoded = jwt_decode_esm_default(token);
     logDebug("Authenticated", decoded);
+    if (globalThis.localStorage && globalThis.localStorage.HARNESS_FF_METRICS) {
+      try {
+        metrics = JSON.parse(globalThis.localStorage.HARNESS_FF_METRICS);
+        delete globalThis.localStorage.HARNESS_FF_METRICS;
+        logDebug("Picking up metrics from previous session");
+      } catch (error) {
+      }
+    }
     metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL);
     environment = decoded.environment;
     fetchFlags().then(() => {
