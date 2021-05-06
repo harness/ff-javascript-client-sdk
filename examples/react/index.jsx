@@ -7,7 +7,7 @@ const App = () => {
 
   useEffect(() => {
     const cf = initialize(
-      '62f97de8-9748-447f-b2b5-8f506166643d',
+      '50e52f07-ec4b-4b4a-8743-fd5050c31e1c',
       {
         identifier: 'Harness',
         attributes: {
@@ -16,7 +16,9 @@ const App = () => {
         }
       },
       {
-        debug: true
+        debug: true,
+        baseUrl: 'http://35.199.167.179/api/1.0', // QA
+        eventUrl: 'http://34.83.236.94/api/1.0'
       }
     )
 
@@ -34,6 +36,10 @@ const App = () => {
         setFeatureFlags(currentFeatureFlags => ({ ...currentFeatureFlags, [flagInfo.flag]: flagInfo.value }))
       }
     })
+
+    return () => {
+      cf.close()
+    }
   }, [])
 
   return <pre>{JSON.stringify(featureFlags, null, 2)}</pre>

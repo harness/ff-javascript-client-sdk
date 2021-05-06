@@ -1,6 +1,6 @@
 {
   "name": "@harnessio/ff-javascript-client-sdk",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "author": "Harness",
   "license": "Apache-2.0",
   "main": "dist/sdk.cjs.js",
