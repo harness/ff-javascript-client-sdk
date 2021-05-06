@@ -1,6 +1,6 @@
 # Harness Feature Flags Client SDK for JavaScript
 
-Library for integrating Harness Feature Flags into JavaScript applications.
+Library for integrating Harness Feature Flags into JavaScript UI applications.
 
 ## Install
 

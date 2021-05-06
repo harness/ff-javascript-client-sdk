@@ -4,11 +4,8 @@ import { EventSourcePolyfill } from 'event-source-polyfill'
 import { Options, Target, StreamEvent, Event, EventCallback, Result, Evaluation, VariationValue } from './types'
 import { logError, defaultOptions, METRICS_FLUSH_INTERVAL } from './utils'
 
-const fetch = globalThis.fetch || require('node-fetch')
-
-// event-source-polyfil works great in browsers, but not under node
-// eventsource works great under node, but can't be bundled for browsers
-const EventSource = globalThis.fetch ? EventSourcePolyfill : require('eventsource')
+const fetch = globalThis.fetch
+const EventSource = EventSourcePolyfill
 
 // Flag to detect is Proxy is supported (not under IE 11)
 const hasProxy = !!globalThis.Proxy
