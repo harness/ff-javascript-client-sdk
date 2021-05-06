@@ -94,7 +94,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
             },
             {
               key: 'target',
-              value: JSON.stringify(target)
+              value: target.identifier
             },
             {
               key: 'SDK_NAME',

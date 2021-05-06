@@ -1787,7 +1787,7 @@ var initialize = (apiKey, target, options) => {
             },
             {
               key: "target",
-              value: JSON.stringify(target)
+              value: target.identifier
             },
             {
               key: "SDK_NAME",
