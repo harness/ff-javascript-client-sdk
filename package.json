@@ -15,7 +15,7 @@
     "build": "npm run clean; npm run type; npm run build:esm; npm run build:cjs",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
-    "type": "tsc ./src/*.ts --declaration --emitDeclarationOnly --outDir dist --lib ES2015",
+    "type": "tsc ./src/*.ts --declaration --emitDeclarationOnly --outDir dist --lib ES2015,DOM",
     "clean": "rm -rf ./dist"
   },
   "devDependencies": {
@@ -34,14 +34,14 @@
     "url": "git+https://github.com/drone/ff-javascript-client-sdk.git"
   },
   "dependencies": {
-    "jwt-decode": "*",
-    "mitt": "*",
-    "event-source-polyfill": "*"
+    "jwt-decode": "^3.2.1",
+    "mitt": "^2.1.0",
+    "event-source-polyfill": "^1.0.24"
   },
   "peerDependencies": {
-    "jwt-decode": "*",
-    "mitt": "*",
-    "event-source-polyfill": "*"
+    "jwt-decode": "^3.2.1",
+    "mitt": "^2.1.0",
+    "event-source-polyfill": "^1.0.24"
   },
   "keywords": [
     "Harness",
