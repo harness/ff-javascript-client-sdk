@@ -21,6 +21,7 @@ export declare enum Event {
 export declare type VariationValue = boolean | string | number | object | undefined;
 export interface Evaluation {
     flag: string;
+    identifier: string;
     value: VariationValue;
     kind: string;
     deleted?: boolean;
@@ -39,4 +40,11 @@ export interface Options {
     allAttributesPrivate?: boolean;
     privateAttributeNames?: string[];
     debug?: boolean;
+}
+export interface MetricsInfo {
+    featureIdentifier: string;
+    featureValue: any;
+    variationIdentifier: string;
+    count: number;
+    lastAccessed: number;
 }
