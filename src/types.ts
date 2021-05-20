@@ -24,10 +24,11 @@ export enum Event {
 export type VariationValue = boolean | string | number | object | undefined
 
 export interface Evaluation {
-  flag: string
-  value: VariationValue
-  kind: string // boolean | json | string | int
-  deleted?: boolean
+  flag: string          // Feature flag identifier
+  identifier: string    // variation identifier
+  value: VariationValue // variation value
+  kind: string          // boolean | json | string | int
+  deleted?: boolean     // mark that feature flag is deleted
 }
 
 export type EventCallback = (event?: Evaluation[] | Error) => void
@@ -46,4 +47,12 @@ export interface Options {
   allAttributesPrivate?: boolean
   privateAttributeNames?: string[]
   debug?: boolean
+}
+
+export interface MetricsInfo {
+  featureIdentifier: string;
+  featureValue: any
+  variationIdentifier: string;
+  count: number
+  lastAccessed: number
 }

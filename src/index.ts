@@ -1,9 +1,21 @@
 import jwt_decode from 'jwt-decode'
 import mitt from 'mitt'
 import { EventSourcePolyfill } from 'event-source-polyfill'
-import { Options, Target, StreamEvent, Event, EventCallback, Result, Evaluation, VariationValue } from './types'
+import type {
+  Options,
+  Target,
+  StreamEvent,
+  EventCallback,
+  Result,
+  Evaluation,
+  VariationValue,
+  MetricsInfo
+} from './types'
+import { Event } from './types'
 import { logError, defaultOptions, METRICS_FLUSH_INTERVAL } from './utils'
 
+const SDK_VERSION = '1.3.0'
+const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
 
@@ -19,11 +31,9 @@ const convertValue = (evaluation: Evaluation) => {
       case 'number':
         value = Number(value)
         break
-
       case 'boolean':
-        value = value.toLocaleString() === 'true'
+        value = value.toString().toLowerCase() === 'true'
         break
-
       case 'json':
         value = JSON.parse(value as string)
         break
@@ -39,8 +49,15 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
   let environment: string
   let eventSource: any
   let jwtToken: string
-  let metricsSchedulerId
-  let metrics: Array<{ featureIdentifier: string; featureValue: string; count: number }> = []
+  let metricsSchedulerId: number
+  let metricsCollectorEnabled = true
+  const stopMetricsCollector = () => {
+    metricsCollectorEnabled = false
+  }
+  const startMetricsCollector = () => {
+    metricsCollectorEnabled = true
+  }
+  let metrics: Array<MetricsInfo> = []
   const eventBus = mitt()
   const configurations = { ...defaultOptions, ...options }
   const logDebug = (message: string, ...args: any[]) => {
@@ -49,10 +66,22 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
       console.debug(`[FF-SDK] ${message}`, ...args)
     }
   }
+  const updateMetrics = (metricsInfo: MetricsInfo) => {
+    if (metricsCollectorEnabled) {
+      const now = Date.now()
+
+      if (now - metricsInfo.lastAccessed > METRICS_VALID_COUNT_INTERVAL) {
+        metricsInfo.count++
+        metricsInfo.lastAccessed = now
+      }
+    }
+  }
 
   globalThis.onbeforeunload = () => {
     if (metrics.length && globalThis.localStorage) {
+      stopMetricsCollector()
       globalThis.localStorage.HARNESS_FF_METRICS = JSON.stringify(metrics)
+      startMetricsCollector()
     }
   }
 
@@ -70,7 +99,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
 
   const scheduleSendingMetrics = () => {
     if (metrics.length) {
-      logDebug('Sending metrics...', metrics)
+      logDebug('Sending metrics...', { metrics, evaluations })
       const payload = {
         metricsData: metrics.map(entry => ({
           timestamp: Date.now(),
@@ -86,8 +115,8 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
               value: entry.featureIdentifier
             },
             {
-              key: 'featureValue',
-              value: String(entry.featureValue)
+              key: 'variationIdentifier',
+              value: entry.variationIdentifier
             },
             {
               key: 'target',
@@ -100,6 +129,10 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
             {
               key: 'SDK_TYPE',
               value: 'client'
+            },
+            {
+              key: 'SDK_VERSION',
+              value: SDK_VERSION
             }
           ]
         }))
@@ -117,37 +150,54 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
           logError(error)
         })
         .finally(() => {
-          metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
+          metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
         })
     } else {
-      metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
+      metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
     }
   }
+
+  let evaluations: Record<string, Evaluation> = {}
 
   const creatStorage = function () {
     return hasProxy
       ? new Proxy(
           {},
           {
-            get(target, featureIdentifier) {
-              if (target.hasOwnProperty(featureIdentifier)) {
-                const featureValue = target[featureIdentifier]
+            get(_storage, property) {
+              const _value = _storage[property]
+
+              if (_storage.hasOwnProperty(property)) {
+                const featureValue = _storage[property]
+                // TODO/BUG: This logic to collect metrics will fail when two variations have the same value
+                // Need to find a better way
                 const entry = metrics.find(
-                  _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
+                  _entry => _entry.featureIdentifier === property && featureValue === _entry.featureValue
                 )
 
                 if (entry) {
-                  entry.count++
+                  entry.variationIdentifier = evaluations[property as string]?.identifier || ''
+                  updateMetrics(entry)
                 } else {
                   metrics.push({
-                    featureIdentifier: featureIdentifier as string,
+                    featureIdentifier: property as string,
                     featureValue,
-                    count: 1
+                    variationIdentifier: evaluations[property as string]?.identifier || '',
+                    count: metricsCollectorEnabled ? 1 : 0,
+                    lastAccessed: Date.now()
                   })
                 }
-                logDebug('Metrics event: Flag', featureIdentifier, 'has been read with value', featureValue)
+                logDebug(
+                  'Metrics event: Flag:',
+                  property,
+                  'has been read with value:',
+                  featureValue,
+                  'variationIdentifier:',
+                  evaluations[property as string]?.identifier
+                )
               }
-              return target[featureIdentifier]
+
+              return _value
             }
           }
         )
@@ -165,13 +215,13 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
 
       if (globalThis.localStorage && globalThis.localStorage.HARNESS_FF_METRICS) {
         try {
-          metrics = JSON.parse(globalThis.localStorage.HARNESS_FF_METRICS)
+          // metrics = JSON.parse(globalThis.localStorage.HARNESS_FF_METRICS)
           delete globalThis.localStorage.HARNESS_FF_METRICS
           logDebug('Picking up metrics from previous session')
         } catch (error) {}
       }
 
-      metricsSchedulerId = setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
+      metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
 
       environment = decoded.environment
 
@@ -192,7 +242,9 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
               metrics.push({
                 featureIdentifier: key,
                 featureValue: storage[key],
-                count: 1
+                variationIdentifier: evaluations[key]?.identifier || '',
+                count: metricsCollectorEnabled ? 1 : 0,
+                lastAccessed: Date.now()
               })
             })
           }
@@ -219,7 +271,9 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
       const data = await res.json()
 
       data.forEach((_evaluation: Evaluation) => {
-        storage[_evaluation.flag] = convertValue(_evaluation)
+        const _value = convertValue(_evaluation)
+        storage[_evaluation.flag] = _value
+        evaluations[_evaluation.flag] = { ..._evaluation, value: _value }
       })
     } catch (error) {
       logError('Features fetch operation error: ', error)
@@ -241,27 +295,36 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
 
       if (result.ok) {
         const flagInfo: Evaluation = await result.json()
-        storage[identifier] = convertValue(flagInfo)
+        const _value = convertValue(flagInfo)
+
+        stopMetricsCollector()
+        storage[identifier] = _value
+        evaluations[identifier] = { ...flagInfo, value: _value }
+        startMetricsCollector()
 
         eventBus.emit(
           Event.CHANGED,
           hasProxy
             ? new Proxy(flagInfo, {
-                get(target, property) {
-                  if (target.hasOwnProperty(property) && property === 'value') { // only track metric when value is read
-                    const featureIdentifier = target.flag
+                get(_flagInfo, property) {
+                  if (_flagInfo.hasOwnProperty(property) && property === 'value') {
+                    // only track metric when value is read
+                    const featureIdentifier = _flagInfo.flag
                     const featureValue = flagInfo.value
                     const entry = metrics.find(
                       _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
                     )
 
                     if (entry) {
-                      entry.count++
+                      updateMetrics(entry)
+                      entry.variationIdentifier = evaluations[featureIdentifier]?.identifier || ''
                     } else {
                       metrics.push({
-                        featureIdentifier: property as string,
+                        featureIdentifier,
                         featureValue: String(featureValue),
-                        count: 1
+                        variationIdentifier: evaluations[featureIdentifier].identifier || '',
+                        count: metricsCollectorEnabled ? 1 : 0,
+                        lastAccessed: Date.now()
                       })
                     }
                     logDebug(
@@ -289,12 +352,15 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
           )
 
           if (entry) {
-            entry.count++
+            updateMetrics(entry)
+            entry.variationIdentifier = evaluations[featureIdentifier as string]?.identifier || ''
           } else {
             metrics.push({
               featureIdentifier: featureIdentifier as string,
               featureValue: String(flagInfo.value),
-              count: 1
+              variationIdentifier: evaluations[featureIdentifier].identifier || '',
+              count: metricsCollectorEnabled ? 1 : 0,
+              lastAccessed: Date.now()
             })
           }
         }
@@ -379,12 +445,15 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
       )
 
       if (entry) {
-        entry.count++
+        updateMetrics(entry)
+        entry.variationIdentifier = evaluations[featureIdentifier as string]?.identifier || ''
       } else {
         metrics.push({
           featureIdentifier: featureIdentifier as string,
           featureValue,
-          count: 1
+          count: metricsCollectorEnabled ? 1 : 0,
+          variationIdentifier: evaluations[featureIdentifier].identifier || '',
+          lastAccessed: Date.now()
         })
       }
     }
@@ -395,6 +464,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
   const close = () => {
     logDebug('Closing event stream')
     storage = creatStorage()
+    evaluations = {}
     clearTimeout(metricsSchedulerId)
     eventBus.all.clear()
     eventSource.close()
