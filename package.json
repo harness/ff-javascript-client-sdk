@@ -1,6 +1,6 @@
 {
   "name": "@harnessio/ff-javascript-client-sdk",
-  "version": "1.3.0",
+  "version": "1.3.2",
   "author": "Harness",
   "license": "Apache-2.0",
   "main": "dist/sdk.cjs.js",
@@ -10,9 +10,11 @@
   ],
   "types": "dist/index.d.ts",
   "scripts": {
+    "build:client": "esbuild ./src/index.ts --minify --bundle --sourcemap --format=iife --global-name=HarnessFFSDK --outfile=./dist/sdk.client-iife.js",
+    "build:client-esm": "esbuild ./src/index.ts --minify --bundle --sourcemap --format=esm --outfile=./dist/sdk.client.js",
     "build:esm": "esbuild ./src/index.ts --minify --bundle --sourcemap --format=esm --external:jwt-decode --external:mitt --external:event-source-polyfill --outfile=./dist/sdk.esm.js",
     "build:cjs": "esbuild ./src/index.ts --minify --bundle --sourcemap --platform=node --format=cjs --external:jwt-decode --external:mitt --external:event-source-polyfill  --outfile=./dist/sdk.cjs.js",
-    "build": "npm run clean; npm run type; npm run build:esm; npm run build:cjs",
+    "build": "npm run clean; npm run type; npm run build:esm; npm run build:cjs; npm run build:client; npm run build:client-esm",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
     "type": "tsc ./src/*.ts --declaration --emitDeclarationOnly --outDir dist --lib ES2015,DOM",

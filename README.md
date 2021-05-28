@@ -4,13 +4,13 @@ Library for integrating Harness Feature Flags into JavaScript UI applications.
 
 ## Install
 
-```
+```sh
 npm i @harnessio/ff-javascript-client-sdk
 ```
 
 or
 
-```
+```sh
 yarn add @harnessio/ff-javascript-client-sdk
 ```
 
@@ -103,6 +103,28 @@ On closing your application, call `cf.close()` to close the event stream.
 ```ts
 cf.close();
 ```
+
+## Import directly from unpkg
+
+In case you want to import this library directly (without having to use npm or yarn):
+
+```html
+<script type="module">
+  import { initialize, Event } from 'https://unpkg.com/@harnessio/ff-javascript-client-sdk@1.3.2/dist/sdk.client.js'
+</script>
+```
+
+If you need to support old browsers which don't support ES Module:
+
+```html
+<script src="https://unpkg.com/@harnessio/ff-javascript-client-sdk@1.3.2/dist/sdk.client.js"></script>
+<script>
+  var initialize = HarnessFFSDK.initialize
+  var Event = HarnessFFSDK.Event
+</script>
+```
+
+Remember to change the version `1.3.2` in the unpkg url accordingly.
 
 ## License
 
