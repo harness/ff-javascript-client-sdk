@@ -110,14 +110,14 @@ In case you want to import this library directly (without having to use npm or y
 
 ```html
 <script type="module">
-  import { initialize, Event } from 'https://unpkg.com/@harnessio/ff-javascript-client-sdk@1.3.2/dist/sdk.client.js'
+  import { initialize, Event } from 'https://unpkg.com/@harnessio/ff-javascript-client-sdk@1.3.4/dist/sdk.client.js'
 </script>
 ```
 
 If you need to support old browsers which don't support ES Module:
 
 ```html
-<script src="https://unpkg.com/@harnessio/ff-javascript-client-sdk@1.3.2/dist/sdk.client.js"></script>
+<script src="https://unpkg.com/@harnessio/ff-javascript-client-sdk@1.3.4/dist/sdk.client.js"></script>
 <script>
   var initialize = HarnessFFSDK.initialize
   var Event = HarnessFFSDK.Event
