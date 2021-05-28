@@ -47,6 +47,7 @@ const convertValue = (evaluation: Evaluation) => {
 
 const initialize = (apiKey: string, target: Target, options: Options): Result => {
   let environment: string
+  let clusterIdentifier: string
   let eventSource: any
   let jwtToken: string
   let metricsSchedulerId: number
@@ -138,7 +139,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
         }))
       }
 
-      fetch(`${options.eventUrl}/metrics/${environment}`, {
+      fetch(`${options.eventUrl}/metrics/${environment}?cluster=${clusterIdentifier}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwtToken}` },
         body: JSON.stringify(payload)
@@ -209,7 +210,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
   authenticate(apiKey, configurations)
     .then((token: string) => {
       jwtToken = token
-      const decoded: { environment: string } = jwt_decode(token)
+      const decoded: { environment: string, clusterIdentifier: string } = jwt_decode(token)
 
       logDebug('Authenticated', decoded)
 
@@ -224,6 +225,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
       metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
 
       environment = decoded.environment
+      clusterIdentifier = decoded.clusterIdentifier
 
       // When authentication is done, fetch all flags
       fetchFlags()
@@ -261,7 +263,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
   const fetchFlags = async () => {
     try {
       const res = await fetch(
-        `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations`,
+        `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations?cluster=${clusterIdentifier}`,
         {
           headers: {
             Authorization: `Bearer ${jwtToken}`
@@ -285,7 +287,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
   const fetchFlag = async (identifier: string) => {
     try {
       const result = await fetch(
-        `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations/${identifier}`,
+        `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations/${identifier}?cluster=${clusterIdentifier}`,
         {
           headers: {
             Authorization: `Bearer ${jwtToken}`
