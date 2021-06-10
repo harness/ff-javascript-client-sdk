@@ -14,7 +14,7 @@ import type {
 import { Event } from './types'
 import { logError, defaultOptions, METRICS_FLUSH_INTERVAL } from './utils'
 
-const SDK_VERSION = '1.3.0'
+const SDK_VERSION = '1.3.7'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
@@ -139,7 +139,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
         }))
       }
 
-      fetch(`${options.eventUrl}/metrics/${environment}?cluster=${clusterIdentifier}`, {
+      fetch(`${configurations.eventUrl}/metrics/${environment}?cluster=${clusterIdentifier}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwtToken}` },
         body: JSON.stringify(payload)
