@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta http-equiv="Content-Language" content="en" />
     <title>Harness Feature Flags Sample</title>
-    <script src="https://unpkg.com/@harnessio/ff-javascript-client-sdk@1.3.7/dist/sdk.client-iife.js"></script>
+    <script src="https://unpkg.com/@harnessio/ff-javascript-client-sdk@1.4.0/dist/sdk.client-iife.js"></script>
   </head>
   <body>
     <pre id="log"></pre>
@@ -20,18 +20,13 @@
       }
 
       var cf = initialize(
-        '50e52f07-ec4b-4b4a-8743-fd5050c31e1c',
+        'c36d8c59-5da4-4376-8bf7-2b01797ed987',
         {
-          identifier: 'Harness',
+          identifier: 'Harness1',
           attributes: {
             lastUpdated: Date(),
             host: location.href
           }
-        },
-        {
-          debug: true,
-          baseUrl: 'http://35.199.167.179/api/1.0',
-          // eventUrl: 'http://34.83.236.94/api/1.0'
         }
       )
 

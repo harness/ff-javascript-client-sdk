@@ -14,11 +14,6 @@ const App = () => {
           lastUpdated: Date(),
           host: location.href
         }
-      },
-      {
-        debug: true,
-        baseUrl: 'http://35.199.167.179/api/1.0', // QA
-        eventUrl: 'http://34.83.236.94/api/1.0'
       }
     )
 
