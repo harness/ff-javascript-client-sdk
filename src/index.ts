@@ -1,6 +1,6 @@
 import jwt_decode from 'jwt-decode'
 import mitt from 'mitt'
-import { EventSourcePolyfill } from 'event-source-polyfill'
+import { EventSourcePolyfill } from './eventsource'
 import type {
   Options,
   Target,
@@ -14,7 +14,7 @@ import type {
 import { Event } from './types'
 import { logError, defaultOptions, METRICS_FLUSH_INTERVAL } from './utils'
 
-const SDK_VERSION = '1.4.0'
+const SDK_VERSION = '1.4.1'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
@@ -148,7 +148,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
           metrics = []
         })
         .catch(error => {
-          logError(error)
+          logDebug(error)
         })
         .finally(() => {
           metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)

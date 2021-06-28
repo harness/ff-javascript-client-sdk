@@ -1,12 +1,1437 @@
-var HarnessFFSDK=(()=>{var tt=Object.create,Re=Object.defineProperty,rt=Object.getPrototypeOf,nt=Object.prototype.hasOwnProperty,at=Object.getOwnPropertyNames,it=Object.getOwnPropertyDescriptor;var ie=Object.assign,ot=t=>Re(t,"__esModule",{value:!0});var st=(t,a)=>()=>(a||(a={exports:{}},t(a.exports,a)),a.exports),ft=(t,a)=>{for(var l in a)Re(t,l,{get:a[l],enumerable:!0})},dt=(t,a,l)=>{if(a&&typeof a=="object"||typeof a=="function")for(let s of at(a))!nt.call(t,s)&&s!=="default"&&Re(t,s,{get:()=>a[s],enumerable:!(l=it(a,s))||l.enumerable});return t},ct=t=>dt(ot(Re(t!=null?tt(rt(t)):{},"default",t&&t.__esModule&&"default"in t?{get:()=>t.default,enumerable:!0}:{value:t,enumerable:!0})),t);var Ie=(t,a,l)=>new Promise((s,x)=>{var A=O=>{try{N(l.next(O))}catch(G){x(G)}},M=O=>{try{N(l.throw(O))}catch(G){x(G)}},N=O=>O.done?s(O.value):Promise.resolve(O.value).then(A,M);N((l=l.apply(t,a)).next())});var Xe=st((ke,Oe)=>{(function(t){"use strict";var a=t.setTimeout,l=t.clearTimeout,s=t.XMLHttpRequest,x=t.XDomainRequest,A=t.ActiveXObject,M=t.EventSource,N=t.document,O=t.Promise,G=t.fetch,ue=t.Response,R=t.TextDecoder,_=t.TextEncoder,K=t.AbortController;if(typeof window!="undefined"&&typeof N!="undefined"&&!("readyState"in N)&&N.body==null&&(N.readyState="loading",window.addEventListener("load",function(e){N.readyState="complete"},!1)),s==null&&A!=null&&(s=function(){return new A("Microsoft.XMLHTTP")}),Object.create==null&&(Object.create=function(e){function n(){}return n.prototype=e,new n}),Date.now||(Date.now=function(){return new Date().getTime()}),K==null){var V=G;G=function(e,n){var i=n.signal;return V(e,{headers:n.headers,credentials:n.credentials,cache:n.cache}).then(function(r){var c=r.body.getReader();return i._reader=c,i._aborted&&i._reader.cancel(),{status:r.status,statusText:r.statusText,headers:r.headers,body:{getReader:function(){return c}}}})},K=function(){this.signal={_reader:null,_aborted:!1},this.abort=function(){this.signal._reader!=null&&this.signal._reader.cancel(),this.signal._aborted=!0}}}function re(){this.bitsNeeded=0,this.codePoint=0}re.prototype.decode=function(e){function n(y,m,u){if(u===1)return y>=128>>m&&y<<m<=2047;if(u===2)return y>=2048>>m&&y<<m<=55295||y>=57344>>m&&y<<m<=65535;if(u===3)return y>=65536>>m&&y<<m<=1114111;throw new Error}function i(y,m){if(y===6*1)return m>>6>15?3:m>31?2:1;if(y===6*2)return m>15?3:2;if(y===6*3)return 3;throw new Error}for(var r=65533,c="",o=this.bitsNeeded,v=this.codePoint,E=0;E<e.length;E+=1){var p=e[E];o!==0&&(p<128||p>191||!n(v<<6|p&63,o-6,i(o,v)))&&(o=0,v=r,c+=String.fromCharCode(v)),o===0?(p>=0&&p<=127?(o=0,v=p):p>=192&&p<=223?(o=6*1,v=p&31):p>=224&&p<=239?(o=6*2,v=p&15):p>=240&&p<=247?(o=6*3,v=p&7):(o=0,v=r),o!==0&&!n(v,o,i(o,v))&&(o=0,v=r)):(o-=6,v=v<<6|p&63),o===0&&(v<=65535?c+=String.fromCharCode(v):(c+=String.fromCharCode(55296+(v-65535-1>>10)),c+=String.fromCharCode(56320+(v-65535-1&1023))))}return this.bitsNeeded=o,this.codePoint=v,c};var Fe=function(){try{return new R().decode(new _().encode("test"),{stream:!0})==="test"}catch(e){console.debug("TextDecoder does not support streaming option. Using polyfill instead: "+e)}return!1};(R==null||_==null||!Fe())&&(R=re);var H=function(){};function b(e){this.withCredentials=!1,this.readyState=0,this.status=0,this.statusText="",this.responseText="",this.onprogress=H,this.onload=H,this.onerror=H,this.onreadystatechange=H,this._contentType="",this._xhr=e,this._sendTimeout=0,this._abort=H}b.prototype.open=function(e,n){this._abort(!0);var i=this,r=this._xhr,c=1,o=0;this._abort=function(u){i._sendTimeout!==0&&(l(i._sendTimeout),i._sendTimeout=0),(c===1||c===2||c===3)&&(c=4,r.onload=H,r.onerror=H,r.onabort=H,r.onprogress=H,r.onreadystatechange=H,r.abort(),o!==0&&(l(o),o=0),u||(i.readyState=4,i.onabort(null),i.onreadystatechange())),c=0};var v=function(){if(c===1){var u=0,w="",Y=void 0;if("contentType"in r)u=200,w="OK",Y=r.contentType;else try{u=r.status,w=r.statusText,Y=r.getResponseHeader("Content-Type")}catch(ge){u=0,w="",Y=void 0}u!==0&&(c=2,i.readyState=2,i.status=u,i.statusText=w,i._contentType=Y,i.onreadystatechange())}},E=function(){if(v(),c===2||c===3){c=3;var u="";try{u=r.responseText}catch(w){}i.readyState=3,i.responseText=u,i.onprogress()}},p=function(u,w){if((w==null||w.preventDefault==null)&&(w={preventDefault:H}),E(),c===1||c===2||c===3){if(c=4,o!==0&&(l(o),o=0),i.readyState=4,u==="load")i.onload(w);else if(u==="error")i.onerror(w);else if(u==="abort")i.onabort(w);else throw new TypeError;i.onreadystatechange()}},y=function(u){r!=null&&(r.readyState===4?(!("onload"in r)||!("onerror"in r)||!("onabort"in r))&&p(r.responseText===""?"error":"load",u):r.readyState===3?"onprogress"in r||E():r.readyState===2&&v())},m=function(){o=a(function(){m()},500),r.readyState===3&&E()};"onload"in r&&(r.onload=function(u){p("load",u)}),"onerror"in r&&(r.onerror=function(u){p("error",u)}),"onabort"in r&&(r.onabort=function(u){p("abort",u)}),"onprogress"in r&&(r.onprogress=E),"onreadystatechange"in r&&(r.onreadystatechange=function(u){y(u)}),("contentType"in r||!("ontimeout"in s.prototype))&&(n+=(n.indexOf("?")===-1?"?":"&")+"padding=true"),r.open(e,n,!0),"readyState"in r&&(o=a(function(){m()},0))},b.prototype.abort=function(){this._abort(!1)},b.prototype.getResponseHeader=function(e){return this._contentType},b.prototype.setRequestHeader=function(e,n){var i=this._xhr;"setRequestHeader"in i&&i.setRequestHeader(e,n)},b.prototype.getAllResponseHeaders=function(){return this._xhr.getAllResponseHeaders!=null&&this._xhr.getAllResponseHeaders()||""},b.prototype.send=function(){if((!("ontimeout"in s.prototype)||!("sendAsBinary"in s.prototype)&&!("mozAnon"in s.prototype))&&N!=null&&N.readyState!=null&&N.readyState!=="complete"){var e=this;e._sendTimeout=a(function(){e._sendTimeout=0,e.send()},4);return}var n=this._xhr;"withCredentials"in n&&(n.withCredentials=this.withCredentials);try{n.send(void 0)}catch(i){throw i}};function le(e){return e.replace(/[A-Z]/g,function(n){return String.fromCharCode(n.charCodeAt(0)+32)})}function $(e){for(var n=Object.create(null),i=e.split(`\r
-`),r=0;r<i.length;r+=1){var c=i[r],o=c.split(": "),v=o.shift(),E=o.join(": ");n[le(v)]=E}this._map=n}$.prototype.get=function(e){return this._map[le(e)]},s!=null&&s.HEADERS_RECEIVED==null&&(s.HEADERS_RECEIVED=2);function Ee(){}Ee.prototype.open=function(e,n,i,r,c,o,v){e.open("GET",c);var E=0;e.onprogress=function(){var y=e.responseText,m=y.slice(E);E+=m.length,i(m)},e.onerror=function(y){y.preventDefault(),r(new Error("NetworkError"))},e.onload=function(){r(null)},e.onabort=function(){r(null)},e.onreadystatechange=function(){if(e.readyState===s.HEADERS_RECEIVED){var y=e.status,m=e.statusText,u=e.getResponseHeader("Content-Type"),w=e.getAllResponseHeaders();n(y,m,u,new $(w))}},e.withCredentials=o;for(var p in v)Object.prototype.hasOwnProperty.call(v,p)&&e.setRequestHeader(p,v[p]);return e.send(),e};function ve(e){this._headers=e}ve.prototype.get=function(e){return this._headers.get(e)};function we(){}we.prototype.open=function(e,n,i,r,c,o,v){var E=null,p=new K,y=p.signal,m=new R;return G(c,{headers:v,credentials:o?"include":"same-origin",signal:y,cache:"no-store"}).then(function(u){return E=u.body.getReader(),n(u.status,u.statusText,u.headers.get("Content-Type"),new ve(u.headers)),new O(function(w,Y){var ge=function(){E.read().then(function(B){if(B.done)w(void 0);else{var k=m.decode(B.value,{stream:!0});i(k),ge()}}).catch(function(B){Y(B)})};ge()})}).catch(function(u){if(u.name!=="AbortError")return u}).then(function(u){r(u)}),{abort:function(){E!=null&&E.cancel(),p.abort()}}};function ne(){this._listeners=Object.create(null)}function be(e){a(function(){throw e},0)}ne.prototype.dispatchEvent=function(e){e.target=this;var n=this._listeners[e.type];if(n!=null)for(var i=n.length,r=0;r<i;r+=1){var c=n[r];try{typeof c.handleEvent=="function"?c.handleEvent(e):c.call(this,e)}catch(o){be(o)}}},ne.prototype.addEventListener=function(e,n){e=String(e);var i=this._listeners,r=i[e];r==null&&(r=[],i[e]=r);for(var c=!1,o=0;o<r.length;o+=1)r[o]===n&&(c=!0);c||r.push(n)},ne.prototype.removeEventListener=function(e,n){e=String(e);var i=this._listeners,r=i[e];if(r!=null){for(var c=[],o=0;o<r.length;o+=1)r[o]!==n&&c.push(r[o]);c.length===0?delete i[e]:i[e]=c}};function te(e){this.type=e,this.target=void 0}function he(e,n){te.call(this,e),this.data=n.data,this.lastEventId=n.lastEventId}he.prototype=Object.create(te.prototype);function f(e,n){te.call(this,e),this.status=n.status,this.statusText=n.statusText,this.headers=n.headers}f.prototype=Object.create(te.prototype);function d(e,n){te.call(this,e),this.error=n.error}d.prototype=Object.create(te.prototype);var g=-1,h=0,L=1,S=2,T=-1,C=0,J=1,se=2,pe=3,Se=/^text\/event\-stream(;.*)?$/i,Je=1e3,ze=18e6,xe=function(e,n){var i=e==null?n:parseInt(e,10);return i!==i&&(i=n),Me(i)},Me=function(e){return Math.min(Math.max(e,Je),ze)},fe=function(e,n,i){try{typeof n=="function"&&n.call(e,i)}catch(r){be(r)}};function z(e,n){ne.call(this),n=n||{},this.onopen=void 0,this.onmessage=void 0,this.onerror=void 0,this.url=void 0,this.readyState=void 0,this.withCredentials=void 0,this.headers=void 0,this._close=void 0,Qe(this,e,n)}function We(){return s!=null&&"withCredentials"in s.prototype||x==null?new s:new x}var Ye=G!=null&&ue!=null&&"body"in ue.prototype;function Qe(e,n,i){n=String(n);var r=Boolean(i.withCredentials),c=i.lastEventIdQueryParameterName||"lastEventId",o=Me(1e3),v=xe(i.heartbeatTimeout,45e3),E="",p=o,y=!1,m=0,u=i.headers||{},w=i.Transport,Y=Ye&&w==null?void 0:new b(w!=null?new w:We()),ge=w!=null&&typeof w!="string"?new w:Y==null?new we:new Ee,B=void 0,k=0,W=g,de="",Te="",Q="",Ce="",P=C,Ve=0,ae=0,Ze=function(D,I,X,q){if(W===h)if(D===200&&X!=null&&Se.test(X)){W=L,y=Date.now(),p=o,e.readyState=L;var j=new f("open",{status:D,statusText:I,headers:q});e.dispatchEvent(j),fe(e,e.onopen,j)}else{var F="";D!==200?(I&&(I=I.replace(/\s+/g," ")),F="EventSource's response has a status "+D+" "+I+" that is not 200. Aborting the connection."):F="EventSource's response has a Content-Type specifying an unsupported type: "+(X==null?"-":X.replace(/\s+/g," "))+". Aborting the connection.",He();var j=new f("error",{status:D,statusText:I,headers:q});e.dispatchEvent(j),fe(e,e.onerror,j),console.error(F)}},et=function(D){if(W===L){for(var I=-1,X=0;X<D.length;X+=1){var q=D.charCodeAt(X);(q===`
-`.charCodeAt(0)||q==="\r".charCodeAt(0))&&(I=X)}var j=(I!==-1?Ce:"")+D.slice(0,I+1);Ce=(I===-1?Ce:"")+D.slice(I+1),D!==""&&(y=Date.now(),m+=D.length);for(var F=0;F<j.length;F+=1){var q=j.charCodeAt(F);if(P===T&&q===`
-`.charCodeAt(0))P=C;else if(P===T&&(P=C),q==="\r".charCodeAt(0)||q===`
-`.charCodeAt(0)){if(P!==C){P===J&&(ae=F+1);var Z=j.slice(Ve,ae-1),ee=j.slice(ae+(ae<F&&j.charCodeAt(ae)===" ".charCodeAt(0)?1:0),F);Z==="data"?(de+=`
-`,de+=ee):Z==="id"?Te=ee:Z==="event"?Q=ee:Z==="retry"?(o=xe(ee,o),p=o):Z==="heartbeatTimeout"&&(v=xe(ee,v),k!==0&&(l(k),k=a(function(){ye()},v)))}if(P===C){if(de!==""){E=Te,Q===""&&(Q="message");var ce=new he(Q,{data:de.slice(1),lastEventId:Te});if(e.dispatchEvent(ce),Q==="open"?fe(e,e.onopen,ce):Q==="message"?fe(e,e.onmessage,ce):Q==="error"&&fe(e,e.onerror,ce),W===S)return}de="",Q=""}P=q==="\r".charCodeAt(0)?T:C}else P===C&&(Ve=F,P=J),P===J?q===":".charCodeAt(0)&&(ae=F+1,P=se):P===se&&(P=pe)}}},je=function(D){if(W===L||W===h){W=g,k!==0&&(l(k),k=0),k=a(function(){ye()},p),p=Me(Math.min(o*16,p*2)),e.readyState=h;var I=new d("error",{error:D});e.dispatchEvent(I),fe(e,e.onerror,I),D!=null&&console.error(D)}},He=function(){W=S,B!=null&&(B.abort(),B=void 0),k!==0&&(l(k),k=0),e.readyState=S},ye=function(){if(k=0,W!==g){if(!y&&B!=null)je(new Error("No activity within "+v+" milliseconds. "+(W===h?"No response received.":m+" chars received.")+" Reconnecting.")),B!=null&&(B.abort(),B=void 0);else{var D=Math.max((y||Date.now())+v-Date.now(),1);y=!1,k=a(function(){ye()},D)}return}y=!1,m=0,k=a(function(){ye()},v),W=h,de="",Q="",Te=E,Ce="",Ve=0,ae=0,P=C;var I=n;if(n.slice(0,5)!=="data:"&&n.slice(0,5)!=="blob:"&&E!==""){var X=n.indexOf("?");I=X===-1?n:n.slice(0,X+1)+n.slice(X+1).replace(/(?:^|&)([^=&]*)(?:=[^&]*)?/g,function(ee,ce){return ce===c?"":ee}),I+=(n.indexOf("?")===-1?"?":"&")+c+"="+encodeURIComponent(E)}var q=e.withCredentials,j={};j.Accept="text/event-stream";var F=e.headers;if(F!=null)for(var Z in F)Object.prototype.hasOwnProperty.call(F,Z)&&(j[Z]=F[Z]);try{B=ge.open(Y,Ze,et,je,I,q,j)}catch(ee){throw He(),ee}};e.url=n,e.readyState=h,e.withCredentials=r,e.headers=u,e._close=He,ye()}z.prototype=Object.create(ne.prototype),z.prototype.CONNECTING=h,z.prototype.OPEN=L,z.prototype.CLOSED=S,z.prototype.close=function(){this._close()},z.CONNECTING=h,z.OPEN=L,z.CLOSED=S,z.prototype.withCredentials=void 0;var Pe=M;s!=null&&(M==null||!("withCredentials"in M.prototype))&&(Pe=z),function(e){if(typeof Oe=="object"&&typeof Oe.exports=="object"){var n=e(ke);n!==void 0&&(Oe.exports=n)}else typeof define=="function"&&define.amd?define(["exports"],e):e(t)}(function(e){e.EventSourcePolyfill=z,e.NativeEventSource=M,e.EventSource=Pe})})(typeof globalThis=="undefined"?typeof window!="undefined"?window:typeof self!="undefined"?self:ke:globalThis)});var vt={};ft(vt,{Event:()=>U,initialize:()=>Ke});function Le(t){this.message=t}Le.prototype=new Error,Le.prototype.name="InvalidCharacterError";var Ue=typeof window!="undefined"&&window.atob&&window.atob.bind(window)||function(t){var a=String(t).replace(/=+$/,"");if(a.length%4==1)throw new Le("'atob' failed: The string to be decoded is not correctly encoded.");for(var l,s,x=0,A=0,M="";s=a.charAt(A++);~s&&(l=x%4?64*l+s:s,x++%4)?M+=String.fromCharCode(255&l>>(-2*x&6)):0)s="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".indexOf(s);return M};function ut(t){var a=t.replace(/-/g,"+").replace(/_/g,"/");switch(a.length%4){case 0:break;case 2:a+="==";break;case 3:a+="=";break;default:throw"Illegal base64url string!"}try{return function(l){return decodeURIComponent(Ue(l).replace(/(.)/g,function(s,x){var A=x.charCodeAt(0).toString(16).toUpperCase();return A.length<2&&(A="0"+A),"%"+A}))}(a)}catch(l){return Ue(a)}}function Ae(t){this.message=t}function lt(t,a){if(typeof t!="string")throw new Ae("Invalid token specified");var l=(a=a||{}).header===!0?0:1;try{return JSON.parse(ut(t.split(".")[l]))}catch(s){throw new Ae("Invalid token specified: "+s.message)}}Ae.prototype=new Error,Ae.prototype.name="InvalidTokenError";var $e=lt;function Be(t){return{all:t=t||new Map,on:function(a,l){var s=t.get(a);s&&s.push(l)||t.set(a,[l])},off:function(a,l){var s=t.get(a);s&&s.splice(s.indexOf(l)>>>0,1)},emit:function(a,l){(t.get(a)||[]).slice().map(function(s){s(l)}),(t.get("*")||[]).slice().map(function(s){s(a,l)})}}}var Ge=ct(Xe());var U;(function(t){t.READY="ready",t.CONNECTED="connected",t.DISCONNECTED="disconnected",t.RECONNECTED="reconnected",t.CHANGED="changed",t.ERROR="error"})(U||(U={}));var qe={debug:!1,baseUrl:"https://config.ff.harness.io/api/1.0",eventUrl:"https://events.ff.harness.io/api/1.0",streamEnabled:!0,allAttributesPrivate:!1,privateAttributeNames:[]},oe=(t,...a)=>console.error(`[FF-SDK] ${t}`,...a),De=30*1e3;var ht="1.4.0",pt=500,Ne=globalThis.fetch,gt=Ge.EventSourcePolyfill,me=!!globalThis.Proxy,_e=t=>{let{value:a}=t;try{switch(t.kind.toLowerCase()){case"int":case"number":a=Number(a);break;case"boolean":a=a.toString().toLowerCase()==="true";break;case"json":a=JSON.parse(a);break}}catch(l){oe(l)}return a},Ke=(t,a,l)=>{let s,x,A,M,N,O=!0,G=()=>{O=!1},ue=()=>{O=!0},R=[],_=Be(),K=ie(ie({},qe),l),V=(f,...d)=>{K.debug&&console.debug(`[FF-SDK] ${f}`,...d)},re=f=>{if(O){let d=Date.now();d-f.lastAccessed>pt&&(f.count++,f.lastAccessed=d)}};globalThis.onbeforeunload=()=>{R.length&&globalThis.localStorage&&(G(),globalThis.localStorage.HARNESS_FF_METRICS=JSON.stringify(R),ue())};let Fe=(f,d)=>Ie(void 0,null,function*(){return(yield(yield Ne(`${d.baseUrl}/client/auth`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({apiKey:f,target:a})})).json()).authToken}),H=()=>{if(R.length){V("Sending metrics...",{metrics:R,evaluations:b});let f={metricsData:R.map(d=>({timestamp:Date.now(),count:d.count,metricsType:"FFMETRICS",attributes:[{key:"featureIdentifier",value:d.featureIdentifier},{key:"featureName",value:d.featureIdentifier},{key:"variationIdentifier",value:d.variationIdentifier},{key:"target",value:a.identifier},{key:"SDK_NAME",value:"JavaScript"},{key:"SDK_TYPE",value:"client"},{key:"SDK_VERSION",value:ht}]}))};Ne(`${K.eventUrl}/metrics/${s}?cluster=${x}`,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${M}`},body:JSON.stringify(f)}).then(()=>{R=[]}).catch(d=>{oe(d)}).finally(()=>{N=window.setTimeout(H,De)})}else N=window.setTimeout(H,De)},b={},le=function(){return me?new Proxy({},{get(f,d){var h,L,S;let g=f[d];if(f.hasOwnProperty(d)){let T=f[d],C=R.find(J=>J.featureIdentifier===d&&T===J.featureValue);C?(C.variationIdentifier=((h=b[d])==null?void 0:h.identifier)||"",re(C)):R.push({featureIdentifier:d,featureValue:T,variationIdentifier:((L=b[d])==null?void 0:L.identifier)||"",count:O?1:0,lastAccessed:Date.now()}),V("Metrics event: Flag:",d,"has been read with value:",T,"variationIdentifier:",(S=b[d])==null?void 0:S.identifier)}return g}}):{}},$=le();Fe(t,K).then(f=>{M=f;let d=$e(f);if(V("Authenticated",d),globalThis.localStorage&&globalThis.localStorage.HARNESS_FF_METRICS)try{delete globalThis.localStorage.HARNESS_FF_METRICS,V("Picking up metrics from previous session")}catch(g){}N=window.setTimeout(H,De),s=d.environment,x=d.clusterIdentifier,Ee().then(()=>{V("Fetch all flags ok",$)}).then(()=>{we()}).then(()=>{V("Event stream ready",{storage:$}),_.emit(U.READY,$),me||Object.keys($).forEach(g=>{var h;R.push({featureIdentifier:g,featureValue:$[g],variationIdentifier:((h=b[g])==null?void 0:h.identifier)||"",count:O?1:0,lastAccessed:Date.now()})})}).catch(g=>{_.emit(U.ERROR,g)})}).catch(f=>{oe("Authentication error: ",f),_.emit(U.ERROR,f)});let Ee=()=>Ie(void 0,null,function*(){try{(yield(yield Ne(`${K.baseUrl}/client/env/${s}/target/${a.identifier}/evaluations?cluster=${x}`,{headers:{Authorization:`Bearer ${M}`}})).json()).forEach(g=>{let h=_e(g);$[g.flag]=h,b[g.flag]=ie(ie({},g),{value:h})})}catch(f){return oe("Features fetch operation error: ",f),_.emit(U.ERROR,f),f}}),ve=f=>Ie(void 0,null,function*(){var d;try{let g=yield Ne(`${K.baseUrl}/client/env/${s}/target/${a.identifier}/evaluations/${f}?cluster=${x}`,{headers:{Authorization:`Bearer ${M}`}});if(g.ok){let h=yield g.json(),L=_e(h);if(G(),$[f]=L,b[f]=ie(ie({},h),{value:L}),ue(),_.emit(U.CHANGED,me?new Proxy(h,{get(S,T){var C;if(S.hasOwnProperty(T)&&T==="value"){let J=S.flag,se=h.value,pe=R.find(Se=>Se.featureIdentifier===J&&Se.featureValue===se);pe?(re(pe),pe.variationIdentifier=((C=b[J])==null?void 0:C.identifier)||""):R.push({featureIdentifier:J,featureValue:String(se),variationIdentifier:b[J].identifier||"",count:O?1:0,lastAccessed:Date.now()}),V("Metrics event: Flag",T,"has been read with value via stream update",se)}return T==="value"?_e(h):h[T]}}):{deleted:h.deleted,flag:h.flag,value:_e(h)}),!me){let S=h.flag,T=R.find(C=>C.featureIdentifier===S&&C.featureValue===h.value);T?(re(T),T.variationIdentifier=((d=b[S])==null?void 0:d.identifier)||""):R.push({featureIdentifier:S,featureValue:String(h.value),variationIdentifier:b[S].identifier||"",count:O?1:0,lastAccessed:Date.now()})}}else _.emit(U.ERROR,g)}catch(g){oe("Feature fetch operation error: ",g),_.emit(U.ERROR,g)}}),we=()=>{if(!K.streamEnabled){V("Stream is disabled by configuration. Note: Polling is not yet supported");return}A=new gt(`${K.baseUrl}/stream`,{headers:{Authorization:`Bearer ${M}`,"API-Key":t}}),A.onopen=f=>{V("Stream connected",f),_.emit(U.CONNECTED)},A.onclose=f=>{V("Stream disconnected"),_.emit(U.DISCONNECTED)},A.onerror=f=>{oe("Stream has issue",f),_.emit("error",f)},A.addEventListener("*",f=>{let d=JSON.parse(f.data);switch(V("Received event from stream: ",d),d.event){case"create":setTimeout(()=>ve(d.identifier),1e3);break;case"patch":ve(d.identifier);break;case"delete":delete $[d.identifier],_.emit(U.CHANGED,{flag:d.identifier,value:void 0,deleted:!0}),V("Evaluation deleted",{message:d,storage:$});break}})},ne=(f,d)=>_.on(f,d),be=(f,d)=>{f?_.off(f,d):he()},te=(f,d)=>{var h;let g=$[f];if(!me&&g!==void 0){let L=g,S=f,T=R.find(C=>C.featureIdentifier===S&&C.featureValue===L);T?(re(T),T.variationIdentifier=((h=b[S])==null?void 0:h.identifier)||""):R.push({featureIdentifier:S,featureValue:L,count:O?1:0,variationIdentifier:b[S].identifier||"",lastAccessed:Date.now()})}return g!==void 0?g:d},he=()=>{V("Closing event stream"),$=le(),b={},clearTimeout(N),_.all.clear(),A.close()};return{on:ne,off:be,variation:te,close:he}};return vt;})();
-/** @license
- * eventsource.js
- * Available under MIT License (MIT)
- * https://github.com/Yaffle/EventSource/
- */
+var HarnessFFSDK = (() => {
+  var __create = Object.create;
+  var __defProp = Object.defineProperty;
+  var __getProtoOf = Object.getPrototypeOf;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __assign = Object.assign;
+  var __markAsModule = (target) => __defProp(target, "__esModule", {value: true});
+  var __commonJS = (callback, module) => () => {
+    if (!module) {
+      module = {exports: {}};
+      callback(module.exports, module);
+    }
+    return module.exports;
+  };
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, {get: all[name], enumerable: true});
+  };
+  var __exportStar = (target, module, desc) => {
+    if (module && typeof module === "object" || typeof module === "function") {
+      for (let key of __getOwnPropNames(module))
+        if (!__hasOwnProp.call(target, key) && key !== "default")
+          __defProp(target, key, {get: () => module[key], enumerable: !(desc = __getOwnPropDesc(module, key)) || desc.enumerable});
+    }
+    return target;
+  };
+  var __toModule = (module) => {
+    return __exportStar(__markAsModule(__defProp(module != null ? __create(__getProtoOf(module)) : {}, "default", module && module.__esModule && "default" in module ? {get: () => module.default, enumerable: true} : {value: module, enumerable: true})), module);
+  };
+  var __async = (__this, __arguments, generator) => {
+    return new Promise((resolve, reject) => {
+      var fulfilled = (value) => {
+        try {
+          step(generator.next(value));
+        } catch (e2) {
+          reject(e2);
+        }
+      };
+      var rejected = (value) => {
+        try {
+          step(generator.throw(value));
+        } catch (e2) {
+          reject(e2);
+        }
+      };
+      var step = (result) => {
+        return result.done ? resolve(result.value) : Promise.resolve(result.value).then(fulfilled, rejected);
+      };
+      step((generator = generator.apply(__this, __arguments)).next());
+    });
+  };
+
+  // src/eventsource.js
+  var require_eventsource = __commonJS((exports, module) => {
+    /** @license
+     * eventsource.js
+     * Available under MIT License (MIT)
+     * https://github.com/Yaffle/EventSource/
+     */
+    (function(global) {
+      "use strict";
+      var setTimeout2 = global.setTimeout;
+      var clearTimeout2 = global.clearTimeout;
+      var XMLHttpRequest = global.XMLHttpRequest;
+      var XDomainRequest = global.XDomainRequest;
+      var ActiveXObject = global.ActiveXObject;
+      var NativeEventSource = global.EventSource;
+      var document = global.document;
+      var Promise2 = global.Promise;
+      var fetch2 = global.fetch;
+      var Response = global.Response;
+      var TextDecoder = global.TextDecoder;
+      var TextEncoder = global.TextEncoder;
+      var AbortController = global.AbortController;
+      if (typeof window !== "undefined" && typeof document !== "undefined" && !("readyState" in document) && document.body == null) {
+        document.readyState = "loading";
+        window.addEventListener("load", function(event) {
+          document.readyState = "complete";
+        }, false);
+      }
+      if (XMLHttpRequest == null && ActiveXObject != null) {
+        XMLHttpRequest = function() {
+          return new ActiveXObject("Microsoft.XMLHTTP");
+        };
+      }
+      if (Object.create == void 0) {
+        Object.create = function(C) {
+          function F() {
+          }
+          F.prototype = C;
+          return new F();
+        };
+      }
+      if (!Date.now) {
+        Date.now = function now() {
+          return new Date().getTime();
+        };
+      }
+      if (AbortController == void 0) {
+        var originalFetch2 = fetch2;
+        fetch2 = function(url, options) {
+          var signal = options.signal;
+          return originalFetch2(url, {headers: options.headers, credentials: options.credentials, cache: options.cache}).then(function(response) {
+            var reader = response.body.getReader();
+            signal._reader = reader;
+            if (signal._aborted) {
+              signal._reader.cancel();
+            }
+            return {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers,
+              body: {
+                getReader: function() {
+                  return reader;
+                }
+              }
+            };
+          });
+        };
+        AbortController = function() {
+          this.signal = {
+            _reader: null,
+            _aborted: false
+          };
+          this.abort = function() {
+            if (this.signal._reader != null) {
+              this.signal._reader.cancel();
+            }
+            this.signal._aborted = true;
+          };
+        };
+      }
+      function TextDecoderPolyfill() {
+        this.bitsNeeded = 0;
+        this.codePoint = 0;
+      }
+      TextDecoderPolyfill.prototype.decode = function(octets) {
+        function valid(codePoint2, shift, octetsCount2) {
+          if (octetsCount2 === 1) {
+            return codePoint2 >= 128 >> shift && codePoint2 << shift <= 2047;
+          }
+          if (octetsCount2 === 2) {
+            return codePoint2 >= 2048 >> shift && codePoint2 << shift <= 55295 || codePoint2 >= 57344 >> shift && codePoint2 << shift <= 65535;
+          }
+          if (octetsCount2 === 3) {
+            return codePoint2 >= 65536 >> shift && codePoint2 << shift <= 1114111;
+          }
+          throw new Error();
+        }
+        function octetsCount(bitsNeeded2, codePoint2) {
+          if (bitsNeeded2 === 6 * 1) {
+            return codePoint2 >> 6 > 15 ? 3 : codePoint2 > 31 ? 2 : 1;
+          }
+          if (bitsNeeded2 === 6 * 2) {
+            return codePoint2 > 15 ? 3 : 2;
+          }
+          if (bitsNeeded2 === 6 * 3) {
+            return 3;
+          }
+          throw new Error();
+        }
+        var REPLACER = 65533;
+        var string = "";
+        var bitsNeeded = this.bitsNeeded;
+        var codePoint = this.codePoint;
+        for (var i = 0; i < octets.length; i += 1) {
+          var octet = octets[i];
+          if (bitsNeeded !== 0) {
+            if (octet < 128 || octet > 191 || !valid(codePoint << 6 | octet & 63, bitsNeeded - 6, octetsCount(bitsNeeded, codePoint))) {
+              bitsNeeded = 0;
+              codePoint = REPLACER;
+              string += String.fromCharCode(codePoint);
+            }
+          }
+          if (bitsNeeded === 0) {
+            if (octet >= 0 && octet <= 127) {
+              bitsNeeded = 0;
+              codePoint = octet;
+            } else if (octet >= 192 && octet <= 223) {
+              bitsNeeded = 6 * 1;
+              codePoint = octet & 31;
+            } else if (octet >= 224 && octet <= 239) {
+              bitsNeeded = 6 * 2;
+              codePoint = octet & 15;
+            } else if (octet >= 240 && octet <= 247) {
+              bitsNeeded = 6 * 3;
+              codePoint = octet & 7;
+            } else {
+              bitsNeeded = 0;
+              codePoint = REPLACER;
+            }
+            if (bitsNeeded !== 0 && !valid(codePoint, bitsNeeded, octetsCount(bitsNeeded, codePoint))) {
+              bitsNeeded = 0;
+              codePoint = REPLACER;
+            }
+          } else {
+            bitsNeeded -= 6;
+            codePoint = codePoint << 6 | octet & 63;
+          }
+          if (bitsNeeded === 0) {
+            if (codePoint <= 65535) {
+              string += String.fromCharCode(codePoint);
+            } else {
+              string += String.fromCharCode(55296 + (codePoint - 65535 - 1 >> 10));
+              string += String.fromCharCode(56320 + (codePoint - 65535 - 1 & 1023));
+            }
+          }
+        }
+        this.bitsNeeded = bitsNeeded;
+        this.codePoint = codePoint;
+        return string;
+      };
+      var supportsStreamOption = function() {
+        try {
+          return new TextDecoder().decode(new TextEncoder().encode("test"), {stream: true}) === "test";
+        } catch (error) {
+          console.debug("TextDecoder does not support streaming option. Using polyfill instead: " + error);
+        }
+        return false;
+      };
+      if (TextDecoder == void 0 || TextEncoder == void 0 || !supportsStreamOption()) {
+        TextDecoder = TextDecoderPolyfill;
+      }
+      var k = function() {
+      };
+      function XHRWrapper(xhr) {
+        this.withCredentials = false;
+        this.readyState = 0;
+        this.status = 0;
+        this.statusText = "";
+        this.responseText = "";
+        this.onprogress = k;
+        this.onload = k;
+        this.onerror = k;
+        this.onreadystatechange = k;
+        this._contentType = "";
+        this._xhr = xhr;
+        this._sendTimeout = 0;
+        this._abort = k;
+      }
+      XHRWrapper.prototype.open = function(method, url) {
+        this._abort(true);
+        var that = this;
+        var xhr = this._xhr;
+        var state = 1;
+        var timeout = 0;
+        this._abort = function(silent) {
+          if (that._sendTimeout !== 0) {
+            clearTimeout2(that._sendTimeout);
+            that._sendTimeout = 0;
+          }
+          if (state === 1 || state === 2 || state === 3) {
+            state = 4;
+            xhr.onload = k;
+            xhr.onerror = k;
+            xhr.onabort = k;
+            xhr.onprogress = k;
+            xhr.onreadystatechange = k;
+            xhr.abort();
+            if (timeout !== 0) {
+              clearTimeout2(timeout);
+              timeout = 0;
+            }
+            if (!silent) {
+              that.readyState = 4;
+              that.onabort(null);
+              that.onreadystatechange();
+            }
+          }
+          state = 0;
+        };
+        var onStart = function() {
+          if (state === 1) {
+            var status = 0;
+            var statusText = "";
+            var contentType = void 0;
+            if (!("contentType" in xhr)) {
+              try {
+                status = xhr.status;
+                statusText = xhr.statusText;
+                contentType = xhr.getResponseHeader("Content-Type");
+              } catch (error) {
+                status = 0;
+                statusText = "";
+                contentType = void 0;
+              }
+            } else {
+              status = 200;
+              statusText = "OK";
+              contentType = xhr.contentType;
+            }
+            if (status !== 0) {
+              state = 2;
+              that.readyState = 2;
+              that.status = status;
+              that.statusText = statusText;
+              that._contentType = contentType;
+              that.onreadystatechange();
+            }
+          }
+        };
+        var onProgress = function() {
+          onStart();
+          if (state === 2 || state === 3) {
+            state = 3;
+            var responseText = "";
+            try {
+              responseText = xhr.responseText;
+            } catch (error) {
+            }
+            that.readyState = 3;
+            that.responseText = responseText;
+            that.onprogress();
+          }
+        };
+        var onFinish = function(type, event) {
+          if (event == null || event.preventDefault == null) {
+            event = {
+              preventDefault: k
+            };
+          }
+          onProgress();
+          if (state === 1 || state === 2 || state === 3) {
+            state = 4;
+            if (timeout !== 0) {
+              clearTimeout2(timeout);
+              timeout = 0;
+            }
+            that.readyState = 4;
+            if (type === "load") {
+              that.onload(event);
+            } else if (type === "error") {
+              that.onerror(event);
+            } else if (type === "abort") {
+              that.onabort(event);
+            } else {
+              throw new TypeError();
+            }
+            that.onreadystatechange();
+          }
+        };
+        var onReadyStateChange = function(event) {
+          if (xhr != void 0) {
+            if (xhr.readyState === 4) {
+              if (!("onload" in xhr) || !("onerror" in xhr) || !("onabort" in xhr)) {
+                onFinish(xhr.responseText === "" ? "error" : "load", event);
+              }
+            } else if (xhr.readyState === 3) {
+              if (!("onprogress" in xhr)) {
+                onProgress();
+              }
+            } else if (xhr.readyState === 2) {
+              onStart();
+            }
+          }
+        };
+        var onTimeout = function() {
+          timeout = setTimeout2(function() {
+            onTimeout();
+          }, 500);
+          if (xhr.readyState === 3) {
+            onProgress();
+          }
+        };
+        if ("onload" in xhr) {
+          xhr.onload = function(event) {
+            onFinish("load", event);
+          };
+        }
+        if ("onerror" in xhr) {
+          xhr.onerror = function(event) {
+            onFinish("error", event);
+          };
+        }
+        if ("onabort" in xhr) {
+          xhr.onabort = function(event) {
+            onFinish("abort", event);
+          };
+        }
+        if ("onprogress" in xhr) {
+          xhr.onprogress = onProgress;
+        }
+        if ("onreadystatechange" in xhr) {
+          xhr.onreadystatechange = function(event) {
+            onReadyStateChange(event);
+          };
+        }
+        if ("contentType" in xhr || !("ontimeout" in XMLHttpRequest.prototype)) {
+          url += (url.indexOf("?") === -1 ? "?" : "&") + "padding=true";
+        }
+        xhr.open(method, url, true);
+        if ("readyState" in xhr) {
+          timeout = setTimeout2(function() {
+            onTimeout();
+          }, 0);
+        }
+      };
+      XHRWrapper.prototype.abort = function() {
+        this._abort(false);
+      };
+      XHRWrapper.prototype.getResponseHeader = function(name) {
+        return this._contentType;
+      };
+      XHRWrapper.prototype.setRequestHeader = function(name, value) {
+        var xhr = this._xhr;
+        if ("setRequestHeader" in xhr) {
+          xhr.setRequestHeader(name, value);
+        }
+      };
+      XHRWrapper.prototype.getAllResponseHeaders = function() {
+        return this._xhr.getAllResponseHeaders != void 0 ? this._xhr.getAllResponseHeaders() || "" : "";
+      };
+      XHRWrapper.prototype.send = function() {
+        if ((!("ontimeout" in XMLHttpRequest.prototype) || !("sendAsBinary" in XMLHttpRequest.prototype) && !("mozAnon" in XMLHttpRequest.prototype)) && document != void 0 && document.readyState != void 0 && document.readyState !== "complete") {
+          var that = this;
+          that._sendTimeout = setTimeout2(function() {
+            that._sendTimeout = 0;
+            that.send();
+          }, 4);
+          return;
+        }
+        var xhr = this._xhr;
+        if ("withCredentials" in xhr) {
+          xhr.withCredentials = this.withCredentials;
+        }
+        try {
+          xhr.send(void 0);
+        } catch (error1) {
+          throw error1;
+        }
+      };
+      function toLowerCase(name) {
+        return name.replace(/[A-Z]/g, function(c) {
+          return String.fromCharCode(c.charCodeAt(0) + 32);
+        });
+      }
+      function HeadersPolyfill(all) {
+        var map = Object.create(null);
+        var array = all.split("\r\n");
+        for (var i = 0; i < array.length; i += 1) {
+          var line = array[i];
+          var parts = line.split(": ");
+          var name = parts.shift();
+          var value = parts.join(": ");
+          map[toLowerCase(name)] = value;
+        }
+        this._map = map;
+      }
+      HeadersPolyfill.prototype.get = function(name) {
+        return this._map[toLowerCase(name)];
+      };
+      if (XMLHttpRequest != null && XMLHttpRequest.HEADERS_RECEIVED == null) {
+        XMLHttpRequest.HEADERS_RECEIVED = 2;
+      }
+      function XHRTransport() {
+      }
+      XHRTransport.prototype.open = function(xhr, onStartCallback, onProgressCallback, onFinishCallback, url, withCredentials, headers) {
+        xhr.open("GET", url);
+        var offset = 0;
+        xhr.onprogress = function() {
+          var responseText = xhr.responseText;
+          var chunk = responseText.slice(offset);
+          offset += chunk.length;
+          onProgressCallback(chunk);
+        };
+        xhr.onerror = function(event) {
+          event.preventDefault();
+          onFinishCallback(new Error("NetworkError"));
+        };
+        xhr.onload = function() {
+          onFinishCallback(null);
+        };
+        xhr.onabort = function() {
+          onFinishCallback(null);
+        };
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
+            var status = xhr.status;
+            var statusText = xhr.statusText;
+            var contentType = xhr.getResponseHeader("Content-Type");
+            var headers2 = xhr.getAllResponseHeaders();
+            onStartCallback(status, statusText, contentType, new HeadersPolyfill(headers2));
+          }
+        };
+        xhr.withCredentials = withCredentials;
+        for (var name in headers) {
+          if (Object.prototype.hasOwnProperty.call(headers, name)) {
+            xhr.setRequestHeader(name, headers[name]);
+          }
+        }
+        xhr.send();
+        return xhr;
+      };
+      function HeadersWrapper(headers) {
+        this._headers = headers;
+      }
+      HeadersWrapper.prototype.get = function(name) {
+        return this._headers.get(name);
+      };
+      function FetchTransport() {
+      }
+      FetchTransport.prototype.open = function(xhr, onStartCallback, onProgressCallback, onFinishCallback, url, withCredentials, headers) {
+        var reader = null;
+        var controller = new AbortController();
+        var signal = controller.signal;
+        var textDecoder = new TextDecoder();
+        fetch2(url, {
+          headers,
+          credentials: withCredentials ? "include" : "same-origin",
+          signal,
+          cache: "no-store"
+        }).then(function(response) {
+          reader = response.body.getReader();
+          onStartCallback(response.status, response.statusText, response.headers.get("Content-Type"), new HeadersWrapper(response.headers));
+          return new Promise2(function(resolve, reject) {
+            var readNextChunk = function() {
+              reader.read().then(function(result) {
+                if (result.done) {
+                  resolve(void 0);
+                } else {
+                  var chunk = textDecoder.decode(result.value, {stream: true});
+                  onProgressCallback(chunk);
+                  readNextChunk();
+                }
+              })["catch"](function(error) {
+                reject(error);
+              });
+            };
+            readNextChunk();
+          });
+        })["catch"](function(error) {
+          if (error.name === "AbortError") {
+            return void 0;
+          } else {
+            return error;
+          }
+        }).then(function(error) {
+          onFinishCallback(error);
+        });
+        return {
+          abort: function() {
+            if (reader != null) {
+              reader.cancel();
+            }
+            controller.abort();
+          }
+        };
+      };
+      function EventTarget() {
+        this._listeners = Object.create(null);
+      }
+      function throwError(e2) {
+        setTimeout2(function() {
+          throw e2;
+        }, 0);
+      }
+      EventTarget.prototype.dispatchEvent = function(event) {
+        event.target = this;
+        var typeListeners = this._listeners[event.type];
+        if (typeListeners != void 0) {
+          var length = typeListeners.length;
+          for (var i = 0; i < length; i += 1) {
+            var listener = typeListeners[i];
+            try {
+              if (typeof listener.handleEvent === "function") {
+                listener.handleEvent(event);
+              } else {
+                listener.call(this, event);
+              }
+            } catch (e2) {
+              throwError(e2);
+            }
+          }
+        }
+      };
+      EventTarget.prototype.addEventListener = function(type, listener) {
+        type = String(type);
+        var listeners = this._listeners;
+        var typeListeners = listeners[type];
+        if (typeListeners == void 0) {
+          typeListeners = [];
+          listeners[type] = typeListeners;
+        }
+        var found = false;
+        for (var i = 0; i < typeListeners.length; i += 1) {
+          if (typeListeners[i] === listener) {
+            found = true;
+          }
+        }
+        if (!found) {
+          typeListeners.push(listener);
+        }
+      };
+      EventTarget.prototype.removeEventListener = function(type, listener) {
+        type = String(type);
+        var listeners = this._listeners;
+        var typeListeners = listeners[type];
+        if (typeListeners != void 0) {
+          var filtered = [];
+          for (var i = 0; i < typeListeners.length; i += 1) {
+            if (typeListeners[i] !== listener) {
+              filtered.push(typeListeners[i]);
+            }
+          }
+          if (filtered.length === 0) {
+            delete listeners[type];
+          } else {
+            listeners[type] = filtered;
+          }
+        }
+      };
+      function Event2(type) {
+        this.type = type;
+        this.target = void 0;
+      }
+      function MessageEvent(type, options) {
+        Event2.call(this, type);
+        this.data = options.data;
+        this.lastEventId = options.lastEventId;
+      }
+      MessageEvent.prototype = Object.create(Event2.prototype);
+      function ConnectionEvent(type, options) {
+        Event2.call(this, type);
+        this.status = options.status;
+        this.statusText = options.statusText;
+        this.headers = options.headers;
+      }
+      ConnectionEvent.prototype = Object.create(Event2.prototype);
+      function ErrorEvent(type, options) {
+        Event2.call(this, type);
+        this.error = options.error;
+      }
+      ErrorEvent.prototype = Object.create(Event2.prototype);
+      var WAITING = -1;
+      var CONNECTING = 0;
+      var OPEN = 1;
+      var CLOSED = 2;
+      var AFTER_CR = -1;
+      var FIELD_START = 0;
+      var FIELD = 1;
+      var VALUE_START = 2;
+      var VALUE = 3;
+      var contentTypeRegExp = /^text\/event\-stream(;.*)?$/i;
+      var MINIMUM_DURATION = 1e3;
+      var MAXIMUM_DURATION = 18e6;
+      var parseDuration = function(value, def) {
+        var n2 = value == null ? def : parseInt(value, 10);
+        if (n2 !== n2) {
+          n2 = def;
+        }
+        return clampDuration(n2);
+      };
+      var clampDuration = function(n2) {
+        return Math.min(Math.max(n2, MINIMUM_DURATION), MAXIMUM_DURATION);
+      };
+      var fire = function(that, f, event) {
+        try {
+          if (typeof f === "function") {
+            f.call(that, event);
+          }
+        } catch (e2) {
+          throwError(e2);
+        }
+      };
+      function EventSourcePolyfill2(url, options) {
+        EventTarget.call(this);
+        options = options || {};
+        this.onopen = void 0;
+        this.onmessage = void 0;
+        this.onerror = void 0;
+        this.url = void 0;
+        this.readyState = void 0;
+        this.withCredentials = void 0;
+        this.headers = void 0;
+        this._close = void 0;
+        start(this, url, options);
+      }
+      function getBestXHRTransport() {
+        return XMLHttpRequest != void 0 && "withCredentials" in XMLHttpRequest.prototype || XDomainRequest == void 0 ? new XMLHttpRequest() : new XDomainRequest();
+      }
+      var isFetchSupported = fetch2 != void 0 && Response != void 0 && "body" in Response.prototype;
+      function start(es, url, options) {
+        url = String(url);
+        var withCredentials = Boolean(options.withCredentials);
+        var lastEventIdQueryParameterName = options.lastEventIdQueryParameterName || "lastEventId";
+        var initialRetry = clampDuration(1e3);
+        var heartbeatTimeout = parseDuration(options.heartbeatTimeout, 45e3);
+        var lastEventId = "";
+        var retry = initialRetry;
+        var wasActivity = false;
+        var textLength = 0;
+        var headers = options.headers || {};
+        var TransportOption = options.Transport;
+        var xhr = isFetchSupported && TransportOption == void 0 ? void 0 : new XHRWrapper(TransportOption != void 0 ? new TransportOption() : getBestXHRTransport());
+        var transport = TransportOption != null && typeof TransportOption !== "string" ? new TransportOption() : xhr == void 0 ? new FetchTransport() : new XHRTransport();
+        var abortController = void 0;
+        var timeout = 0;
+        var currentState = WAITING;
+        var dataBuffer = "";
+        var lastEventIdBuffer = "";
+        var eventTypeBuffer = "";
+        var textBuffer = "";
+        var state = FIELD_START;
+        var fieldStart = 0;
+        var valueStart = 0;
+        var onStart = function(status, statusText, contentType, headers2) {
+          if (currentState === CONNECTING) {
+            if (status === 200 && contentType != void 0 && contentTypeRegExp.test(contentType)) {
+              currentState = OPEN;
+              wasActivity = Date.now();
+              retry = initialRetry;
+              es.readyState = OPEN;
+              var event = new ConnectionEvent("open", {
+                status,
+                statusText,
+                headers: headers2
+              });
+              es.dispatchEvent(event);
+              fire(es, es.onopen, event);
+            } else {
+              var message = "";
+              if (status !== 200) {
+                if (statusText) {
+                  statusText = statusText.replace(/\s+/g, " ");
+                }
+                message = "EventSource's response has a status " + status + " " + statusText + " that is not 200. Aborting the connection.";
+              } else {
+                message = "EventSource's response has a Content-Type specifying an unsupported type: " + (contentType == void 0 ? "-" : contentType.replace(/\s+/g, " ")) + ". Aborting the connection.";
+              }
+              close();
+              var event = new ConnectionEvent("error", {
+                status,
+                statusText,
+                headers: headers2
+              });
+              es.dispatchEvent(event);
+              fire(es, es.onerror, event);
+              console.error(message);
+            }
+          }
+        };
+        var onProgress = function(textChunk) {
+          if (currentState === OPEN) {
+            var n2 = -1;
+            for (var i = 0; i < textChunk.length; i += 1) {
+              var c = textChunk.charCodeAt(i);
+              if (c === "\n".charCodeAt(0) || c === "\r".charCodeAt(0)) {
+                n2 = i;
+              }
+            }
+            var chunk = (n2 !== -1 ? textBuffer : "") + textChunk.slice(0, n2 + 1);
+            textBuffer = (n2 === -1 ? textBuffer : "") + textChunk.slice(n2 + 1);
+            if (textChunk !== "") {
+              wasActivity = Date.now();
+              textLength += textChunk.length;
+            }
+            for (var position = 0; position < chunk.length; position += 1) {
+              var c = chunk.charCodeAt(position);
+              if (state === AFTER_CR && c === "\n".charCodeAt(0)) {
+                state = FIELD_START;
+              } else {
+                if (state === AFTER_CR) {
+                  state = FIELD_START;
+                }
+                if (c === "\r".charCodeAt(0) || c === "\n".charCodeAt(0)) {
+                  if (state !== FIELD_START) {
+                    if (state === FIELD) {
+                      valueStart = position + 1;
+                    }
+                    var field = chunk.slice(fieldStart, valueStart - 1);
+                    var value = chunk.slice(valueStart + (valueStart < position && chunk.charCodeAt(valueStart) === " ".charCodeAt(0) ? 1 : 0), position);
+                    if (field === "data") {
+                      dataBuffer += "\n";
+                      dataBuffer += value;
+                    } else if (field === "id") {
+                      lastEventIdBuffer = value;
+                    } else if (field === "event") {
+                      eventTypeBuffer = value;
+                    } else if (field === "retry") {
+                      initialRetry = parseDuration(value, initialRetry);
+                      retry = initialRetry;
+                    } else if (field === "heartbeatTimeout") {
+                      heartbeatTimeout = parseDuration(value, heartbeatTimeout);
+                      if (timeout !== 0) {
+                        clearTimeout2(timeout);
+                        timeout = setTimeout2(function() {
+                          onTimeout();
+                        }, heartbeatTimeout);
+                      }
+                    }
+                  }
+                  if (state === FIELD_START) {
+                    if (dataBuffer !== "") {
+                      lastEventId = lastEventIdBuffer;
+                      if (eventTypeBuffer === "") {
+                        eventTypeBuffer = "message";
+                      }
+                      var event = new MessageEvent(eventTypeBuffer, {
+                        data: dataBuffer.slice(1),
+                        lastEventId: lastEventIdBuffer
+                      });
+                      es.dispatchEvent(event);
+                      if (eventTypeBuffer === "open") {
+                        fire(es, es.onopen, event);
+                      } else if (eventTypeBuffer === "message") {
+                        fire(es, es.onmessage, event);
+                      } else if (eventTypeBuffer === "error") {
+                        fire(es, es.onerror, event);
+                      }
+                      if (currentState === CLOSED) {
+                        return;
+                      }
+                    }
+                    dataBuffer = "";
+                    eventTypeBuffer = "";
+                  }
+                  state = c === "\r".charCodeAt(0) ? AFTER_CR : FIELD_START;
+                } else {
+                  if (state === FIELD_START) {
+                    fieldStart = position;
+                    state = FIELD;
+                  }
+                  if (state === FIELD) {
+                    if (c === ":".charCodeAt(0)) {
+                      valueStart = position + 1;
+                      state = VALUE_START;
+                    }
+                  } else if (state === VALUE_START) {
+                    state = VALUE;
+                  }
+                }
+              }
+            }
+          }
+        };
+        var onFinish = function(error) {
+          if (currentState === OPEN || currentState === CONNECTING) {
+            currentState = WAITING;
+            if (timeout !== 0) {
+              clearTimeout2(timeout);
+              timeout = 0;
+            }
+            timeout = setTimeout2(function() {
+              onTimeout();
+            }, retry);
+            retry = clampDuration(Math.min(initialRetry * 16, retry * 2));
+            es.readyState = CONNECTING;
+          } else if (currentState === CLOSED && error != void 0) {
+            console.error(error);
+            var event = new ErrorEvent("error", {error});
+            es.dispatchEvent(event);
+            fire(es, es.onerror, event);
+          }
+        };
+        var close = function() {
+          currentState = CLOSED;
+          if (abortController != void 0) {
+            abortController.abort();
+            abortController = void 0;
+          }
+          if (timeout !== 0) {
+            clearTimeout2(timeout);
+            timeout = 0;
+          }
+          es.readyState = CLOSED;
+        };
+        var onTimeout = function() {
+          timeout = 0;
+          if (currentState !== WAITING) {
+            if (!wasActivity && abortController != void 0) {
+              onFinish(new Error("No activity within " + heartbeatTimeout + " milliseconds. " + (currentState === CONNECTING ? "No response received." : textLength + " chars received.") + " Reconnecting."));
+              if (abortController != void 0) {
+                abortController.abort();
+                abortController = void 0;
+              }
+            } else {
+              var nextHeartbeat = Math.max((wasActivity || Date.now()) + heartbeatTimeout - Date.now(), 1);
+              wasActivity = false;
+              timeout = setTimeout2(function() {
+                onTimeout();
+              }, nextHeartbeat);
+            }
+            return;
+          }
+          wasActivity = false;
+          textLength = 0;
+          timeout = setTimeout2(function() {
+            onTimeout();
+          }, heartbeatTimeout);
+          currentState = CONNECTING;
+          dataBuffer = "";
+          eventTypeBuffer = "";
+          lastEventIdBuffer = lastEventId;
+          textBuffer = "";
+          fieldStart = 0;
+          valueStart = 0;
+          state = FIELD_START;
+          var requestURL = url;
+          if (url.slice(0, 5) !== "data:" && url.slice(0, 5) !== "blob:") {
+            if (lastEventId !== "") {
+              var i = url.indexOf("?");
+              requestURL = i === -1 ? url : url.slice(0, i + 1) + url.slice(i + 1).replace(/(?:^|&)([^=&]*)(?:=[^&]*)?/g, function(p, paramName) {
+                return paramName === lastEventIdQueryParameterName ? "" : p;
+              });
+              requestURL += (url.indexOf("?") === -1 ? "?" : "&") + lastEventIdQueryParameterName + "=" + encodeURIComponent(lastEventId);
+            }
+          }
+          var withCredentials2 = es.withCredentials;
+          var requestHeaders = {};
+          requestHeaders["Accept"] = "text/event-stream";
+          var headers2 = es.headers;
+          if (headers2 != void 0) {
+            for (var name in headers2) {
+              if (Object.prototype.hasOwnProperty.call(headers2, name)) {
+                requestHeaders[name] = headers2[name];
+              }
+            }
+          }
+          try {
+            abortController = transport.open(xhr, onStart, onProgress, onFinish, requestURL, withCredentials2, requestHeaders);
+          } catch (error) {
+            close();
+            throw error;
+          }
+        };
+        es.url = url;
+        es.readyState = CONNECTING;
+        es.withCredentials = withCredentials;
+        es.headers = headers;
+        es._close = close;
+        onTimeout();
+      }
+      EventSourcePolyfill2.prototype = Object.create(EventTarget.prototype);
+      EventSourcePolyfill2.prototype.CONNECTING = CONNECTING;
+      EventSourcePolyfill2.prototype.OPEN = OPEN;
+      EventSourcePolyfill2.prototype.CLOSED = CLOSED;
+      EventSourcePolyfill2.prototype.close = function() {
+        this._close();
+      };
+      EventSourcePolyfill2.CONNECTING = CONNECTING;
+      EventSourcePolyfill2.OPEN = OPEN;
+      EventSourcePolyfill2.CLOSED = CLOSED;
+      EventSourcePolyfill2.prototype.withCredentials = void 0;
+      var R = NativeEventSource;
+      if (XMLHttpRequest != void 0 && (NativeEventSource == void 0 || !("withCredentials" in NativeEventSource.prototype))) {
+        R = EventSourcePolyfill2;
+      }
+      (function(factory) {
+        if (typeof module === "object" && typeof module.exports === "object") {
+          var v = factory(exports);
+          if (v !== void 0)
+            module.exports = v;
+        } else if (typeof define === "function" && define.amd) {
+          define(["exports"], factory);
+        } else {
+          factory(global);
+        }
+      })(function(exports2) {
+        exports2.EventSourcePolyfill = EventSourcePolyfill2;
+        exports2.NativeEventSource = NativeEventSource;
+        exports2.EventSource = R;
+      });
+    })(typeof globalThis === "undefined" ? typeof window !== "undefined" ? window : typeof self !== "undefined" ? self : exports : globalThis);
+  });
+
+  // src/index.ts
+  var src_exports = {};
+  __export(src_exports, {
+    Event: () => Event,
+    initialize: () => initialize
+  });
+
+  // node_modules/jwt-decode/build/jwt-decode.esm.js
+  function e(e2) {
+    this.message = e2;
+  }
+  e.prototype = new Error(), e.prototype.name = "InvalidCharacterError";
+  var r = typeof window != "undefined" && window.atob && window.atob.bind(window) || function(r2) {
+    var t2 = String(r2).replace(/=+$/, "");
+    if (t2.length % 4 == 1)
+      throw new e("'atob' failed: The string to be decoded is not correctly encoded.");
+    for (var n2, o2, a = 0, i = 0, c = ""; o2 = t2.charAt(i++); ~o2 && (n2 = a % 4 ? 64 * n2 + o2 : o2, a++ % 4) ? c += String.fromCharCode(255 & n2 >> (-2 * a & 6)) : 0)
+      o2 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".indexOf(o2);
+    return c;
+  };
+  function t(e2) {
+    var t2 = e2.replace(/-/g, "+").replace(/_/g, "/");
+    switch (t2.length % 4) {
+      case 0:
+        break;
+      case 2:
+        t2 += "==";
+        break;
+      case 3:
+        t2 += "=";
+        break;
+      default:
+        throw "Illegal base64url string!";
+    }
+    try {
+      return function(e3) {
+        return decodeURIComponent(r(e3).replace(/(.)/g, function(e4, r2) {
+          var t3 = r2.charCodeAt(0).toString(16).toUpperCase();
+          return t3.length < 2 && (t3 = "0" + t3), "%" + t3;
+        }));
+      }(t2);
+    } catch (e3) {
+      return r(t2);
+    }
+  }
+  function n(e2) {
+    this.message = e2;
+  }
+  function o(e2, r2) {
+    if (typeof e2 != "string")
+      throw new n("Invalid token specified");
+    var o2 = (r2 = r2 || {}).header === true ? 0 : 1;
+    try {
+      return JSON.parse(t(e2.split(".")[o2]));
+    } catch (e3) {
+      throw new n("Invalid token specified: " + e3.message);
+    }
+  }
+  n.prototype = new Error(), n.prototype.name = "InvalidTokenError";
+  var jwt_decode_esm_default = o;
+
+  // node_modules/mitt/dist/mitt.es.js
+  function mitt_es_default(n2) {
+    return {all: n2 = n2 || new Map(), on: function(t2, e2) {
+      var i = n2.get(t2);
+      i && i.push(e2) || n2.set(t2, [e2]);
+    }, off: function(t2, e2) {
+      var i = n2.get(t2);
+      i && i.splice(i.indexOf(e2) >>> 0, 1);
+    }, emit: function(t2, e2) {
+      (n2.get(t2) || []).slice().map(function(n3) {
+        n3(e2);
+      }), (n2.get("*") || []).slice().map(function(n3) {
+        n3(t2, e2);
+      });
+    }};
+  }
+
+  // src/index.ts
+  var import_eventsource = __toModule(require_eventsource());
+
+  // src/types.ts
+  var Event;
+  (function(Event2) {
+    Event2["READY"] = "ready";
+    Event2["CONNECTED"] = "connected";
+    Event2["DISCONNECTED"] = "disconnected";
+    Event2["RECONNECTED"] = "reconnected";
+    Event2["CHANGED"] = "changed";
+    Event2["ERROR"] = "error";
+  })(Event || (Event = {}));
+
+  // src/utils.ts
+  var defaultOptions = {
+    debug: false,
+    baseUrl: "https://config.ff.harness.io/api/1.0",
+    eventUrl: "https://events.ff.harness.io/api/1.0",
+    streamEnabled: true,
+    allAttributesPrivate: false,
+    privateAttributeNames: []
+  };
+  var logError = (message, ...args) => console.error(`[FF-SDK] ${message}`, ...args);
+  var METRICS_FLUSH_INTERVAL = 30 * 1e3;
+
+  // src/index.ts
+  var SDK_VERSION = "1.4.1";
+  var METRICS_VALID_COUNT_INTERVAL = 500;
+  var fetch = globalThis.fetch;
+  var EventSource = import_eventsource.EventSourcePolyfill;
+  var hasProxy = !!globalThis.Proxy;
+  var convertValue = (evaluation) => {
+    let {value} = evaluation;
+    try {
+      switch (evaluation.kind.toLowerCase()) {
+        case "int":
+        case "number":
+          value = Number(value);
+          break;
+        case "boolean":
+          value = value.toString().toLowerCase() === "true";
+          break;
+        case "json":
+          value = JSON.parse(value);
+          break;
+      }
+    } catch (error) {
+      logError(error);
+    }
+    return value;
+  };
+  var initialize = (apiKey, target, options) => {
+    let environment;
+    let clusterIdentifier;
+    let eventSource;
+    let jwtToken;
+    let metricsSchedulerId;
+    let metricsCollectorEnabled = true;
+    const stopMetricsCollector = () => {
+      metricsCollectorEnabled = false;
+    };
+    const startMetricsCollector = () => {
+      metricsCollectorEnabled = true;
+    };
+    let metrics = [];
+    const eventBus = mitt_es_default();
+    const configurations = __assign(__assign({}, defaultOptions), options);
+    const logDebug = (message, ...args) => {
+      if (configurations.debug) {
+        console.debug(`[FF-SDK] ${message}`, ...args);
+      }
+    };
+    const updateMetrics = (metricsInfo) => {
+      if (metricsCollectorEnabled) {
+        const now = Date.now();
+        if (now - metricsInfo.lastAccessed > METRICS_VALID_COUNT_INTERVAL) {
+          metricsInfo.count++;
+          metricsInfo.lastAccessed = now;
+        }
+      }
+    };
+    globalThis.onbeforeunload = () => {
+      if (metrics.length && globalThis.localStorage) {
+        stopMetricsCollector();
+        globalThis.localStorage.HARNESS_FF_METRICS = JSON.stringify(metrics);
+        startMetricsCollector();
+      }
+    };
+    const authenticate = (clientID, configuration) => __async(void 0, null, function* () {
+      const response = yield fetch(`${configuration.baseUrl}/client/auth`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({apiKey: clientID, target})
+      });
+      const data = yield response.json();
+      return data.authToken;
+    });
+    const scheduleSendingMetrics = () => {
+      if (metrics.length) {
+        logDebug("Sending metrics...", {metrics, evaluations});
+        const payload = {
+          metricsData: metrics.map((entry) => ({
+            timestamp: Date.now(),
+            count: entry.count,
+            metricsType: "FFMETRICS",
+            attributes: [
+              {
+                key: "featureIdentifier",
+                value: entry.featureIdentifier
+              },
+              {
+                key: "featureName",
+                value: entry.featureIdentifier
+              },
+              {
+                key: "variationIdentifier",
+                value: entry.variationIdentifier
+              },
+              {
+                key: "target",
+                value: target.identifier
+              },
+              {
+                key: "SDK_NAME",
+                value: "JavaScript"
+              },
+              {
+                key: "SDK_TYPE",
+                value: "client"
+              },
+              {
+                key: "SDK_VERSION",
+                value: SDK_VERSION
+              }
+            ]
+          }))
+        };
+        fetch(`${configurations.eventUrl}/metrics/${environment}?cluster=${clusterIdentifier}`, {
+          method: "POST",
+          headers: {"Content-Type": "application/json", Authorization: `Bearer ${jwtToken}`},
+          body: JSON.stringify(payload)
+        }).then(() => {
+          metrics = [];
+        }).catch((error) => {
+          logDebug(error);
+        }).finally(() => {
+          metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL);
+        });
+      } else {
+        metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL);
+      }
+    };
+    let evaluations = {};
+    const creatStorage = function() {
+      return hasProxy ? new Proxy({}, {
+        get(_storage, property) {
+          var _a, _b, _c;
+          const _value = _storage[property];
+          if (_storage.hasOwnProperty(property)) {
+            const featureValue = _storage[property];
+            const entry = metrics.find((_entry) => _entry.featureIdentifier === property && featureValue === _entry.featureValue);
+            if (entry) {
+              entry.variationIdentifier = ((_a = evaluations[property]) == null ? void 0 : _a.identifier) || "";
+              updateMetrics(entry);
+            } else {
+              metrics.push({
+                featureIdentifier: property,
+                featureValue,
+                variationIdentifier: ((_b = evaluations[property]) == null ? void 0 : _b.identifier) || "",
+                count: metricsCollectorEnabled ? 1 : 0,
+                lastAccessed: Date.now()
+              });
+            }
+            logDebug("Metrics event: Flag:", property, "has been read with value:", featureValue, "variationIdentifier:", (_c = evaluations[property]) == null ? void 0 : _c.identifier);
+          }
+          return _value;
+        }
+      }) : {};
+    };
+    let storage = creatStorage();
+    authenticate(apiKey, configurations).then((token) => {
+      jwtToken = token;
+      const decoded = jwt_decode_esm_default(token);
+      logDebug("Authenticated", decoded);
+      if (globalThis.localStorage && globalThis.localStorage.HARNESS_FF_METRICS) {
+        try {
+          delete globalThis.localStorage.HARNESS_FF_METRICS;
+          logDebug("Picking up metrics from previous session");
+        } catch (error) {
+        }
+      }
+      metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL);
+      environment = decoded.environment;
+      clusterIdentifier = decoded.clusterIdentifier;
+      fetchFlags().then(() => {
+        logDebug("Fetch all flags ok", storage);
+      }).then(() => {
+        startStream();
+      }).then(() => {
+        logDebug("Event stream ready", {storage});
+        eventBus.emit(Event.READY, storage);
+        if (!hasProxy) {
+          Object.keys(storage).forEach((key) => {
+            var _a;
+            metrics.push({
+              featureIdentifier: key,
+              featureValue: storage[key],
+              variationIdentifier: ((_a = evaluations[key]) == null ? void 0 : _a.identifier) || "",
+              count: metricsCollectorEnabled ? 1 : 0,
+              lastAccessed: Date.now()
+            });
+          });
+        }
+      }).catch((err) => {
+        eventBus.emit(Event.ERROR, err);
+      });
+    }).catch((error) => {
+      logError("Authentication error: ", error);
+      eventBus.emit(Event.ERROR, error);
+    });
+    const fetchFlags = () => __async(void 0, null, function* () {
+      try {
+        const res = yield fetch(`${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations?cluster=${clusterIdentifier}`, {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`
+          }
+        });
+        const data = yield res.json();
+        data.forEach((_evaluation) => {
+          const _value = convertValue(_evaluation);
+          storage[_evaluation.flag] = _value;
+          evaluations[_evaluation.flag] = __assign(__assign({}, _evaluation), {value: _value});
+        });
+      } catch (error) {
+        logError("Features fetch operation error: ", error);
+        eventBus.emit(Event.ERROR, error);
+        return error;
+      }
+    });
+    const fetchFlag = (identifier) => __async(void 0, null, function* () {
+      var _a;
+      try {
+        const result = yield fetch(`${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations/${identifier}?cluster=${clusterIdentifier}`, {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`
+          }
+        });
+        if (result.ok) {
+          const flagInfo = yield result.json();
+          const _value = convertValue(flagInfo);
+          stopMetricsCollector();
+          storage[identifier] = _value;
+          evaluations[identifier] = __assign(__assign({}, flagInfo), {value: _value});
+          startMetricsCollector();
+          eventBus.emit(Event.CHANGED, hasProxy ? new Proxy(flagInfo, {
+            get(_flagInfo, property) {
+              var _a2;
+              if (_flagInfo.hasOwnProperty(property) && property === "value") {
+                const featureIdentifier = _flagInfo.flag;
+                const featureValue = flagInfo.value;
+                const entry = metrics.find((_entry) => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue);
+                if (entry) {
+                  updateMetrics(entry);
+                  entry.variationIdentifier = ((_a2 = evaluations[featureIdentifier]) == null ? void 0 : _a2.identifier) || "";
+                } else {
+                  metrics.push({
+                    featureIdentifier,
+                    featureValue: String(featureValue),
+                    variationIdentifier: evaluations[featureIdentifier].identifier || "",
+                    count: metricsCollectorEnabled ? 1 : 0,
+                    lastAccessed: Date.now()
+                  });
+                }
+                logDebug("Metrics event: Flag", property, "has been read with value via stream update", featureValue);
+              }
+              return property === "value" ? convertValue(flagInfo) : flagInfo[property];
+            }
+          }) : {
+            deleted: flagInfo.deleted,
+            flag: flagInfo.flag,
+            value: convertValue(flagInfo)
+          });
+          if (!hasProxy) {
+            const featureIdentifier = flagInfo.flag;
+            const entry = metrics.find((_entry) => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === flagInfo.value);
+            if (entry) {
+              updateMetrics(entry);
+              entry.variationIdentifier = ((_a = evaluations[featureIdentifier]) == null ? void 0 : _a.identifier) || "";
+            } else {
+              metrics.push({
+                featureIdentifier,
+                featureValue: String(flagInfo.value),
+                variationIdentifier: evaluations[featureIdentifier].identifier || "",
+                count: metricsCollectorEnabled ? 1 : 0,
+                lastAccessed: Date.now()
+              });
+            }
+          }
+        } else {
+          eventBus.emit(Event.ERROR, result);
+        }
+      } catch (error) {
+        logError("Feature fetch operation error: ", error);
+        eventBus.emit(Event.ERROR, error);
+      }
+    });
+    const startStream = () => {
+      if (!configurations.streamEnabled) {
+        logDebug("Stream is disabled by configuration. Note: Polling is not yet supported");
+        return;
+      }
+      eventSource = new EventSource(`${configurations.baseUrl}/stream`, {
+        headers: {
+          Authorization: `Bearer ${jwtToken}`,
+          "API-Key": apiKey
+        }
+      });
+      eventSource.onopen = (event) => {
+        logDebug("Stream connected", event);
+        eventBus.emit(Event.CONNECTED);
+      };
+      eventSource.onclose = (event) => {
+        logDebug("Stream disconnected");
+        eventBus.emit(Event.DISCONNECTED);
+      };
+      eventSource.onerror = (event) => {
+        logError("Stream has issue", event);
+        eventBus.emit("error", event);
+      };
+      eventSource.addEventListener("*", (msg) => {
+        const event = JSON.parse(msg.data);
+        logDebug("Received event from stream: ", event);
+        switch (event.event) {
+          case "create":
+            setTimeout(() => fetchFlag(event.identifier), 1e3);
+            break;
+          case "patch":
+            fetchFlag(event.identifier);
+            break;
+          case "delete":
+            delete storage[event.identifier];
+            eventBus.emit(Event.CHANGED, {flag: event.identifier, value: void 0, deleted: true});
+            logDebug("Evaluation deleted", {message: event, storage});
+            break;
+        }
+      });
+    };
+    const on = (event, callback) => eventBus.on(event, callback);
+    const off = (event, callback) => {
+      if (event) {
+        eventBus.off(event, callback);
+      } else {
+        close();
+      }
+    };
+    const variation = (flag, defaultValue) => {
+      var _a;
+      const value = storage[flag];
+      if (!hasProxy && value !== void 0) {
+        const featureValue = value;
+        const featureIdentifier = flag;
+        const entry = metrics.find((_entry) => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue);
+        if (entry) {
+          updateMetrics(entry);
+          entry.variationIdentifier = ((_a = evaluations[featureIdentifier]) == null ? void 0 : _a.identifier) || "";
+        } else {
+          metrics.push({
+            featureIdentifier,
+            featureValue,
+            count: metricsCollectorEnabled ? 1 : 0,
+            variationIdentifier: evaluations[featureIdentifier].identifier || "",
+            lastAccessed: Date.now()
+          });
+        }
+      }
+      return value !== void 0 ? value : defaultValue;
+    };
+    const close = () => {
+      logDebug("Closing event stream");
+      storage = creatStorage();
+      evaluations = {};
+      clearTimeout(metricsSchedulerId);
+      eventBus.all.clear();
+      eventSource.close();
+    };
+    return {on, off, variation, close};
+  };
+  return src_exports;
+})();
 //# sourceMappingURL=sdk.client-iife.js.map
