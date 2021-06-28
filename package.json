@@ -1,6 +1,6 @@
 {
   "name": "@harnessio/ff-javascript-client-sdk",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "author": "Harness",
   "license": "Apache-2.0",
   "main": "dist/sdk.cjs.js",
@@ -36,12 +36,10 @@
     "url": "git+https://github.com/drone/ff-javascript-client-sdk.git"
   },
   "dependencies": {
-    "event-source-polyfill": "^1.0.24",
     "jwt-decode": "^3.1.2",
     "mitt": "^2.1.0"
   },
   "peerDependencies": {
-    "event-source-polyfill": "^1.0.24",
     "jwt-decode": "^3.1.2",
     "mitt": "^2.1.0"
   },
