@@ -14,7 +14,7 @@ import type {
 import { Event } from './types'
 import { logError, defaultOptions, METRICS_FLUSH_INTERVAL } from './utils'
 
-const SDK_VERSION = '1.4.3'
+const SDK_VERSION = '1.4.4'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
@@ -381,7 +381,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
       logDebug('Stream is disabled by configuration. Note: Polling is not yet supported')
       return
     }
-    eventSource = new EventSource(`${configurations.baseUrl}/stream`, {
+    eventSource = new EventSource(`${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`, {
       headers: {
         Authorization: `Bearer ${jwtToken}`,
         'API-Key': apiKey
