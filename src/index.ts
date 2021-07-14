@@ -1,11 +1,12 @@
 import jwt_decode from 'jwt-decode'
-import mitt from 'mitt'
+import mitt, { EventType, WildcardHandler } from 'mitt'
 import { EventSourcePolyfill } from './eventsource'
 import type {
   Options,
   Target,
   StreamEvent,
-  EventCallback,
+  EventOnBinding,
+  EventOffBinding,
   Result,
   Evaluation,
   VariationValue,
@@ -14,7 +15,7 @@ import type {
 import { Event } from './types'
 import { logError, defaultOptions, METRICS_FLUSH_INTERVAL } from './utils'
 
-const SDK_VERSION = '1.4.4'
+const SDK_VERSION = '1.4.6'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
@@ -45,7 +46,7 @@ const convertValue = (evaluation: Evaluation) => {
   return value
 }
 
-const initialize = (apiKey: string, target: Target, options: Options): Result => {
+const initialize = (apiKey: string, target: Target, options?: Options): Result => {
   let environment: string
   let clusterIdentifier: string
   let eventSource: any
@@ -400,7 +401,7 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
 
     eventSource.onerror = (event: any) => {
       logError('Stream has issue', event)
-      eventBus.emit('error', event)
+      eventBus.emit(Event.ERROR, event)
     }
 
     eventSource.addEventListener('*', (msg: any) => {
@@ -419,17 +420,16 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
           delete storage[event.identifier]
           eventBus.emit(Event.CHANGED, { flag: event.identifier, value: undefined, deleted: true })
           logDebug('Evaluation deleted', { message: event, storage })
-          // TODO: Delete flag from storage
           break
       }
     })
   }
 
-  const on = (event: Event, callback: EventCallback): void => eventBus.on(event, callback)
+  const on: EventOnBinding = (event, callback) => eventBus.on(event as unknown as EventType, callback as unknown as WildcardHandler)
 
-  const off = (event?: Event, callback?: EventCallback): void => {
+  const off: EventOffBinding = (event, callback) => {
     if (event) {
-      eventBus.off(event, callback)
+      eventBus.off(event as unknown as '*', callback as unknown as WildcardHandler)
     } else {
       close()
     }
@@ -475,4 +475,4 @@ const initialize = (apiKey: string, target: Target, options: Options): Result =>
   return { on, off, variation, close }
 }
 
-export { initialize, Options, Target, StreamEvent, Event, EventCallback, Result, Evaluation, VariationValue }
+export { initialize, Options, Target, StreamEvent, Event, EventOnBinding, EventOffBinding, Result, Evaluation, VariationValue }

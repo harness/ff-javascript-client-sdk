@@ -71,7 +71,7 @@ cf.on(Event.DISCONNECTED, () => {
   // Event happens when connection is disconnected
 })
 
-cf.on(Event.ERROR, () => {
+cf.on(Event.ERROR, error => {
   // Event happens when connection some error has occurred
 })
 ```
@@ -87,7 +87,7 @@ const value = cf.variation('Dark_Theme', false) // second argument is default va
 Remove a listener of an event by `cf.off`.
 
 ```ts
-cf.off(Event.ERROR, () => {
+cf.off(Event.ERROR, error => {
   // Do something when an error occurs
 })
 ```

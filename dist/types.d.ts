@@ -14,7 +14,6 @@ export declare enum Event {
     READY = "ready",
     CONNECTED = "connected",
     DISCONNECTED = "disconnected",
-    RECONNECTED = "reconnected",
     CHANGED = "changed",
     ERROR = "error"
 }
@@ -26,10 +25,18 @@ export interface Evaluation {
     kind: string;
     deleted?: boolean;
 }
-export declare type EventCallback = (event?: Evaluation[] | Error) => void;
+export interface EventCallbackMapping {
+    [Event.READY]: (flags: Record<string, VariationValue>) => void;
+    [Event.CONNECTED]: () => void;
+    [Event.DISCONNECTED]: () => void;
+    [Event.CHANGED]: (flag: Evaluation) => void;
+    [Event.ERROR]: (error: unknown) => void;
+}
+export declare type EventOnBinding = <K extends keyof EventCallbackMapping>(event: K, callback: EventCallbackMapping[K]) => void;
+export declare type EventOffBinding = <K extends keyof EventCallbackMapping>(event?: K, callback?: EventCallbackMapping[K]) => void;
 export interface Result {
-    on: (event: Event, callback: EventCallback) => void;
-    off: (event: Event, callback: EventCallback) => void;
+    on: EventOnBinding;
+    off: EventOffBinding;
     variation: (identifier: string, defaultValue: any) => VariationValue;
     close: () => void;
 }
