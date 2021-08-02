@@ -129,6 +129,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
               value: 'JavaScript'
             },
             {
+              key: 'SDK_LANGUAGE',
+              value: 'JavaScript'
+            },
+            {
               key: 'SDK_TYPE',
               value: 'client'
             },
