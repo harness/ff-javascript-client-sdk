@@ -7,7 +7,7 @@
     "serve": "vite preview"
   },
   "dependencies": {
-    "@harnessio/ff-javascript-client-sdk": "^1.4.6",
+    "@harnessio/ff-javascript-client-sdk": "^1.4.7",
     "preact": "^10.5.13"
   },
   "devDependencies": {

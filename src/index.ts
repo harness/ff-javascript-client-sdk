@@ -15,7 +15,7 @@ import type {
 import { Event } from './types'
 import { logError, defaultOptions, METRICS_FLUSH_INTERVAL } from './utils'
 
-const SDK_VERSION = '1.4.6'
+const SDK_VERSION = '1.4.7'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
