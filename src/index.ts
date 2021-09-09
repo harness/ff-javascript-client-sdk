@@ -15,7 +15,7 @@ import type {
 import { Event } from './types'
 import { logError, defaultOptions, METRICS_FLUSH_INTERVAL } from './utils'
 
-const SDK_VERSION = '1.4.7'
+const SDK_VERSION = '1.4.8'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
@@ -165,6 +165,53 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   let evaluations: Record<string, Evaluation> = {}
 
+  const sendEvent = (evaluation: Evaluation) => {
+    logDebug('creating event for ', evaluation.identifier)
+
+    eventBus.emit(
+      Event.CHANGED,
+      hasProxy
+        ? new Proxy(evaluation, {
+          get(_flagInfo, property) {
+            if (_flagInfo.hasOwnProperty(property) && property === 'value') {
+              // only track metric when value is read
+              const featureIdentifier = _flagInfo.flag
+              const featureValue = evaluation.value
+              const entry = metrics.find(
+                _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
+              )
+
+              if (entry) {
+                updateMetrics(entry)
+                entry.variationIdentifier = evaluations[featureIdentifier]?.identifier || ''
+              } else {
+                metrics.push({
+                  featureIdentifier,
+                  featureValue: String(featureValue),
+                  variationIdentifier: evaluations[featureIdentifier].identifier || '',
+                  count: metricsCollectorEnabled ? 1 : 0,
+                  lastAccessed: Date.now()
+                })
+              }
+              logDebug(
+                'Metrics event: Flag',
+                property,
+                'has been read with value via stream update',
+                featureValue
+              )
+            }
+
+            return property === 'value' ? convertValue(evaluation) : evaluation[property]
+          }
+        })
+        : {
+          deleted: evaluation.deleted,
+          flag: evaluation.flag,
+          value: convertValue(evaluation)
+        }
+    )
+  }
+
   const creatStorage = function () {
     return hasProxy
       ? new Proxy(
@@ -279,9 +326,19 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
       data.forEach((_evaluation: Evaluation) => {
         const _value = convertValue(_evaluation)
-        storage[_evaluation.flag] = _value
-        evaluations[_evaluation.flag] = { ..._evaluation, value: _value }
+
+        // Update the flag if the values are different
+        const _oldValue = storage[_evaluation.flag]
+        if (_value !== _oldValue) {
+          logDebug("Flag variation has changed for ", _evaluation.identifier)
+          storage[_evaluation.flag] = _value
+          evaluations[_evaluation.flag] = { ..._evaluation, value: _value }
+          sendEvent(_evaluation)
+        }
+
       })
+
+
     } catch (error) {
       logError('Features fetch operation error: ', error)
       eventBus.emit(Event.ERROR, error)
@@ -309,48 +366,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         evaluations[identifier] = { ...flagInfo, value: _value }
         startMetricsCollector()
 
-        eventBus.emit(
-          Event.CHANGED,
-          hasProxy
-            ? new Proxy(flagInfo, {
-                get(_flagInfo, property) {
-                  if (_flagInfo.hasOwnProperty(property) && property === 'value') {
-                    // only track metric when value is read
-                    const featureIdentifier = _flagInfo.flag
-                    const featureValue = flagInfo.value
-                    const entry = metrics.find(
-                      _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
-                    )
-
-                    if (entry) {
-                      updateMetrics(entry)
-                      entry.variationIdentifier = evaluations[featureIdentifier]?.identifier || ''
-                    } else {
-                      metrics.push({
-                        featureIdentifier,
-                        featureValue: String(featureValue),
-                        variationIdentifier: evaluations[featureIdentifier].identifier || '',
-                        count: metricsCollectorEnabled ? 1 : 0,
-                        lastAccessed: Date.now()
-                      })
-                    }
-                    logDebug(
-                      'Metrics event: Flag',
-                      property,
-                      'has been read with value via stream update',
-                      featureValue
-                    )
-                  }
-
-                  return property === 'value' ? convertValue(flagInfo) : flagInfo[property]
-                }
-              })
-            : {
-                deleted: flagInfo.deleted,
-                flag: flagInfo.flag,
-                value: convertValue(flagInfo)
-              }
-        )
+        sendEvent(flagInfo)
 
         if (!hasProxy) {
           const featureIdentifier = flagInfo.flag
@@ -418,7 +434,12 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           setTimeout(() => fetchFlag(event.identifier), 1000) // Wait a bit before fetching evaluation due to https://harness.atlassian.net/browse/FFM-583
           break
         case 'patch':
-          fetchFlag(event.identifier)
+          // for target-segment events we need to fetch all flag evaluations
+          if (event.domain === "target-segment") {
+            fetchFlags()
+          } else {
+            fetchFlag(event.identifier)
+          }
           break
         case 'delete':
           delete storage[event.identifier]
