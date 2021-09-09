@@ -166,12 +166,12 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let evaluations: Record<string, Evaluation> = {}
 
   const sendEvent = (evaluation: Evaluation) => {
-    logDebug('creating event for ', evaluation.identifier)
+    logDebug('Sending event for', evaluation.flag)
 
-    eventBus.emit(
-      Event.CHANGED,
-      hasProxy
-        ? new Proxy(evaluation, {
+    if (hasProxy) {
+      eventBus.emit(
+        Event.CHANGED,
+        new Proxy(evaluation, {
           get(_flagInfo, property) {
             if (_flagInfo.hasOwnProperty(property) && property === 'value') {
               // only track metric when value is read
@@ -203,13 +203,17 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
             return property === 'value' ? convertValue(evaluation) : evaluation[property]
           }
-        })
-        : {
+        }))
+    } else {
+      eventBus.emit(
+        Event.CHANGED,
+        {
           deleted: evaluation.deleted,
           flag: evaluation.flag,
           value: convertValue(evaluation)
         }
-    )
+      )
+    }
   }
 
   const creatStorage = function () {
@@ -330,7 +334,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         // Update the flag if the values are different
         const _oldValue = storage[_evaluation.flag]
         if (_value !== _oldValue) {
-          logDebug("Flag variation has changed for ", _evaluation.identifier)
+          logDebug('Flag variation has changed for ', _evaluation.identifier)
           storage[_evaluation.flag] = _value
           evaluations[_evaluation.flag] = { ..._evaluation, value: _value }
           sendEvent(_evaluation)
