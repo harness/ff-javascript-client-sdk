@@ -36,10 +36,11 @@
     "type": "git",
     "url": "git+https://github.com/drone/ff-javascript-client-sdk.git"
   },
-  "peerDependencies": {
+  "dependencies": {
     "jwt-decode": "^3.1.2",
     "mitt": "^2.1.0"
   },
+  "bundleDependencies": true,
   "keywords": [
     "Harness",
     "Feature",
