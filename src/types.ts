@@ -31,10 +31,10 @@ export interface Evaluation {
 }
 
 export interface EventCallbackMapping {
-  [Event.READY]: (flags: Record<string, VariationValue>) => void
+  [Event.READY]: (flags: string[]) => void
   [Event.CONNECTED]: () => void
   [Event.DISCONNECTED]: () => void
-  [Event.CHANGED]: (flag: Evaluation) => void
+  [Event.CHANGED]: (flag: string) => void
   [Event.ERROR]: (error: unknown) => void
 }
 

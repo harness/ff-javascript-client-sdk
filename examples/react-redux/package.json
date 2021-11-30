@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@harnessio/ff-javascript-client-sdk": "../../",
+    "@harnessio/ff-javascript-client-sdk": "file:../..",
     "@reduxjs/toolkit": "^1.5.1",
     "@testing-library/jest-dom": "^5.15.0",
     "@testing-library/react": "^9.3.2",

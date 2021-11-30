@@ -26,10 +26,10 @@ export interface Evaluation {
     deleted?: boolean;
 }
 export interface EventCallbackMapping {
-    [Event.READY]: (flags: Record<string, VariationValue>) => void;
+    [Event.READY]: (flags: string[]) => void;
     [Event.CONNECTED]: () => void;
     [Event.DISCONNECTED]: () => void;
-    [Event.CHANGED]: (flag: Evaluation) => void;
+    [Event.CHANGED]: (flag: string) => void;
     [Event.ERROR]: (error: unknown) => void;
 }
 export declare type EventOnBinding = <K extends keyof EventCallbackMapping>(event: K, callback: EventCallbackMapping[K]) => void;

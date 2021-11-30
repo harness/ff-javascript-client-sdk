@@ -11,7 +11,7 @@ export const flagSlice = createSlice({
     // The `reducers` field lets us define reducers and generate associated actions
     reducers: {
       setFeatureFlags: (state: any, action: PayloadAction<FeatureFlags>) => {
-        state.featureFlags = action.payload;
+        state.featureFlags = action.payload
         return state;
       }
     },
