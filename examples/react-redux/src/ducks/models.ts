@@ -1,3 +1,3 @@
 export type FeatureFlags = {
-    transmitmmsScheduling?: boolean;
-  };
+  transmitmmsScheduling?: boolean;
+};
