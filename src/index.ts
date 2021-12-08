@@ -293,7 +293,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         })
         .then(() => {
           logDebug('Event stream ready', { storage })
-          eventBus.emit(Event.READY, storage)
+          eventBus.emit(Event.READY, {...storage})
 
           if (!hasProxy) {
             Object.keys(storage).forEach(key => {
