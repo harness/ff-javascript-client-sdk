@@ -40,7 +40,6 @@
     "jwt-decode": "^3.1.2",
     "mitt": "^2.1.0"
   },
-  "bundleDependencies": true,
   "keywords": [
     "Harness",
     "Feature",
