@@ -35,7 +35,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "## Relase ${{ github.event.repository.name }} : ${{ github.event.release.name }}\ #### Release Notes\${{ github.event.release.body }}"
+                    "text": "## Relase ${{ github.event.repository.name }} : ${{ github.event.release.name }}\\ #### Release Notes\\${{ github.event.release.body }}"
                   }
                 }
               ]
