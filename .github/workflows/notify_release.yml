@@ -8,10 +8,7 @@ on:
   release:
     types:
       - published
-      - created
       - edited
-      
-
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -25,20 +22,20 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - name: Send GitHub Action trigger data to Slack workflow
+      - name: Publish release details to slack ff-builds
         id: slack
         uses: slackapi/slack-github-action@v1.17.0
         with:
           # For posting a rich message using Block Kit
           payload: |
             {
-              "text": "ff-javascript-client-sdk release ${{ github.event.client_payload.message }}",
+              "text": "${{ github.event.repository.name }} release ${{ github.event.client_payload.message }}",
               "blocks": [
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}. TODO Add Release Note Details"
+                    "text": "## Relase ${{ github.event.repository.name }} : ${{ github.event.release.name }}\ #### Release Notes\${{ github.event.release.body }}"
                   }
                 }
               ]
