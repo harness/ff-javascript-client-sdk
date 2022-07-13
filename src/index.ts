@@ -193,26 +193,19 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
                   lastAccessed: Date.now()
                 })
               }
-              logDebug(
-                'Metrics event: Flag',
-                property,
-                'has been read with value via stream update',
-                featureValue
-              )
+              logDebug('Metrics event: Flag', property, 'has been read with value via stream update', featureValue)
             }
 
             return property === 'value' ? convertValue(evaluation) : evaluation[property]
           }
-        }))
-    } else {
-      eventBus.emit(
-        Event.CHANGED,
-        {
-          deleted: evaluation.deleted,
-          flag: evaluation.flag,
-          value: convertValue(evaluation)
-        }
+        })
       )
+    } else {
+      eventBus.emit(Event.CHANGED, {
+        deleted: evaluation.deleted,
+        flag: evaluation.flag,
+        value: convertValue(evaluation)
+      })
     }
   }
 
@@ -266,7 +259,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   authenticate(apiKey, configurations)
     .then((token: string) => {
       jwtToken = token
-      const decoded: { environment: string, clusterIdentifier: string } = jwt_decode(token)
+      const decoded: { environment: string; clusterIdentifier: string } = jwt_decode(token)
 
       logDebug('Authenticated', decoded)
 
@@ -293,7 +286,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         })
         .then(() => {
           logDebug('Event stream ready', { storage })
-          eventBus.emit(Event.READY, {...storage})
+          eventBus.emit(Event.READY, { ...storage })
 
           if (!hasProxy) {
             Object.keys(storage).forEach(key => {
@@ -339,10 +332,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           evaluations[_evaluation.flag] = { ..._evaluation, value: _value }
           sendEvent(_evaluation)
         }
-
       })
-
-
     } catch (error) {
       logError('Features fetch operation error: ', error)
       eventBus.emit(Event.ERROR, error)
@@ -428,22 +418,13 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       eventBus.emit(Event.ERROR, event)
     }
 
-    eventSource.addEventListener('*', (msg: any) => {
-      const event: StreamEvent = JSON.parse(msg.data)
-
-      logDebug('Received event from stream: ', event)
-
+    const handleFlagEvent = (event: StreamEvent): void => {
       switch (event.event) {
         case 'create':
           setTimeout(() => fetchFlag(event.identifier), 1000) // Wait a bit before fetching evaluation due to https://harness.atlassian.net/browse/FFM-583
           break
         case 'patch':
-          // for target-segment events we need to fetch all flag evaluations
-          if (event.domain === "target-segment") {
-            fetchFlags()
-          } else {
-            fetchFlag(event.identifier)
-          }
+          fetchFlag(event.identifier)
           break
         case 'delete':
           delete storage[event.identifier]
@@ -451,14 +432,33 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           logDebug('Evaluation deleted', { message: event, storage })
           break
       }
+    }
+
+    const handleSegmentEvent = (event: StreamEvent): void => {
+      if (event.event === 'patch') {
+        fetchFlags()
+      }
+    }
+
+    eventSource.addEventListener('*', (msg: any) => {
+      const event: StreamEvent = JSON.parse(msg.data)
+
+      logDebug('Received event from stream: ', event)
+
+      if (event.domain === 'flag') {
+        handleFlagEvent(event)
+      } else if (event.domain === 'target-segment') {
+        handleSegmentEvent(event)
+      }
     })
   }
 
-  const on: EventOnBinding = (event, callback) => eventBus.on(event as unknown as EventType, callback as unknown as WildcardHandler)
+  const on: EventOnBinding = (event, callback) =>
+    eventBus.on((event as unknown) as EventType, (callback as unknown) as WildcardHandler)
 
   const off: EventOffBinding = (event, callback) => {
     if (event) {
-      eventBus.off(event as unknown as '*', callback as unknown as WildcardHandler)
+      eventBus.off((event as unknown) as '*', (callback as unknown) as WildcardHandler)
     } else {
       close()
     }
@@ -504,4 +504,15 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   return { on, off, variation, close }
 }
 
-export { initialize, Options, Target, StreamEvent, Event, EventOnBinding, EventOffBinding, Result, Evaluation, VariationValue }
+export {
+  initialize,
+  Options,
+  Target,
+  StreamEvent,
+  Event,
+  EventOnBinding,
+  EventOffBinding,
+  Result,
+  Evaluation,
+  VariationValue
+}
