@@ -14,31 +14,31 @@ Library for integrating Harness Feature Flags into JavaScript UI applications.
 
 ## Install
 
-```sh
+```shell
 npm i @harnessio/ff-javascript-client-sdk
 ```
 
 or
 
-```sh
+```shell
 yarn add @harnessio/ff-javascript-client-sdk
 ```
 
 ## Usage
 
-```ts
+```typescript
 import { initialize, Event } from '@harnessio/ff-javascript-client-sdk'
 ```
 
 Initialize SDK with api key and target information.
 
-```ts
+```typescript
 initialize(FeatureFlagSDKKey: string, target: Target, options?: Options)
 ```
 
 In which `Target` and `Options` are defined as:
 
-```ts
+```typescript
 interface Target {
   identifier: string
   name?: string
@@ -54,10 +54,10 @@ interface Options {
 
 For example:
 
-```ts
+```typescript
 const cf = initialize('00000000-1111-2222-3333-444444444444', {
-    identifier: YOUR-TARGET-IDENTIFIER,      // Target identifier
-    name: YOUR-TARGET-NAME,                  // Optional target name
+    identifier: YOUR_TARGET_IDENTIFIER,      // Target identifier
+    name: YOUR_TARGET_NAME,                  // Optional target name
     attributes: {                            // Optional target attributes
       email: 'sample@sample.com'
     }
@@ -66,7 +66,7 @@ const cf = initialize('00000000-1111-2222-3333-444444444444', {
 
 ### Listening to events from the `cf` instance.
 
-```ts
+```typescript
 cf.on(Event.READY, flags => {
   // Event happens when connection to server is established
   // flags contains all evaluations against SDK key
@@ -88,7 +88,7 @@ cf.on(Event.ERROR, error => {
 
 ### Getting value for a particular feature flag
 
-```ts
+```typescript
 const value = cf.variation('Dark_Theme', false) // second argument is default value when variation does not exist
 ```
 
@@ -96,7 +96,7 @@ const value = cf.variation('Dark_Theme', false) // second argument is default va
 
 Remove a listener of an event by `cf.off`.
 
-```ts
+```typescript
 cf.off(Event.ERROR, error => {
   // Do something when an error occurs
 })
@@ -104,13 +104,13 @@ cf.off(Event.ERROR, error => {
 
 Remove all listeners:
 
-```ts
+```typescript
 cf.off()
 ```
 
 On closing your application, call `cf.close()` to close the event stream.
 
-```ts
+```typescript
 cf.close();
 ```
 
@@ -120,21 +120,21 @@ In case you want to import this library directly (without having to use npm or y
 
 ```html
 <script type="module">
-  import { initialize, Event } from 'https://unpkg.com/@harnessio/ff-javascript-client-sdk@1.4.10/dist/sdk.client.js'
+  import { initialize, Event } from 'https://unpkg.com/@harnessio/ff-javascript-client-sdk@1.4.11/dist/sdk.client.js'
 </script>
 ```
 
 If you need to support old browsers which don't support ES Module:
 
 ```html
-<script src="https://unpkg.com/@harnessio/ff-javascript-client-sdk@1.4.10/dist/sdk.client.js"></script>
+<script src="https://unpkg.com/@harnessio/ff-javascript-client-sdk@1.4.11/dist/sdk.client.js"></script>
 <script>
   var initialize = HarnessFFSDK.initialize
   var Event = HarnessFFSDK.Event
 </script>
 ```
 
-Remember to change the version `1.4.10` in the unpkg url accordingly.
+Remember to change the version `1.4.11` in the unpkg url accordingly.
 
 ## License
 
