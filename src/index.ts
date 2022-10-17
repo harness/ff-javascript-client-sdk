@@ -47,6 +47,7 @@ const convertValue = (evaluation: Evaluation) => {
 }
 
 const initialize = (apiKey: string, target: Target, options?: Options): Result => {
+  let closed = false
   let environment: string
   let clusterIdentifier: string
   let eventSource: any
@@ -258,6 +259,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   authenticate(apiKey, configurations)
     .then((token: string) => {
+      if (closed) return
+
       jwtToken = token
       const decoded: { environment: string; clusterIdentifier: string } = jwt_decode(token)
 
@@ -282,9 +285,13 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           logDebug('Fetch all flags ok', storage)
         })
         .then(() => {
+          if (closed) return
+
           startStream() // start stream only after we get all evaluations
         })
         .then(() => {
+          if (closed) return
+
           logDebug('Event stream ready', { storage })
           eventBus.emit(Event.READY, { ...storage })
 
@@ -493,12 +500,17 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const close = () => {
+    closed = true
+
     logDebug('Closing event stream')
     storage = creatStorage()
     evaluations = {}
     clearTimeout(metricsSchedulerId)
     eventBus.all.clear()
-    eventSource.close()
+
+    if (typeof eventSource?.close === 'function') {
+      eventSource.close()
+    }
   }
 
   return { on, off, variation, close }
