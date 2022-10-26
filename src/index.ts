@@ -15,7 +15,7 @@ import type {
 import { Event } from './types'
 import { logError, defaultOptions, METRICS_FLUSH_INTERVAL } from './utils'
 
-const SDK_VERSION = '1.4.13'
+const SDK_VERSION = '1.4.14'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
@@ -54,6 +54,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let jwtToken: string
   let metricsSchedulerId: number
   let metricsCollectorEnabled = true
+
   const stopMetricsCollector = () => {
     metricsCollectorEnabled = false
   }
@@ -92,7 +93,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     const response = await fetch(`${configuration.baseUrl}/client/auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ apiKey: clientID, target })
+      body: JSON.stringify({
+        apiKey: clientID,
+        target: { ...target, identifier: String(target.identifier) }
+      })
     })
 
     const data: { authToken: string } = await response.json()
