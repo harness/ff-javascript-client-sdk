@@ -43,6 +43,7 @@ export interface Result {
 export interface Options {
     baseUrl?: string;
     eventUrl?: string;
+    eventsSyncInterval?: number;
     streamEnabled?: boolean;
     allAttributesPrivate?: boolean;
     privateAttributeNames?: string[];
