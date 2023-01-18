@@ -15,7 +15,7 @@ import type {
 import { Event } from './types'
 import { defaultOptions, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
 
-const SDK_VERSION = '1.5.0'
+const SDK_VERSION = '1.6.0'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
@@ -109,6 +109,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     return data.authToken
   }
 
+  let failedMetricsCallCount = 0
+
   const scheduleSendingMetrics = () => {
     if (metrics.length) {
       logDebug('Sending metrics...', { metrics, evaluations })
@@ -161,8 +163,13 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       })
         .then(() => {
           metrics = []
+          failedMetricsCallCount = 0
         })
         .catch(error => {
+          if (failedMetricsCallCount++) {
+            metrics = []
+            failedMetricsCallCount = 0
+          }
           logDebug(error)
         })
         .finally(() => {
