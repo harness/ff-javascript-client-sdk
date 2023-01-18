@@ -23,11 +23,11 @@ export enum Event {
 export type VariationValue = boolean | string | number | object | undefined
 
 export interface Evaluation {
-  flag: string          // Feature flag identifier
-  identifier: string    // variation identifier
+  flag: string // Feature flag identifier
+  identifier: string // variation identifier
   value: VariationValue // variation value
-  kind: string          // boolean | json | string | int
-  deleted?: boolean     // mark that feature flag is deleted
+  kind: string // boolean | json | string | int
+  deleted?: boolean // mark that feature flag is deleted
 }
 
 export interface EventCallbackMapping {
@@ -39,7 +39,10 @@ export interface EventCallbackMapping {
 }
 
 export type EventOnBinding = <K extends keyof EventCallbackMapping>(event: K, callback: EventCallbackMapping[K]) => void
-export type EventOffBinding = <K extends keyof EventCallbackMapping>(event?: K, callback?: EventCallbackMapping[K]) => void
+export type EventOffBinding = <K extends keyof EventCallbackMapping>(
+  event?: K,
+  callback?: EventCallbackMapping[K]
+) => void
 
 export interface Result {
   on: EventOnBinding
@@ -51,6 +54,7 @@ export interface Result {
 export interface Options {
   baseUrl?: string
   eventUrl?: string
+  eventsSyncInterval?: number
   streamEnabled?: boolean
   allAttributesPrivate?: boolean
   privateAttributeNames?: string[]
@@ -58,9 +62,9 @@ export interface Options {
 }
 
 export interface MetricsInfo {
-  featureIdentifier: string;
+  featureIdentifier: string
   featureValue: any
-  variationIdentifier: string;
+  variationIdentifier: string
   count: number
   lastAccessed: number
 }

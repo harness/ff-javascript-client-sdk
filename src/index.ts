@@ -2,20 +2,20 @@ import jwt_decode from 'jwt-decode'
 import mitt, { EventType, WildcardHandler } from 'mitt'
 import { EventSourcePolyfill } from './eventsource'
 import type {
-  Options,
-  Target,
-  StreamEvent,
-  EventOnBinding,
-  EventOffBinding,
-  Result,
   Evaluation,
-  VariationValue,
-  MetricsInfo
+  EventOffBinding,
+  EventOnBinding,
+  MetricsInfo,
+  Options,
+  Result,
+  StreamEvent,
+  Target,
+  VariationValue
 } from './types'
 import { Event } from './types'
-import { logError, defaultOptions, METRICS_FLUSH_INTERVAL } from './utils'
+import { defaultOptions, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
 
-const SDK_VERSION = '1.4.14'
+const SDK_VERSION = '1.5.0'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
@@ -64,6 +64,11 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let metrics: Array<MetricsInfo> = []
   const eventBus = mitt()
   const configurations = { ...defaultOptions, ...options }
+
+  if (configurations.eventsSyncInterval < MIN_EVENTS_SYNC_INTERVAL) {
+    configurations.eventsSyncInterval = MIN_EVENTS_SYNC_INTERVAL
+  }
+
   const logDebug = (message: string, ...args: any[]) => {
     if (configurations.debug) {
       // tslint:disable-next-line:no-console
@@ -161,10 +166,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           logDebug(error)
         })
         .finally(() => {
-          metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
+          metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, configurations.eventsSyncInterval)
         })
     } else {
-      metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
+      metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, configurations.eventsSyncInterval)
     }
   }
 
@@ -214,7 +219,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
   }
 
-  const creatStorage = function () {
+  const createStorage = function () {
     return hasProxy
       ? new Proxy(
           {},
@@ -259,7 +264,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       : {}
   }
 
-  let storage: Record<string, any> = creatStorage()
+  let storage: Record<string, any> = createStorage()
 
   authenticate(apiKey, configurations)
     .then((token: string) => {
@@ -278,7 +283,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         } catch (error) {}
       }
 
-      metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, METRICS_FLUSH_INTERVAL)
+      metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, configurations.eventsSyncInterval)
 
       environment = decoded.environment
       clusterIdentifier = decoded.clusterIdentifier
@@ -507,7 +512,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     closed = true
 
     logDebug('Closing event stream')
-    storage = creatStorage()
+    storage = createStorage()
     evaluations = {}
     clearTimeout(metricsSchedulerId)
     eventBus.all.clear()
