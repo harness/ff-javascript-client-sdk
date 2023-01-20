@@ -15,7 +15,7 @@ import type {
 import { Event } from './types'
 import { defaultOptions, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
 
-const SDK_VERSION = '1.6.0'
+const SDK_VERSION = '1.7.0'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
@@ -54,6 +54,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let jwtToken: string
   let metricsSchedulerId: number
   let metricsCollectorEnabled = true
+  let standardHeaders: Record<string, string> = {}
 
   const stopMetricsCollector = () => {
     metricsCollectorEnabled = false
@@ -158,7 +159,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
       fetch(`${configurations.eventUrl}/metrics/${environment}?cluster=${clusterIdentifier}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jwtToken}` },
+        headers: { 'Content-Type': 'application/json', ...standardHeaders },
         body: JSON.stringify(payload)
       })
         .then(() => {
@@ -278,7 +279,18 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       if (closed) return
 
       jwtToken = token
-      const decoded: { environment: string; clusterIdentifier: string } = jwt_decode(token)
+      const decoded: {
+        environment: string
+        environmentIdentifier: string
+        clusterIdentifier: string
+        accountID: string
+      } = jwt_decode(token)
+
+      standardHeaders = {
+        Authorization: `Bearer ${jwtToken}`,
+        'Harness-AccountID': decoded.accountID,
+        'Harness-EnvironmentID': decoded.environmentIdentifier
+      }
 
       logDebug('Authenticated', decoded)
 
@@ -337,9 +349,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       const res = await fetch(
         `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations?cluster=${clusterIdentifier}`,
         {
-          headers: {
-            Authorization: `Bearer ${jwtToken}`
-          }
+          headers: standardHeaders
         }
       )
       const data = await res.json()
@@ -368,9 +378,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       const result = await fetch(
         `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations/${identifier}?cluster=${clusterIdentifier}`,
         {
-          headers: {
-            Authorization: `Bearer ${jwtToken}`
-          }
+          headers: standardHeaders
         }
       )
 
@@ -421,8 +429,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
     eventSource = new EventSource(`${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`, {
       headers: {
-        Authorization: `Bearer ${jwtToken}`,
-        'API-Key': apiKey
+        'API-Key': apiKey,
+        ...standardHeaders
       }
     })
 
