@@ -15,7 +15,7 @@ import type {
 import { Event } from './types'
 import { defaultOptions, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
 
-const SDK_VERSION = '1.7.0'
+const SDK_VERSION = '1.8.0'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
@@ -172,6 +172,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
             failedMetricsCallCount = 0
           }
           logDebug(error)
+          eventBus.emit(Event.ERROR_METRICS, error)
         })
         .finally(() => {
           metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, configurations.eventsSyncInterval)
@@ -307,6 +308,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       environment = decoded.environment
       clusterIdentifier = decoded.clusterIdentifier
 
+      const hasExistingFlags = !!Object.keys(evaluations).length
+
       // When authentication is done, fetch all flags
       fetchFlags()
         .then(() => {
@@ -321,18 +324,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           if (closed) return
 
           logDebug('Event stream ready', { storage })
-          eventBus.emit(Event.READY, { ...storage })
 
-          if (!hasProxy) {
-            Object.keys(storage).forEach(key => {
-              metrics.push({
-                featureIdentifier: key,
-                featureValue: storage[key],
-                variationIdentifier: evaluations[key]?.identifier || '',
-                count: metricsCollectorEnabled ? 1 : 0,
-                lastAccessed: Date.now()
-              })
-            })
+          // emit the ready event only if flags weren't already set using setEvaluations
+          if (!hasExistingFlags) {
+            eventBus.emit(Event.READY, { ...storage })
           }
         })
         .catch(err => {
@@ -341,6 +336,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     })
     .catch(error => {
       logError('Authentication error: ', error)
+      eventBus.emit(Event.ERROR_AUTH, error)
       eventBus.emit(Event.ERROR, error)
     })
 
@@ -352,22 +348,18 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           headers: standardHeaders
         }
       )
-      const data = await res.json()
 
-      data.forEach((_evaluation: Evaluation) => {
-        const _value = convertValue(_evaluation)
-
-        // Update the flag if the values are different
-        const _oldValue = storage[_evaluation.flag]
-        if (_value !== _oldValue) {
-          logDebug('Flag variation has changed for ', _evaluation.identifier)
-          storage[_evaluation.flag] = _value
-          evaluations[_evaluation.flag] = { ..._evaluation, value: _value }
-          sendEvent(_evaluation)
-        }
-      })
+      if (res.ok) {
+        const data = await res.json()
+        data.forEach(registerEvaluation)
+      } else {
+        logError('Features fetch operation error: ', res)
+        eventBus.emit(Event.ERROR_FETCH_FLAGS, res)
+        eventBus.emit(Event.ERROR, res)
+      }
     } catch (error) {
       logError('Features fetch operation error: ', error)
+      eventBus.emit(Event.ERROR_FETCH_FLAGS, error)
       eventBus.emit(Event.ERROR, error)
       return error
     }
@@ -384,41 +376,33 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
       if (result.ok) {
         const flagInfo: Evaluation = await result.json()
-        const _value = convertValue(flagInfo)
 
-        stopMetricsCollector()
-        storage[identifier] = _value
-        evaluations[identifier] = { ...flagInfo, value: _value }
-        startMetricsCollector()
-
+        registerEvaluation(flagInfo)
         sendEvent(flagInfo)
-
-        if (!hasProxy) {
-          const featureIdentifier = flagInfo.flag
-          const entry = metrics.find(
-            _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === flagInfo.value
-          )
-
-          if (entry) {
-            updateMetrics(entry)
-            entry.variationIdentifier = evaluations[featureIdentifier as string]?.identifier || ''
-          } else {
-            metrics.push({
-              featureIdentifier: featureIdentifier as string,
-              featureValue: String(flagInfo.value),
-              variationIdentifier: evaluations[featureIdentifier].identifier || '',
-              count: metricsCollectorEnabled ? 1 : 0,
-              lastAccessed: Date.now()
-            })
-          }
-        }
       } else {
+        logError('Feature fetch operation error: ', result)
+        eventBus.emit(Event.ERROR_FETCH_FLAG, result)
         eventBus.emit(Event.ERROR, result)
       }
     } catch (error) {
       logError('Feature fetch operation error: ', error)
+      eventBus.emit(Event.ERROR_FETCH_FLAG, error)
       eventBus.emit(Event.ERROR, error)
     }
+  }
+
+  const registerEvaluation = (evaluation: Evaluation) => {
+    stopMetricsCollector()
+    const value = convertValue(evaluation)
+
+    // Update the flag if the values are different
+    if (value !== storage[evaluation.flag]) {
+      logDebug('Flag variation has changed for ', evaluation.identifier)
+      storage[evaluation.flag] = value
+      evaluations[evaluation.flag] = { ...evaluation, value: value }
+      sendEvent(evaluation)
+    }
+    startMetricsCollector()
   }
 
   const startStream = () => {
@@ -446,6 +430,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
     eventSource.onerror = (event: any) => {
       logError('Stream has issue', event)
+      eventBus.emit(Event.ERROR_STREAM, event)
       eventBus.emit(Event.ERROR, event)
     }
 
@@ -537,7 +522,22 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
   }
 
-  return { on, off, variation, close }
+  const setEvaluations = (evals: Evaluation[]): void => {
+    if (evals.length) {
+      const hasExistingFlags = !!Object.keys(evaluations).length
+
+      evals.forEach(registerEvaluation)
+
+      if (!hasExistingFlags) {
+        // defer for 10ms to allow ready handlers to be registered
+        setTimeout(() => {
+          eventBus.emit(Event.READY, { ...storage })
+        }, 10)
+      }
+    }
+  }
+
+  return { on, off, variation, close, setEvaluations }
 }
 
 export {
