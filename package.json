@@ -1,6 +1,6 @@
 {
   "name": "@harnessio/ff-javascript-client-sdk",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "author": "Harness",
   "license": "Apache-2.0",
   "main": "dist/sdk.cjs.js",
@@ -16,6 +16,7 @@
     "build:esm": "esbuild ./src/index.ts --minify --bundle --target=es2016 --format=esm --external:jwt-decode --external:mitt --external:event-source-polyfill --outfile=./dist/sdk.esm.js",
     "build:cjs": "esbuild ./src/index.ts --minify --bundle --target=es2016 --platform=node --format=cjs --external:jwt-decode --external:mitt --external:event-source-polyfill  --outfile=./dist/sdk.cjs.js",
     "build": "npm run clean; npm run type; npm run build:esm; npm run build:cjs; npm run build:client; npm run build:client-esm",
+    "install-examples": "cd examples/preact; rm -rf node_modules; npm i; cd -; cd examples/react; rm -rf node_modules; npm i; cd -; cd examples/react-redux; rm -rf node_modules; npm i; cd -",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json",
     "type": "tsc ./src/*.ts --declaration --emitDeclarationOnly --outDir dist --lib ES2015,DOM",
