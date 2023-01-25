@@ -48,6 +48,11 @@ interface Target {
 
 interface Options {
   baseUrl?: string
+  eventUrl?: string
+  eventsSyncInterval?: number
+  streamEnabled?: boolean
+  allAttributesPrivate?: boolean
+  privateAttributeNames?: string[]
   debug?: boolean
 }
 ```
@@ -84,6 +89,26 @@ cf.on(Event.DISCONNECTED, () => {
 cf.on(Event.ERROR, error => {
   // Event happens when connection some error has occurred
 })
+
+cf.on(Event.ERROR_AUTH, error => {
+  // Event happens when unable to authenticate
+})
+
+cf.on(Event.ERROR_FETCH_FLAGS, error => {
+  // Event happens when unable to fetch flags from the service
+})
+
+cf.on(Event.ERROR_FETCH_FLAG, error => {
+  // Event happens when unable to fetch an individual flag from the service
+})
+
+cf.on(Event.ERROR_METRICS, error => {
+  // Event happens when unable to report metrics back to the service
+})
+
+cf.on(Event.ERROR_STREAM, error => {
+  // Event happens when the stream returns an error
+})
 ```
 
 ### Getting value for a particular feature flag
@@ -112,6 +137,34 @@ On closing your application, call `cf.close()` to close the event stream.
 
 ```typescript
 cf.close();
+```
+
+## Set evaluations
+
+In some cases it might be worthwhile providing the SDK with a set of evaluations which it can then serve instantly. You 
+might want to consider this when you need to:
+- **reduce application startup time** by providing default values or a snapshot of evaluations. For example, if your
+  application is server-side generated, then it might make sense to retrieve evaluations on the server and provide them 
+  in the HTML of the page to be injected into the SDK
+- **provide network redundancy** by allowing your app to detect network connectivity issues accessing the service and 
+  loading evaluations from another source
+
+To achieve this you can call the `setEvaluations` method at any time after initializing the client. The 
+`setEvaluations` method takes an array of `Evaluation` objects as an argument.
+
+```typescript
+cf.setEvaluations(evals);
+```
+
+In which `Evaluation` is defined as:
+```typescript
+export interface Evaluation {
+  flag: string // Feature flag identifier
+  identifier: string // variation identifier
+  value: boolean | string | number | object | undefined // variation value
+  kind: string // boolean | json | string | int
+  deleted?: boolean // mark that feature flag is deleted
+}
 ```
 
 ## Import directly from unpkg
