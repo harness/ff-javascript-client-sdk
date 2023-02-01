@@ -16,6 +16,7 @@ export enum Event {
   READY = 'ready',
   CONNECTED = 'connected',
   DISCONNECTED = 'disconnected',
+  FLAGS_LOADED = 'flags loaded',
   CHANGED = 'changed',
   ERROR = 'error',
   ERROR_METRICS = 'metrics error',
@@ -39,6 +40,7 @@ export interface EventCallbackMapping {
   [Event.READY]: (flags: Record<string, VariationValue>) => void
   [Event.CONNECTED]: () => void
   [Event.DISCONNECTED]: () => void
+  [Event.FLAGS_LOADED]: (evaluations: Evaluation[]) => void
   [Event.CHANGED]: (flag: Evaluation) => void
   [Event.ERROR]: (error: unknown) => void
   [Event.ERROR_AUTH]: (error: unknown) => void
@@ -70,6 +72,7 @@ export interface Options {
   allAttributesPrivate?: boolean
   privateAttributeNames?: string[]
   debug?: boolean
+  cache?: boolean
 }
 
 export interface MetricsInfo {

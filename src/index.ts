@@ -14,8 +14,9 @@ import type {
 } from './types'
 import { Event } from './types'
 import { defaultOptions, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
+import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 
-const SDK_VERSION = '1.8.0'
+const SDK_VERSION = '1.9.0'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
@@ -352,6 +353,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       if (res.ok) {
         const data = await res.json()
         data.forEach(registerEvaluation)
+        eventBus.emit(Event.FLAGS_LOADED, data)
       } else {
         logError('Features fetch operation error: ', res)
         eventBus.emit(Event.ERROR_FETCH_FLAGS, res)
@@ -378,7 +380,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         const flagInfo: Evaluation = await result.json()
 
         registerEvaluation(flagInfo)
-        sendEvent(flagInfo)
       } else {
         logError('Feature fetch operation error: ', result)
         eventBus.emit(Event.ERROR_FETCH_FLAG, result)
@@ -423,7 +424,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       eventBus.emit(Event.CONNECTED)
     }
 
-    eventSource.onclose = (event: any) => {
+    eventSource.onclose = () => {
       logDebug('Stream disconnected')
       eventBus.emit(Event.DISCONNECTED)
     }
@@ -535,6 +536,30 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         }, 10)
       }
     }
+  }
+
+  if (configurations.cache && 'localStorage' in window) {
+    let initialLoad = true
+
+    const cachedEvaluations = loadFromCache(target.identifier)
+    if (cachedEvaluations) {
+      setEvaluations(cachedEvaluations)
+    }
+
+    on(Event.FLAGS_LOADED, evaluations => {
+      saveToCache(target.identifier, evaluations)
+      initialLoad = false
+    })
+
+    on(Event.CHANGED, evaluation => {
+      if (!initialLoad) {
+        if (evaluation.deleted) {
+          removeCachedEvaluation(target.identifier, evaluation.flag)
+        } else {
+          updateCachedEvaluation(target.identifier, evaluation)
+        }
+      }
+    })
   }
 
   return { on, off, variation, close, setEvaluations }

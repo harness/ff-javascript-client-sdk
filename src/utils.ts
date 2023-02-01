@@ -9,7 +9,8 @@ export const defaultOptions: Options = {
   eventsSyncInterval: MIN_EVENTS_SYNC_INTERVAL,
   streamEnabled: true,
   allAttributesPrivate: false,
-  privateAttributeNames: []
+  privateAttributeNames: [],
+  cache: false
 }
 
 // tslint:disable-next-line:no-console
