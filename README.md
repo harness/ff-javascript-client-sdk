@@ -154,12 +154,12 @@ serving flags, while it carries on authenticating and fetching up-to-date evalua
 
 ```typescript
 const client = initialize('00000000-1111-2222-3333-444444444444', {
-  identifier: YOUR_TARGET_IDENTIFIER,
-  name: YOUR_TARGET_NAME,
-  options: {
+    identifier: YOUR_TARGET_IDENTIFIER,
+    name: YOUR_TARGET_NAME
+  }, {
     cache: true // enable caching
   }
-})
+)
 ```
 
 ## Set evaluations
