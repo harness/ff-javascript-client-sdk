@@ -1,8 +1,7 @@
 node_modules/
 .DS_Store
 .snowpack
-build
-
+examples/**/build
 .idea
-*.lock
 yarn-error.log
+junit.xml

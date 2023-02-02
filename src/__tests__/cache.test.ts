@@ -26,7 +26,7 @@ describe('Cache', () => {
 
   describe('getCacheId', () => {
     test('it should prefix the target ID', async () => {
-      expect(getCacheId(targetIdentifier)).toBe('HARNESS_FF_CACHE' + targetIdentifier)
+      expect(getCacheId(targetIdentifier)).toBe('HARNESS_FF_CACHE_' + targetIdentifier)
     })
   })
 
