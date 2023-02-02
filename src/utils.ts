@@ -1,4 +1,4 @@
-import { Options } from './types'
+import type { Options } from './types'
 
 export const MIN_EVENTS_SYNC_INTERVAL = 60000
 
