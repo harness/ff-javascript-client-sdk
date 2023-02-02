@@ -14,6 +14,7 @@ export declare enum Event {
     READY = "ready",
     CONNECTED = "connected",
     DISCONNECTED = "disconnected",
+    FLAGS_LOADED = "flags loaded",
     CHANGED = "changed",
     ERROR = "error",
     ERROR_METRICS = "metrics error",
@@ -22,7 +23,7 @@ export declare enum Event {
     ERROR_FETCH_FLAG = "fetch flag error",
     ERROR_STREAM = "stream error"
 }
-export declare type VariationValue = boolean | string | number | object | undefined;
+export type VariationValue = boolean | string | number | object | undefined;
 export interface Evaluation {
     flag: string;
     identifier: string;
@@ -34,6 +35,7 @@ export interface EventCallbackMapping {
     [Event.READY]: (flags: Record<string, VariationValue>) => void;
     [Event.CONNECTED]: () => void;
     [Event.DISCONNECTED]: () => void;
+    [Event.FLAGS_LOADED]: (evaluations: Evaluation[]) => void;
     [Event.CHANGED]: (flag: Evaluation) => void;
     [Event.ERROR]: (error: unknown) => void;
     [Event.ERROR_AUTH]: (error: unknown) => void;
@@ -42,8 +44,8 @@ export interface EventCallbackMapping {
     [Event.ERROR_STREAM]: (error: unknown) => void;
     [Event.ERROR_METRICS]: (error: unknown) => void;
 }
-export declare type EventOnBinding = <K extends keyof EventCallbackMapping>(event: K, callback: EventCallbackMapping[K]) => void;
-export declare type EventOffBinding = <K extends keyof EventCallbackMapping>(event?: K, callback?: EventCallbackMapping[K]) => void;
+export type EventOnBinding = <K extends keyof EventCallbackMapping>(event: K, callback: EventCallbackMapping[K]) => void;
+export type EventOffBinding = <K extends keyof EventCallbackMapping>(event?: K, callback?: EventCallbackMapping[K]) => void;
 export interface Result {
     on: EventOnBinding;
     off: EventOffBinding;
@@ -59,6 +61,7 @@ export interface Options {
     allAttributesPrivate?: boolean;
     privateAttributeNames?: string[];
     debug?: boolean;
+    cache?: boolean;
 }
 export interface MetricsInfo {
     featureIdentifier: string;
