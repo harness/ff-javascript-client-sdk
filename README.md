@@ -83,6 +83,10 @@ client.on(Event.FLAGS_LOADED, evaluations => {
   // Event happens when flags are loaded from the server
 })
 
+client.on(Event.CACHE_LOADED, evaluations => {
+  // Event happens when flags are loaded from the cache
+})
+
 client.on(Event.CHANGED, flagInfo => {
   // Event happens when a changed event is pushed
   // flagInfo contains information about the updated feature flag

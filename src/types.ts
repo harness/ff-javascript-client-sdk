@@ -17,6 +17,7 @@ export enum Event {
   CONNECTED = 'connected',
   DISCONNECTED = 'disconnected',
   FLAGS_LOADED = 'flags loaded',
+  CACHE_LOADED = 'cache loaded',
   CHANGED = 'changed',
   ERROR = 'error',
   ERROR_METRICS = 'metrics error',
@@ -41,6 +42,7 @@ export interface EventCallbackMapping {
   [Event.CONNECTED]: () => void
   [Event.DISCONNECTED]: () => void
   [Event.FLAGS_LOADED]: (evaluations: Evaluation[]) => void
+  [Event.CACHE_LOADED]: (evaluations: Evaluation[]) => void
   [Event.CHANGED]: (flag: Evaluation) => void
   [Event.ERROR]: (error: unknown) => void
   [Event.ERROR_AUTH]: (error: unknown) => void
