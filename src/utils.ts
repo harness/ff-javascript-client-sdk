@@ -15,3 +15,11 @@ export const defaultOptions: Options = {
 
 // tslint:disable-next-line:no-console
 export const logError = (message: string, ...args: any[]) => console.error(`[FF-SDK] ${message}`, ...args)
+
+export const defer = (fn: Function, doDefer = true): void => {
+  if (doDefer) {
+    setTimeout(fn, 0)
+  } else {
+    fn()
+  }
+}

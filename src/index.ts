@@ -13,10 +13,10 @@ import type {
   VariationValue
 } from './types'
 import { Event } from './types'
-import { defaultOptions, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
+import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 
-const SDK_VERSION = '1.9.0'
+const SDK_VERSION = '1.9.1'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 const EventSource = EventSourcePolyfill
@@ -523,18 +523,17 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
   }
 
-  const setEvaluations = (evals: Evaluation[]): void => {
+  const setEvaluations = (evals: Evaluation[], doDefer = true): void => {
     if (evals.length) {
-      const hasExistingFlags = !!Object.keys(evaluations).length
+      defer(() => {
+        const hasExistingFlags = !!Object.keys(evaluations).length
 
-      evals.forEach(registerEvaluation)
+        evals.forEach(registerEvaluation)
 
-      if (!hasExistingFlags) {
-        // defer for 10ms to allow ready handlers to be registered
-        setTimeout(() => {
+        if (!hasExistingFlags) {
           eventBus.emit(Event.READY, { ...storage })
-        }, 10)
-      }
+        }
+      }, doDefer)
     }
   }
 
@@ -543,7 +542,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
     const cachedEvaluations = loadFromCache(target.identifier)
     if (cachedEvaluations) {
-      setEvaluations(cachedEvaluations)
+      defer(() => {
+        setEvaluations(cachedEvaluations, false)
+        eventBus.emit(Event.CACHE_LOADED, cachedEvaluations)
+      })
     }
 
     on(Event.FLAGS_LOADED, evaluations => {
