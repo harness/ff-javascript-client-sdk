@@ -5,6 +5,7 @@
     "module": "ESNext",
     "lib": ["dom", "dom.iterable"],
     "moduleResolution": "node",
+    "jsx": "react",
     "allowJs": true,
     "checkJs": false,
     "sourceMap": true,
@@ -20,7 +21,7 @@
     "resolveJsonModule": true,
     "importsNotUsedAsValues": "error",
     "noUnusedLocals": true,
-    "noUnusedParameters": true,
+    "noUnusedParameters": true
   },
   "include": ["./src"],
   "exclude": ["node_modules"]

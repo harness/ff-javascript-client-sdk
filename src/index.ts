@@ -1,7 +1,7 @@
 import jwt_decode from 'jwt-decode'
 import mitt, { EventType, WildcardHandler } from 'mitt'
-import { EventSourcePolyfill } from './eventsource'
 import type {
+  APIRequestMiddleware,
   Evaluation,
   EventOffBinding,
   EventOnBinding,
@@ -15,11 +15,11 @@ import type {
 import { Event } from './types'
 import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
+import { addMiddlewareToEventSource, addMiddlewareToFetch } from './request'
 
-const SDK_VERSION = '1.9.1'
+const SDK_VERSION = '1.10.0'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
-const EventSource = EventSourcePolyfill
 
 // Flag to detect is Proxy is supported (not under IE 11)
 const hasProxy = !!globalThis.Proxy
@@ -56,6 +56,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let metricsSchedulerId: number
   let metricsCollectorEnabled = true
   let standardHeaders: Record<string, string> = {}
+  let fetchWithMiddleware = addMiddlewareToFetch(args => args)
+  let eventSourceWithMiddleware = addMiddlewareToEventSource(args => args)
 
   const stopMetricsCollector = () => {
     metricsCollectorEnabled = false
@@ -158,7 +160,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         }))
       }
 
-      fetch(`${configurations.eventUrl}/metrics/${environment}?cluster=${clusterIdentifier}`, {
+      fetchWithMiddleware(`${configurations.eventUrl}/metrics/${environment}?cluster=${clusterIdentifier}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...standardHeaders },
         body: JSON.stringify(payload)
@@ -343,7 +345,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   const fetchFlags = async () => {
     try {
-      const res = await fetch(
+      const res = await fetchWithMiddleware(
         `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations?cluster=${clusterIdentifier}`,
         {
           headers: standardHeaders
@@ -369,7 +371,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   const fetchFlag = async (identifier: string) => {
     try {
-      const result = await fetch(
+      const result = await fetchWithMiddleware(
         `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations/${identifier}?cluster=${clusterIdentifier}`,
         {
           headers: standardHeaders
@@ -412,7 +414,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       logDebug('Stream is disabled by configuration. Note: Polling is not yet supported')
       return
     }
-    eventSource = new EventSource(`${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`, {
+
+    eventSource = eventSourceWithMiddleware(`${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`, {
       headers: {
         'API-Key': apiKey,
         ...standardHeaders
@@ -564,7 +567,12 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     })
   }
 
-  return { on, off, variation, close, setEvaluations }
+  const registerAPIRequestMiddleware = (middleware: APIRequestMiddleware): void => {
+    fetchWithMiddleware = addMiddlewareToFetch(middleware)
+    eventSourceWithMiddleware = addMiddlewareToEventSource(middleware)
+  }
+
+  return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware }
 }
 
 export {
