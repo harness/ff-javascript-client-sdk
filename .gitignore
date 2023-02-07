@@ -5,3 +5,4 @@ examples/**/build
 .idea
 yarn-error.log
 junit.xml
+dist

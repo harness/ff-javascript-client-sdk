@@ -64,7 +64,11 @@ export interface Result {
   variation: (identifier: string, defaultValue: any) => VariationValue
   close: () => void
   setEvaluations: (evaluations: Evaluation[]) => void
+  registerAPIRequestMiddleware: (middleware: APIRequestMiddleware) => void
 }
+
+type FetchArgs = Parameters<typeof fetch>
+export type APIRequestMiddleware = (req: FetchArgs) => FetchArgs
 
 export interface Options {
   baseUrl?: string
