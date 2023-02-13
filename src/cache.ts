@@ -1,11 +1,19 @@
-import type { Evaluation } from './types'
+import type { CacheOptions, Evaluation } from './types'
 
 export function getCacheId(targetIdentifier: string): string {
   return 'HARNESS_FF_CACHE_' + targetIdentifier
 }
 
-export function loadFromCache(targetIdentifier: string): Evaluation[] {
-  const cachedEvaluations = window.localStorage.getItem(getCacheId(targetIdentifier))
+export function loadFromCache(targetIdentifier: string, cacheOptions: CacheOptions = {}): Evaluation[] {
+  const cacheId = getCacheId(targetIdentifier)
+  const timestamp = parseInt(window.localStorage.getItem(cacheId + '.ts'))
+
+  if (cacheOptions?.ttl && !isNaN(timestamp) && timestamp + cacheOptions.ttl < Date.now()) {
+    clearCachedEvaluations(targetIdentifier)
+    return []
+  }
+
+  const cachedEvaluations = window.localStorage.getItem(cacheId)
 
   if (cachedEvaluations) {
     try {
@@ -17,7 +25,9 @@ export function loadFromCache(targetIdentifier: string): Evaluation[] {
 }
 
 export function saveToCache(targetIdentifier: string, evaluations: Evaluation[]): void {
-  window.localStorage.setItem(getCacheId(targetIdentifier), JSON.stringify(evaluations))
+  const cacheId = getCacheId(targetIdentifier)
+  window.localStorage.setItem(cacheId, JSON.stringify(evaluations))
+  window.localStorage.setItem(cacheId + '.ts', Date.now().toString())
 }
 
 export function updateCachedEvaluation(targetIdentifier: string, evaluation: Evaluation): void {
@@ -42,4 +52,10 @@ export function removeCachedEvaluation(targetIdentifier: string, flagIdentifier:
 
     saveToCache(targetIdentifier, cachedEvals)
   }
+}
+
+export function clearCachedEvaluations(targetIdentifier: string): void {
+  const cacheId = getCacheId(targetIdentifier)
+  window.localStorage.removeItem(cacheId)
+  window.localStorage.removeItem(cacheId + '.ts')
 }

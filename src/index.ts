@@ -543,9 +543,14 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   if (configurations.cache && 'localStorage' in window) {
     let initialLoad = true
 
-    const cachedEvaluations = loadFromCache(target.identifier)
-    if (cachedEvaluations) {
+    const cachedEvaluations = loadFromCache(
+      target.identifier,
+      typeof configurations.cache === 'boolean' ? {} : configurations.cache
+    )
+
+    if (!!cachedEvaluations?.length) {
       defer(() => {
+        logDebug('loading from cache', cachedEvaluations)
         setEvaluations(cachedEvaluations, false)
         eventBus.emit(Event.CACHE_LOADED, cachedEvaluations)
       })

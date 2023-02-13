@@ -78,7 +78,7 @@ export interface Options {
   allAttributesPrivate?: boolean
   privateAttributeNames?: string[]
   debug?: boolean
-  cache?: boolean
+  cache?: boolean | CacheOptions
 }
 
 export interface MetricsInfo {
@@ -87,4 +87,8 @@ export interface MetricsInfo {
   variationIdentifier: string
   count: number
   lastAccessed: number
+}
+
+export interface CacheOptions {
+  ttl?: number
 }

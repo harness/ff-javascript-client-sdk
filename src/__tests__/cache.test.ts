@@ -1,4 +1,11 @@
-import { getCacheId, loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from '../cache'
+import {
+  clearCachedEvaluations,
+  getCacheId,
+  loadFromCache,
+  removeCachedEvaluation,
+  saveToCache,
+  updateCachedEvaluation
+} from '../cache'
 import type { Evaluation } from '../types'
 
 describe('Cache', () => {
@@ -46,6 +53,20 @@ describe('Cache', () => {
 
       expect(loadFromCache(targetIdentifier)).toEqual([])
     })
+
+    test('it should return an empty array if the stored evaluations timestamp exceeds the ttl', async () => {
+      primeCache()
+      window.localStorage.setItem(getCacheId(targetIdentifier) + '.ts', '0')
+
+      expect(loadFromCache(targetIdentifier, { ttl: 60000 })).toEqual([])
+    })
+
+    test('it should return the evaluations if the stored evaluations timestamp does not exceed the ttl', async () => {
+      const evals = primeCache()
+      window.localStorage.setItem(getCacheId(targetIdentifier) + '.ts', Date.now().toString())
+
+      expect(loadFromCache(targetIdentifier, { ttl: 60000 })).toEqual(evals)
+    })
   })
 
   describe('saveToCache', () => {
@@ -56,6 +77,16 @@ describe('Cache', () => {
       saveToCache(targetIdentifier, evals)
 
       expect(window.localStorage.getItem(getCacheId(targetIdentifier))).toBeTruthy()
+    })
+
+    test('it should save the timestamp of when the evaluations were stored', async () => {
+      const now = Date.now()
+      saveToCache(targetIdentifier, [
+        { flag: 'F1', deleted: false, value: 'true', identifier: 'true', kind: 'boolean' }
+      ])
+
+      const timestamp = parseInt(window.localStorage.getItem(getCacheId(targetIdentifier) + '.ts'))
+      expect(timestamp / 1000).toBeCloseTo(now / 1000, 0)
     })
   })
 
@@ -92,6 +123,21 @@ describe('Cache', () => {
       const storedEvals = JSON.parse(window.localStorage.getItem(getCacheId(targetIdentifier)) as string)
       expect(storedEvals).toHaveLength(evals.length - 1)
       expect(storedEvals).not.toContainEqual(evals[0])
+    })
+  })
+
+  describe('clearCachedEvaluations', () => {
+    test('it should clear stored evaluations and timestamp', async () => {
+      primeCache()
+      window.localStorage.setItem(getCacheId(targetIdentifier) + '.ts', Date.now().toString())
+
+      expect(window.localStorage.getItem(getCacheId(targetIdentifier))).toBeTruthy()
+      expect(window.localStorage.getItem(getCacheId(targetIdentifier) + '.ts')).toBeTruthy()
+
+      clearCachedEvaluations(targetIdentifier)
+
+      expect(window.localStorage.getItem(getCacheId(targetIdentifier))).toBeFalsy()
+      expect(window.localStorage.getItem(getCacheId(targetIdentifier) + '.ts')).toBeFalsy()
     })
   })
 })
