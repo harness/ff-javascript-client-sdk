@@ -152,9 +152,10 @@ client.close()
 ## Caching
 
 In practice flags rarely change and so it can be useful to cache the last received evaluations from the server to allow
-your application to get started as fast as possible. Setting the `cache` option as `true` will allow the SDK to store
-its evaluations to `localStorage` and retrieve at startup. This lets the SDK get started near instantly and begin
-serving flags, while it carries on authenticating and fetching up-to-date evaluations from the server behind the scenes.
+your application to get started as fast as possible. Setting the `cache` option as `true` or as an object (see interface
+below) will allow the SDK to store its evaluations to `localStorage` and retrieve at startup. This lets the SDK get
+started near instantly and begin serving flags, while it carries on authenticating and fetching up-to-date evaluations
+from the server behind the scenes.
 
 ```typescript
 const client = initialize('00000000-1111-2222-3333-444444444444', {
@@ -164,6 +165,14 @@ const client = initialize('00000000-1111-2222-3333-444444444444', {
     cache: true // enable caching
   }
 )
+```
+
+The `cache` option can also be passed as an object with the following options.
+
+```typescript
+export interface CacheOptions {
+  ttl?: number // maximum age of stored cache, in ms, before it is considered stale 
+}
 ```
 
 ## Set evaluations
