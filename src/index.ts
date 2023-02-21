@@ -17,7 +17,7 @@ import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './uti
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToEventSource, addMiddlewareToFetch } from './request'
 
-const SDK_VERSION = '1.10.0'
+const SDK_VERSION = '1.11.0'
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 
@@ -195,7 +195,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         Event.CHANGED,
         new Proxy(evaluation, {
           get(_flagInfo, property) {
-            if (_flagInfo.hasOwnProperty(property) && property === 'value') {
+            if (metricsCollectorEnabled && _flagInfo.hasOwnProperty(property) && property === 'value') {
               // only track metric when value is read
               const featureIdentifier = _flagInfo.flag
               const featureValue = evaluation.value
@@ -211,7 +211,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
                   featureIdentifier,
                   featureValue: String(featureValue),
                   variationIdentifier: evaluations[featureIdentifier].identifier || '',
-                  count: metricsCollectorEnabled ? 1 : 0,
+                  count: 1,
                   lastAccessed: Date.now()
                 })
               }
@@ -239,7 +239,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
             get(_storage, property) {
               const _value = _storage[property]
 
-              if (_storage.hasOwnProperty(property)) {
+              if (metricsCollectorEnabled && _storage.hasOwnProperty(property)) {
                 const featureValue = _storage[property]
                 // TODO/BUG: This logic to collect metrics will fail when two variations have the same value
                 // Need to find a better way
@@ -255,7 +255,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
                     featureIdentifier: property as string,
                     featureValue,
                     variationIdentifier: evaluations[property as string]?.identifier || '',
-                    count: metricsCollectorEnabled ? 1 : 0,
+                    count: 1,
                     lastAccessed: Date.now()
                   })
                 }
@@ -330,7 +330,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
           // emit the ready event only if flags weren't already set using setEvaluations
           if (!hasExistingFlags) {
+            stopMetricsCollector()
             eventBus.emit(Event.READY, { ...storage })
+            startMetricsCollector()
           }
         })
         .catch(err => {
@@ -487,7 +489,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   const variation = (flag: string, defaultValue: any) => {
     const value = storage[flag]
 
-    if (!hasProxy && value !== undefined) {
+    if (metricsCollectorEnabled && !hasProxy && value !== undefined) {
       const featureValue = value
       const featureIdentifier = flag
 
@@ -502,7 +504,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         metrics.push({
           featureIdentifier: featureIdentifier as string,
           featureValue,
-          count: metricsCollectorEnabled ? 1 : 0,
+          count: 1,
           variationIdentifier: evaluations[featureIdentifier].identifier || '',
           lastAccessed: Date.now()
         })
@@ -534,7 +536,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         evals.forEach(registerEvaluation)
 
         if (!hasExistingFlags) {
+          stopMetricsCollector()
           eventBus.emit(Event.READY, { ...storage })
+          startMetricsCollector()
         }
       }, doDefer)
     }
