@@ -1,3 +1,5 @@
+import type { ExperimentationOptions } from "./experimentation/types";
+
 export interface Target {
   identifier: string
   name?: string
@@ -62,6 +64,7 @@ export interface Result {
   on: EventOnBinding
   off: EventOffBinding
   variation: (identifier: string, defaultValue: any) => VariationValue
+  experiment: (identifier: string, variation: VariationValue) => void
   close: () => void
   setEvaluations: (evaluations: Evaluation[]) => void
   registerAPIRequestMiddleware: (middleware: APIRequestMiddleware) => void
@@ -79,6 +82,7 @@ export interface Options {
   privateAttributeNames?: string[]
   debug?: boolean
   cache?: boolean | CacheOptions
+  experiment?: ExperimentationOptions
 }
 
 export interface MetricsInfo {

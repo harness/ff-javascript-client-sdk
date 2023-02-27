@@ -1,14 +1,14 @@
 import { ExperimentProvider, ExperimentProviderConfig } from "./types";
 import { Target, VariationValue } from "../types";
 
-export default abstract class Provider implements ExperimentProvider {
-  debug = false
+export default abstract class BaseProvider implements ExperimentProvider {
+  
+  protected debug = false
 
   initialize(config: ExperimentProviderConfig) {
-    this.debug = (config.debug != undefined) ? config.debug : false;
+    this.debug = (config.debug !== undefined) ? config.debug : false;
   }
 
-  experiment(flagIdentifier: string, variation: VariationValue, target: Target) {
-  }
+  abstract startExperiment(flagIdentifier: string, variation: VariationValue, target: Target): void;
 
 }

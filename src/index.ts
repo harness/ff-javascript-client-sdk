@@ -16,6 +16,8 @@ import { Event } from './types'
 import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToEventSource, addMiddlewareToFetch } from './request'
+import { getProvider } from "./experimentation";
+import type { ExperimentProvider } from "./experimentation/types";
 
 const SDK_VERSION = '1.11.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
@@ -516,6 +518,17 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     return value !== undefined ? value : defaultValue
   }
 
+  const experiment = (flagIdentifier: string, variation: VariationValue) => {
+    let provider: ExperimentProvider
+    if (options && options.experiment) {
+      provider = getProvider(options.experiment);
+      provider.startExperiment(flagIdentifier, variation, target);
+    } else {
+      // Handle the case where no experiment options were passed to initialize
+      console.log("experiment called but no experimentation config provided.");
+    }
+  }
+
   const close = () => {
     closed = true
 
@@ -583,7 +596,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     eventSourceWithMiddleware = addMiddlewareToEventSource(middleware)
   }
 
-  return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware }
+  return { on, off, variation, experiment, close, setEvaluations, registerAPIRequestMiddleware }
 }
 
 export {
