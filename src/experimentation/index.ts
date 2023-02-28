@@ -12,12 +12,12 @@ const providerMap: Map<string, ProviderSource> = new Map<string, ProviderSource>
   ["segment", () => new SegmentExperimentProvider()]
 ]);
 
-const loadProvider = (providerType: string): ExperimentProvider => {
-  const providerTypeKey = providerType.toLowerCase();
-  if (!providerMap.has(providerTypeKey)) {
-    logError(`Unsupported experiment provider: ${providerTypeKey}. Will return NoOpExperimentProvider instead.`);
+const loadProvider = (providerName: string): ExperimentProvider => {
+  const providerKey = providerName.toLowerCase();
+  if (!providerMap.has(providerKey)) {
+    logError(`Unsupported experiment provider: ${providerName}. Will return NoOpExperimentProvider instead.`);
   }
-  const providerSource = providerMap.get(providerTypeKey) || providerMap.get("noop") as ProviderSource;
+  const providerSource = providerMap.get(providerKey) || providerMap.get("noop") as ProviderSource;
   return providerSource();
 }
 

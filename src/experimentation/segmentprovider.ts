@@ -10,10 +10,10 @@ export default class SegmentExperimentProvider extends BaseProvider{
   initialize(config: ExperimentProviderConfig) {
     super.initialize(config);
     this.analyics = AnalyticsBrowser.load({writeKey:config.apiKey});
-    console.log(`Initializing the AMPLITUDE provider with ${config.apiKey}`);
+    console.log(`Initializing the SEGMENT provider with ${config.apiKey}`);
   }
 
-  startExperiment(flagIdentifier: string, variation: VariationValue, target?: Target) {
+  startExperiment(flagIdentifier: string, variation: VariationValue, target?: Target) { 
     console.log(`Experimenting on amplitude for ${flagIdentifier} with variation ${variation}`);
     if (target) {
       console.log('Identifying the user');
@@ -24,7 +24,7 @@ export default class SegmentExperimentProvider extends BaseProvider{
         }
       });
     }
-    this.analyics.track('Experiment', {
+    this.analyics.track('$exposure', {
         flag: flagIdentifier,
         variation: variation,
     });
