@@ -1,5 +1,5 @@
-import { ExperimentProviderConfig } from "./types";
-import { Target, VariationValue } from "../types";
+import type { ExperimentProviderConfig } from "./types";
+import type { Target, VariationValue } from "../types";
 import BaseProvider from "./baseprovider";
 
 export default class NoOpExperimentProvider extends BaseProvider {

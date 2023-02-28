@@ -1,4 +1,4 @@
-import { Target, VariationValue } from "../types";
+import type { Target, VariationValue } from "../types";
 
 export interface ExperimentProvider {
   initialize(config: ExperimentProviderConfig): void
@@ -6,7 +6,7 @@ export interface ExperimentProvider {
 }
 
 export interface ExperimentProviderConfig {
-  apiKey: string
+  apiKey?: string
   url?: string
   debug?: boolean
   serverUrl?: string
@@ -14,5 +14,5 @@ export interface ExperimentProviderConfig {
 
 export interface ExperimentationOptions {
   provider: string
-  config: ExperimentProviderConfig
+  config?: ExperimentProviderConfig
 }

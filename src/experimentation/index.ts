@@ -1,4 +1,4 @@
-import { ExperimentationOptions, ExperimentProvider } from "./types";
+import type { ExperimentationOptions, ExperimentProvider } from "./types";
 import NoOpExperimentProvider from "./noopprovider";
 import AmplitudeExperimentProvider from "./amplitudeprovider";
 import SegmentExperimentProvider from "./segmentprovider";
@@ -27,4 +27,15 @@ export const getProvider = (config: ExperimentationOptions): ExperimentProvider 
     provider.initialize(config.config)
   }
   return provider
+}
+
+export const registerProvider = (providerName: string, providerSource: ProviderSource): boolean => {
+  const providerKey = providerName.toLowerCase();
+  // we don't allow users to replace existing provider
+  if (providerMap.has(providerKey)) {
+        logError(`Cannot replace existing provider ${providerName}.`);
+        return false;
+  }
+  providerMap.set(providerKey, providerSource);
+  return true;
 }
