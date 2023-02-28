@@ -1,6 +1,7 @@
 import type { Target, VariationValue } from "../types";
 
 export interface ExperimentProvider {
+  name: string
   initialize(config: ExperimentProviderConfig): void
   startExperiment(flagIdentifier: string, variation: VariationValue, target: Target): void
 }

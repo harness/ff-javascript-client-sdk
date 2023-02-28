@@ -7,6 +7,11 @@ export default class SegmentExperimentProvider extends BaseProvider{
 
   private analyics: AnalyticsBrowser;
 
+  constructor() {
+    super();
+    this.name = "SegmentProvider";
+  }
+
   initialize(config: ExperimentProviderConfig) {
     super.initialize(config);
     this.analyics = AnalyticsBrowser.load({writeKey:config.apiKey});

@@ -3,6 +3,12 @@ import type { Target, VariationValue } from "../types";
 import BaseProvider from "./baseprovider";
 
 export default class NoOpExperimentProvider extends BaseProvider {
+
+  constructor() {
+    super();
+    this.name = "NoOpProvider";
+  }
+
   initialize(config: ExperimentProviderConfig) {
     super.initialize(config);
     if (this.debug) {
