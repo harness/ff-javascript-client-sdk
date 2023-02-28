@@ -13,8 +13,7 @@ class TestProvider extends BaseProvider {
     startExperiment(_flagIdentifier: string, _variation: VariationValue, _target: Target): void {
     } 
 }
-const testProvider = new TestProvider();
-const TestProviderSource = () => testProvider;
+const TestProviderSource = () => new TestProvider();
 
 const randomProviderName = ()=>Math.random().toString(20).substring(2, 10);
 let providerName: string;
@@ -51,10 +50,10 @@ describe('registerProvider', () => {
 describe('getProvider', () => {
     test('it should return a provider if registered', async() => {
         registerProvider(providerName, TestProviderSource);
-        expect(getProvider({provider: providerName})).toBe(testProvider); 
+        expect(getProvider({provider: providerName}).name).toBe("TestProvider"); 
     });
 
-    test('it will return default provider if provider name not registered', async() => {
+    test('it should return the noop provider if provider name not registered', async() => {
         expect(getProvider({provider: 'NotRegistered'}).name).toBe("NoOpProvider");
         expect(mockConsoleError).toHaveBeenCalled();
     });
