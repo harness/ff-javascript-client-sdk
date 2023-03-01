@@ -43,8 +43,11 @@
           provider: "segment",
           config: {
             apiKey: SEGMENT_API_KEY,
-            debug: true
-          }
+            debug: true,
+            extraConfig: {
+              experimentEvent: '$exposure'
+            }
+          },
         }
       }
     );

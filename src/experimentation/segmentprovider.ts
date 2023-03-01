@@ -6,6 +6,7 @@ import BaseProvider from "./baseprovider";
 export default class SegmentExperimentProvider extends BaseProvider{
 
   private analyics: AnalyticsBrowser;
+  private experimentEvent: string;
 
   constructor() {
     super();
@@ -15,6 +16,12 @@ export default class SegmentExperimentProvider extends BaseProvider{
   initialize(config: ExperimentProviderConfig) {
     super.initialize(config);
     this.analyics = AnalyticsBrowser.load({writeKey:config.apiKey});
+      console.log(config);
+    if (config.extraConfig && config.extraConfig.experimentEvent) {
+      this.experimentEvent = config.extraConfig.experimentEvent;
+    } else {
+      this.experimentEvent = 'experimentEvent';
+    }
     console.log(`Initializing the SEGMENT provider with ${config.apiKey}`);
   }
 
@@ -29,7 +36,7 @@ export default class SegmentExperimentProvider extends BaseProvider{
         }
       });
     }
-    this.analyics.track('$exposure', {
+    this.analyics.track(this.experimentEvent, {
         flag: flagIdentifier,
         variation: variation,
     });

@@ -11,6 +11,7 @@ export interface ExperimentProviderConfig {
   url?: string
   debug?: boolean
   serverUrl?: string
+  extraConfig?: Map<string, any> // provider-specific config
 }
 
 export interface ExperimentationOptions {
