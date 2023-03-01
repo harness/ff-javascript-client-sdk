@@ -24,7 +24,7 @@ jobs:
     steps:
       - name: Publish release details to slack ff-builds
         id: slack
-        uses: slackapi/slack-github-action@v1.17.0
+        uses: slackapi/slack-github-action@v1.23.0
         with:
           # For posting a rich message using Block Kit
           payload: |
