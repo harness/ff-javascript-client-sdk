@@ -18,6 +18,7 @@ import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluat
 import { addMiddlewareToEventSource, addMiddlewareToFetch } from './request'
 
 const SDK_VERSION = '1.11.0'
+const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
 
@@ -101,7 +102,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   const authenticate = async (clientID: string, configuration: Options): Promise<string> => {
     const response = await fetch(`${configuration.baseUrl}/client/auth`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Harness-SDK-Info': SDK_INFO },
       body: JSON.stringify({
         apiKey: clientID,
         target: { ...target, identifier: String(target.identifier) }
@@ -293,7 +294,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       standardHeaders = {
         Authorization: `Bearer ${jwtToken}`,
         'Harness-AccountID': decoded.accountID,
-        'Harness-EnvironmentID': decoded.environmentIdentifier
+        'Harness-EnvironmentID': decoded.environmentIdentifier,
+        'Harness-SDK-Info': SDK_INFO
       }
 
       logDebug('Authenticated', decoded)
