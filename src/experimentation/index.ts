@@ -1,6 +1,5 @@
 import type { ExperimentationOptions, ExperimentProvider } from "./types";
 import NoOpExperimentProvider from "./noopprovider";
-import AmplitudeExperimentProvider from "./amplitudeprovider";
 import SegmentExperimentProvider from "./segmentprovider";
 import { logError } from "../utils";
 
@@ -8,7 +7,6 @@ type ProviderSource = () => ExperimentProvider;
 
 const providerMap: Map<string, ProviderSource> = new Map<string, ProviderSource>([
   ["noop", () => new NoOpExperimentProvider()],
-  ["amplitude", () => new AmplitudeExperimentProvider()],
   ["segment", () => new SegmentExperimentProvider()]
 ]);
 
