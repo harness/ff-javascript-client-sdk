@@ -12,4 +12,10 @@ export default abstract class BaseProvider implements ExperimentProvider {
 
   abstract startExperiment(flagIdentifier: string, variation: VariationValue, target: Target): void;
 
+  protected log(message: string) {
+    if (this.debug) {
+      console.log(message);
+    }
+  }
+
 }
