@@ -16,7 +16,6 @@ export default class SegmentExperimentProvider extends BaseProvider{
   initialize(config: ExperimentProviderConfig) {
     super.initialize(config);
     this.analyics = AnalyticsBrowser.load({writeKey:config.apiKey});
-      console.log(config);
     if (config.extraConfig && config.extraConfig.experimentEvent) {
       this.experimentEvent = config.extraConfig.experimentEvent;
     } else {
