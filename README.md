@@ -56,6 +56,7 @@ interface Options {
   allAttributesPrivate?: boolean
   privateAttributeNames?: string[]
   debug?: boolean
+  experiment?: ExperimentationOptions
 }
 ```
 
@@ -204,6 +205,74 @@ export interface Evaluation {
   deleted?: boolean // mark that feature flag is deleted
 }
 ```
+
+## Experiments
+
+The SDK now has support for running experiments from various experimentation providers. There is a default implementation for
+[Twilio Segment](https://segment.com) built into the SDK, but you can build and register your own provider implementations. This
+will be covered below.
+
+### Configuring an experiment provider
+
+You will provide the configuration for your experiment provider when you create an instance of the FF client. As above, pass an
+instance of the Options interface to the client's `initialize` function including an `experiment` object, e.g.
+
+```typescript
+const client = initialize('00000000-1111-2222-3333-444444444444', {
+    identifier: YOUR_TARGET_IDENTIFIER,
+    name: YOUR_TARGET_NAME
+  },
+  experiment: {
+    provider: 'segment',
+    config: {
+      apiKey: '123abc456def',
+      debug: true
+    }
+  }
+)
+```
+
+The example above will configure the client to use the Segment provider when you run an experiment. The `config` block contains
+configuration for the requested provider. This will likely include an API key that you will have configured separately with the
+experimentation service provider.
+
+### Running an experiment
+
+With the client configured to use an experimentation provider, you will use the `experiment` function of the client to run an
+experiment with the provider, e.g.
+
+```typescript
+client.experiment(flagName, variation, target);
+```
+
+Calling this function will pass the flag name, the variation value and (optionally) the target to the configured experiment 
+provider. How the experiment itself is run is provider-dependent.
+
+### Building your own experiment provider
+
+An experiment provider is an object that implements the `ExperimentProvider` interface, which is defined as follows:
+
+```typescript
+// defined in 'experimentation/types'
+export interface ExperimentProvider {
+  name: string
+  initialize(config: ExperimentProviderConfig): void
+  startExperiment(flagIdentifier: string, variation: VariationValue, target: Target): void
+}
+```
+
+The easiest way to start implementing your own provider is to extend the class `BaseProvider` which takes care of making sure
+your provider is configured correctly.
+
+The `name` field is simply a way to identify your provider.
+Use the `initialize` method to configure any connections or provider-specific API access you need.
+The `startExperiment` method will be called by the FF JavaScript client when the user calls its `experiment` function. This will
+likely be where you will send data to the experimentation provider through their SDK or API (which you will have configured in
+the `initialize` method).
+
+When you have implemented your provider, use the `registerProvider(providerName: string, providerSource: () => ExperimentProvider)`
+function to make your provider available to the FF JavaScript client. The arguments to this function are the name of the provider
+which is used in the FF JavaScript client configuration and a function that returns an instance of your new provider.
 
 ## Import directly from unpkg
 

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Local Experiment</title>
+</head>
+<body>
+  <div>
+      <button id="runExperiment" onclick="runExperiment()">Run Experiment</button>
+  </div>
+  <pre id="log"></pre>
+  <script src="/dist/sdk.client-iife.js"></script>
+  <!-- Create a file called 'keys.js' and add your Harness API key 
+      to it as 'const HARNESS_API_KEY' and your Segment API key 
+      as 'const SEGMENT_API_KEY'.
+      REMEMBER: DO NOT CHECK keys.js INTO SOURCE CONTROL!
+  -->
+  <script src="keys.js"></script>
+  <script>
+    const initialize = HarnessFFSDK.initialize;
+    const Event = HarnessFFSDK.Event;
+
+    const log = msg => {
+      document.querySelector('#log').innerHTML += `${msg}\n`
+    };
+
+    const clearLog = () => {
+        document.querySelector("#log").innerHTML = ""
+    };
+
+    log("Initializing the client");
+
+    const target = {
+        identifier: "experiment-test",
+        name: "experiment-tester",
+        attributes: {
+            lastUpdated: Date(),
+            host: location.href
+        }
+    };
+    const client = initialize(HARNESS_API_KEY, target, {
+        experiment: {
+          provider: "segment",
+          config: {
+            apiKey: SEGMENT_API_KEY,
+            debug: true,
+          },
+        }
+      }
+    );
+
+    function runExperiment() {
+        clearLog();
+        log("Sending experiment ...");
+        const value = client.variation("experiment-feature", false);
+        client.experiment("experiment-feature", value, target);
+        log("Done!");
+    }
+  </script>
+</body>
+</html>

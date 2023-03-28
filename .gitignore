@@ -6,3 +6,5 @@ examples/**/build
 yarn-error.log
 junit.xml
 dist
+*.lock
+yarn-error.log

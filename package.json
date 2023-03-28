@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "event-source-polyfill": "1.0.31",
+    "@segment/analytics-next": "^1.49.2",
     "jwt-decode": "^3.1.2",
     "mitt": "^2.1.0"
   },
