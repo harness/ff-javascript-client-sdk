@@ -445,10 +445,22 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     const handleFlagEvent = (event: StreamEvent): void => {
       switch (event.event) {
         case 'create':
-          setTimeout(() => fetchFlag(event.identifier), 1000) // Wait a bit before fetching evaluation due to https://harness.atlassian.net/browse/FFM-583
+          // if evaluation was sent in stream save it directly, else query for it
+          if (event.evaluation) {
+            registerEvaluation(event.evaluation)
+          } else {
+            setTimeout(() => fetchFlag(event.identifier), 1000) // Wait a bit before fetching evaluation due to https://harness.atlassian.net/browse/FFM-583
+          }
+          
           break
         case 'patch':
-          fetchFlag(event.identifier)
+          // if evaluation was sent in stream save it directly, else query for it
+          if (event.evaluation) {
+            registerEvaluation(event.evaluation)
+          } else {
+            fetchFlag(event.identifier)
+          }
+          
           break
         case 'delete':
           delete storage[event.identifier]
