@@ -446,7 +446,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       switch (event.event) {
         case 'create':
           // if evaluation was sent in stream save it directly, else query for it
-          if (event.evaluation) {
+          if (isEvaluationValid(event.evaluation)) {
             registerEvaluation(event.evaluation)
           } else {
             setTimeout(() => fetchFlag(event.identifier), 1000) // Wait a bit before fetching evaluation due to https://harness.atlassian.net/browse/FFM-583
@@ -455,7 +455,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           break
         case 'patch':
           // if evaluation was sent in stream save it directly, else query for it
-          if (event.evaluation) {
+          if (isEvaluationValid(event.evaluation)) {
             registerEvaluation(event.evaluation)
           } else {
             fetchFlag(event.identifier)
@@ -468,6 +468,15 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           logDebug('Evaluation deleted', { message: event, storage })
           break
       }
+    }
+    
+    // check if Evaluation and it's fields are populated
+    const isEvaluationValid = (evaluation: Evaluation): boolean => { 
+      if (!evaluation || !evaluation.flag || !evaluation.identifier || !evaluation.kind || !evaluation.value) {
+        return false
+      }
+
+      return true
     }
 
     const handleSegmentEvent = (event: StreamEvent): void => {
