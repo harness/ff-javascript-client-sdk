@@ -10,7 +10,7 @@ export interface StreamEvent {
   domain: string
   identifier: string
   version: number
-  evaluation?: Evaluation
+  evaluations?: Evaluation[]
 }
 
 export enum Event {

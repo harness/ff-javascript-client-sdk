@@ -446,8 +446,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       switch (event.event) {
         case 'create':
           // if evaluation was sent in stream save it directly, else query for it
-          if (isEvaluationValid(event.evaluation)) {
-            registerEvaluation(event.evaluation)
+          if (areEvaluationsValid(event.evaluations)) {
+            event.evaluations.forEach(evaluation => {
+              registerEvaluation(evaluation)
+            });
           } else {
             setTimeout(() => fetchFlag(event.identifier), 1000) // Wait a bit before fetching evaluation due to https://harness.atlassian.net/browse/FFM-583
           }
@@ -455,8 +457,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           break
         case 'patch':
           // if evaluation was sent in stream save it directly, else query for it
-          if (isEvaluationValid(event.evaluation)) {
-            registerEvaluation(event.evaluation)
+          if (areEvaluationsValid(event.evaluations)) {
+            event.evaluations.forEach(evaluation => {
+              registerEvaluation(evaluation)
+            });
           } else {
             fetchFlag(event.identifier)
           }
@@ -479,9 +483,23 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       return true
     }
 
+    // check if Evaluations populated and each member is valid
+    const areEvaluationsValid = (evaluations: Evaluation[]): boolean => { 
+      if (!evaluations || evaluations.length == 0 || !evaluations.every(evaluation => isEvaluationValid(evaluation))) {
+        return false
+      }
+      return true
+    }
+
     const handleSegmentEvent = (event: StreamEvent): void => {
       if (event.event === 'patch') {
-        fetchFlags()
+        if (areEvaluationsValid(event.evaluations)) {
+          event.evaluations.forEach(evaluation => {
+            registerEvaluation(evaluation)
+          });
+        } else {
+          fetchFlags()
+        }
       }
     }
 
