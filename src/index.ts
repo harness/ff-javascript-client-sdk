@@ -59,7 +59,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let standardHeaders: Record<string, string> = {}
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
   let eventSourceWithMiddleware = addMiddlewareToEventSource(args => args)
-  let lastCacheRefreshTime: number
+  let lastCacheRefreshTime = 0
 
   const stopMetricsCollector = () => {
     metricsCollectorEnabled = false
@@ -623,19 +623,17 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     eventSourceWithMiddleware = addMiddlewareToEventSource(middleware)
   }
 
-  const refreshCache = (): boolean => {
+  const refreshEvaluations = (): boolean => {
     // only fetch flags if enough time has elapsed to avoid pressuring backend servers
-    if (!lastCacheRefreshTime || Math.round((Date.now() - lastCacheRefreshTime) / 1000) >== 60) {
+    if (Date.now() - lastCacheRefreshTime >= 60000) {
       fetchFlags()
       lastCacheRefreshTime = Date.now()
       return true
     }
-
-    logDebug('Refresh cache skipped. Not enough time has elapsed since last call')
     return false
   }
 
-  return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware, refreshCache }
+  return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware, refreshEvaluations }
 }
 
 export {
