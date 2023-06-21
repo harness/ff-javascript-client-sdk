@@ -625,7 +625,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   const refreshCache = (): boolean => {
     // only fetch flags if enough time has elapsed to avoid pressuring backend servers
-    if (lastCacheRefreshTime == null || Math.round((Date.now()-lastCacheRefreshTime)/1000) >= 60) {
+    if (!lastCacheRefreshTime || Math.round((Date.now() - lastCacheRefreshTime) / 1000) >== 60) {
       fetchFlags()
       lastCacheRefreshTime = Date.now()
       return true
