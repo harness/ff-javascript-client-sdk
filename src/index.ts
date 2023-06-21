@@ -59,7 +59,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let standardHeaders: Record<string, string> = {}
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
   let eventSourceWithMiddleware = addMiddlewareToEventSource(args => args)
-  let lastCacheRefreshTime = null
+  let lastCacheRefreshTime: number
 
   const stopMetricsCollector = () => {
     metricsCollectorEnabled = false
