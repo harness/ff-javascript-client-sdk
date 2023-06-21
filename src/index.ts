@@ -17,7 +17,7 @@ import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './uti
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToEventSource, addMiddlewareToFetch } from './request'
 
-const SDK_VERSION = '1.13.0'
+const SDK_VERSION = '1.14.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
@@ -59,6 +59,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let standardHeaders: Record<string, string> = {}
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
   let eventSourceWithMiddleware = addMiddlewareToEventSource(args => args)
+  let lastCacheRefreshTime = null
 
   const stopMetricsCollector = () => {
     metricsCollectorEnabled = false
@@ -622,7 +623,19 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     eventSourceWithMiddleware = addMiddlewareToEventSource(middleware)
   }
 
-  return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware }
+  const refreshCache = (): boolean => {
+    // only fetch flags if enough time has elapsed to avoid pressuring backend servers
+    if (lastCacheRefreshTime == null || Math.round((Date.now()-lastCacheRefreshTime)/1000) >= 60) {
+      fetchFlags()
+      lastCacheRefreshTime = Date.now()
+      return true
+    }
+
+    logDebug('Refresh cache skipped. Not enough time has elapsed since last call')
+    return false
+  }
+
+  return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware, refreshCache }
 }
 
 export {
