@@ -17,7 +17,7 @@ import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './uti
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToEventSource, addMiddlewareToFetch } from './request'
 
-const SDK_VERSION = '1.13.0'
+const SDK_VERSION = '1.14.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
@@ -59,6 +59,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let standardHeaders: Record<string, string> = {}
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
   let eventSourceWithMiddleware = addMiddlewareToEventSource(args => args)
+  let lastCacheRefreshTime = 0
+  let initialised = false
 
   const stopMetricsCollector = () => {
     metricsCollectorEnabled = false
@@ -336,6 +338,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
             eventBus.emit(Event.READY, { ...storage })
             startMetricsCollector()
           }
+        })
+        .then(() => {
+          if (closed) return
+          initialised = true
         })
         .catch(err => {
           eventBus.emit(Event.ERROR, err)
@@ -622,7 +628,17 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     eventSourceWithMiddleware = addMiddlewareToEventSource(middleware)
   }
 
-  return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware }
+  const refreshEvaluations = () => {
+    if (initialised && !closed) {
+      // only fetch flags if enough time has elapsed to avoid pressuring backend servers
+      if (Date.now() - lastCacheRefreshTime >= 60000) {
+        fetchFlags()
+        lastCacheRefreshTime = Date.now()
+      }
+    }
+  }
+
+  return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware, refreshEvaluations }
 }
 
 export {

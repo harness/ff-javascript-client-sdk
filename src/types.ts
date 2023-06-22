@@ -66,6 +66,7 @@ export interface Result {
   close: () => void
   setEvaluations: (evaluations: Evaluation[]) => void
   registerAPIRequestMiddleware: (middleware: APIRequestMiddleware) => void
+  refreshEvaluations: () => void
 }
 
 type FetchArgs = Parameters<typeof fetch>

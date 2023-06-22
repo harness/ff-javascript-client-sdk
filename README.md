@@ -225,6 +225,10 @@ If you need to support old browsers which don't support ES Module:
 </script>
 ```
 
+## Further reading
+
+[Integrating with webviews on mobile devices](mobile_device_support.md)
+
 ## License
 
 Apache version 2.
