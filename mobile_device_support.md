@@ -12,7 +12,7 @@ network after enough time has elapsed.
 
 ### toForeground JS function
 
-Once you have a client instance (as shown above) add a function that can be easily invoked from the device's native language
+Once you have a client instance (as shown on the previous page) add a function that can be easily invoked from the device's native language
 
 ```typescript
   function toForeground() {

@@ -60,6 +60,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
   let eventSourceWithMiddleware = addMiddlewareToEventSource(args => args)
   let lastCacheRefreshTime = 0
+  let initialised = false
 
   const stopMetricsCollector = () => {
     metricsCollectorEnabled = false
@@ -337,6 +338,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
             eventBus.emit(Event.READY, { ...storage })
             startMetricsCollector()
           }
+        })
+        .then(() => {
+          if (closed) return
+          initialised = true
         })
         .catch(err => {
           eventBus.emit(Event.ERROR, err)
@@ -624,10 +629,12 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const refreshEvaluations = () => {
-    // only fetch flags if enough time has elapsed to avoid pressuring backend servers
-    if (Date.now() - lastCacheRefreshTime >= 60000) {
-      fetchFlags()
-      lastCacheRefreshTime = Date.now()
+    if (initialised && !closed) {
+      // only fetch flags if enough time has elapsed to avoid pressuring backend servers
+      if (Date.now() - lastCacheRefreshTime >= 60000) {
+        fetchFlags()
+        lastCacheRefreshTime = Date.now()
+      }
     }
   }
 
