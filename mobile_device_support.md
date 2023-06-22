@@ -15,9 +15,9 @@ network after enough time has elapsed.
 Once you have a client instance (as shown above) add a function that can be easily invoked from the device's native language
 
 ```typescript
-   function toForeground() {
-      client.refreshEvaluations()
-   }
+  function toForeground() {
+    client.refreshEvaluations()
+  }
 ```
 
 
