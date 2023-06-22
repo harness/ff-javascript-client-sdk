@@ -623,14 +623,12 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     eventSourceWithMiddleware = addMiddlewareToEventSource(middleware)
   }
 
-  const refreshEvaluations = (): boolean => {
+  const refreshEvaluations = () => {
     // only fetch flags if enough time has elapsed to avoid pressuring backend servers
     if (Date.now() - lastCacheRefreshTime >= 60000) {
       fetchFlags()
       lastCacheRefreshTime = Date.now()
-      return true
     }
-    return false
   }
 
   return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware, refreshEvaluations }
