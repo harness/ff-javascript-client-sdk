@@ -8,7 +8,7 @@ period of no connectivity.
 
 The SDK provides a function on the client instance called `refreshEvaluations`. Calling this allows you to soft poll the
 servers for the latest evaluations. Note to avoid overloading the backend servers this function will only call out to the
-network after enough time has elapsed.
+network after enough time has elapsed. Requires version 1.14.0+ of the JS SDK.
 
 ### toForeground JS function
 
@@ -67,3 +67,15 @@ On Android register an [ActivityLifecycleCallbacks](https://developer.android.co
   }
 ```
 
+
+### Mobile web browsers
+
+When not embedded inside a webview and using a mobile browser you can detect when the browser app comes to the foreground by listening for the 'visibilitychange' event as described here [Page Lifecycle API](https://developer.chrome.com/blog/page-lifecycle-api/)
+
+```javascript
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    client.refreshEvaluations();
+  }
+})
+```
