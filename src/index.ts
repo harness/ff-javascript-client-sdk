@@ -505,14 +505,21 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       }
     }
 
+    const getRandom = (min, max) => {
+      return Math.round(Math.random() * (max - min) + min)
+    }
+
     const onConnected = () => {
-      logDebug('Stream connected', event)
+      logDebug('Stream connected')
       eventBus.emit(Event.CONNECTED)
     };
 
     const onDisconnect = () => {
-      logDebug('Stream disconnected', event)
+      clearInterval(readTimeoutCheckerId)
+      const reconnectDelayMs = getRandom(1000, 10000)
+      logDebug('Stream disconnected, will reconnect in ' + reconnectDelayMs + 'ms')
       eventBus.emit(Event.DISCONNECTED)
+      setTimeout(() => startStream(), reconnectDelayMs)
     };
 
     const onFailed = (msg: string) => {
@@ -540,9 +547,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     for (const [header, value] of Object.entries(sseHeaders)) {
       xhr.setRequestHeader(header, value)
     }
-    xhr.timeout = SSE_TIMEOUT_MS*2
-    xhr.onerror = () => { onFailed('SSE XMLHttpRequest error statusText=' + xhr.statusText); }
-    xhr.onabort = () => { onFailed(null);  logDebug('SSE aborted'); }
+    xhr.timeout = 86400000 // Force SSE to reconnect after 24hrs
+    xhr.onerror = () => { onFailed('XMLHttpRequest error on SSE stream'); }
+    xhr.onabort = () => { logDebug('SSE aborted'); onFailed(null); }
     xhr.ontimeout = () => { onFailed('SSE timeout'); }
     xhr.onload = () => {
       if (xhr.status >= 400 && xhr.status <= 599) {
@@ -553,13 +560,24 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
 
     let offset = 0;
+    let lastActivity = Date.now()
 
     xhr.onprogress = (event) => {
+      lastActivity = Date.now()
       const data = xhr.responseText.slice(offset);
       offset += data.length;
       logDebug("SSE GOT: " + data)
       processData(data);
     }
+
+    const readTimeoutCheckerId = setInterval(() => {
+      // this task will kill and restart the SSE connection if no data or heartbeat has arrived in a while
+      if (lastActivity < Date.now() - SSE_TIMEOUT_MS) {
+        logDebug("SSE read timeout")
+        xhr.abort()
+      }
+    }, SSE_TIMEOUT_MS)
+
     xhr.send()
   }
 
