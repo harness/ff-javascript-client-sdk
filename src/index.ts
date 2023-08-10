@@ -15,9 +15,9 @@ import type {
 import { Event } from './types'
 import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
-import { addMiddlewareToEventSource, addMiddlewareToFetch } from './request'
+import { addMiddlewareToFetch } from './request'
 
-const SDK_VERSION = '1.14.0'
+const SDK_VERSION = '1.15.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
@@ -49,6 +49,8 @@ const convertValue = (evaluation: Evaluation) => {
 }
 
 const initialize = (apiKey: string, target: Target, options?: Options): Result => {
+  const SSE_TIMEOUT_MS = 30000;
+
   let closed = false
   let environment: string
   let clusterIdentifier: string
@@ -58,7 +60,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let metricsCollectorEnabled = true
   let standardHeaders: Record<string, string> = {}
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
-  let eventSourceWithMiddleware = addMiddlewareToEventSource(args => args)
   let lastCacheRefreshTime = 0
   let initialised = false
 
@@ -425,29 +426,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       return
     }
 
-    eventSource = eventSourceWithMiddleware(`${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`, {
-      headers: {
-        'API-Key': apiKey,
-        ...standardHeaders
-      }
-    })
-
-    eventSource.onopen = (event: any) => {
-      logDebug('Stream connected', event)
-      eventBus.emit(Event.CONNECTED)
-    }
-
-    eventSource.onclose = () => {
-      logDebug('Stream disconnected')
-      eventBus.emit(Event.DISCONNECTED)
-    }
-
-    eventSource.onerror = (event: any) => {
-      logError('Stream has issue', event)
-      eventBus.emit(Event.ERROR_STREAM, event)
-      eventBus.emit(Event.ERROR, event)
-    }
-
     const handleFlagEvent = (event: StreamEvent): void => {
       switch (event.event) {
         case 'create':
@@ -459,7 +437,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           } else {
             setTimeout(() => fetchFlag(event.identifier), 1000) // Wait a bit before fetching evaluation due to https://harness.atlassian.net/browse/FFM-583
           }
-          
+
           break
         case 'patch':
           // if evaluation was sent in stream save it directly, else query for it
@@ -470,7 +448,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           } else {
             fetchFlag(event.identifier)
           }
-          
+
           break
         case 'delete':
           delete storage[event.identifier]
@@ -479,9 +457,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           break
       }
     }
-    
+
     // check if Evaluation and it's fields are populated
-    const isEvaluationValid = (evaluation: Evaluation): boolean => { 
+    const isEvaluationValid = (evaluation: Evaluation): boolean => {
       if (!evaluation || !evaluation.flag || !evaluation.identifier || !evaluation.kind || !evaluation.value) {
         return false
       }
@@ -490,7 +468,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
 
     // check if Evaluations populated and each member is valid
-    const areEvaluationsValid = (evaluations: Evaluation[]): boolean => { 
+    const areEvaluationsValid = (evaluations: Evaluation[]): boolean => {
       if (!evaluations || evaluations.length == 0 || !evaluations.every(evaluation => isEvaluationValid(evaluation))) {
         return false
       }
@@ -509,17 +487,80 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       }
     }
 
-    eventSource.addEventListener('*', (msg: any) => {
-      const event: StreamEvent = JSON.parse(msg.data)
+    const processData = (data: any): void => {
+      const lines = data.toString().split(/\r?\n/);
+      lines.forEach((line) => processLine(line));
+    }
 
-      logDebug('Received event from stream: ', event)
+    const processLine = (line: string): void => {
+      if (line.startsWith('data:')) {
+        const event: StreamEvent = JSON.parse(line.substring(5))
+        logDebug('Received event from stream: ', event)
 
-      if (event.domain === 'flag') {
-        handleFlagEvent(event)
-      } else if (event.domain === 'target-segment') {
-        handleSegmentEvent(event)
+        if (event.domain === 'flag') {
+          handleFlagEvent(event)
+        } else if (event.domain === 'target-segment') {
+          handleSegmentEvent(event)
+        }
       }
-    })
+    }
+
+    const onConnected = () => {
+      logDebug('Stream connected', event)
+      eventBus.emit(Event.CONNECTED)
+    };
+
+    const onDisconnect = () => {
+      logDebug('Stream disconnected', event)
+      eventBus.emit(Event.DISCONNECTED)
+    };
+
+    const onFailed = (msg: string) => {
+      if (msg != null) {
+        logError('Stream has issue', msg)
+      }
+      eventBus.emit(Event.ERROR_STREAM, msg)
+      eventBus.emit(Event.ERROR, msg)
+      onDisconnect()
+    }
+
+    const url = `${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`
+
+    const sseHeaders = {
+      'Cache-Control': 'no-cache',
+      'Accept': 'text/event-stream',
+      'API-Key': apiKey,
+      ...standardHeaders
+    }
+
+    logDebug('SSE HTTP start request', url);
+
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", url)
+    for (const [header, value] of Object.entries(sseHeaders)) {
+      xhr.setRequestHeader(header, value)
+    }
+    xhr.timeout = SSE_TIMEOUT_MS*2
+    xhr.onerror = () => { onFailed('SSE XMLHttpRequest error statusText=' + xhr.statusText); }
+    xhr.onabort = () => { onFailed(null);  logDebug('SSE aborted'); }
+    xhr.ontimeout = () => { onFailed('SSE timeout'); }
+    xhr.onload = () => {
+      if (xhr.status >= 400 && xhr.status <= 599) {
+        onFailed(`HTTP code ${xhr.status}`);
+        return;
+      }
+      onConnected();
+    }
+
+    let offset = 0;
+
+    xhr.onprogress = (event) => {
+      const data = xhr.responseText.slice(offset);
+      offset += data.length;
+      logDebug("SSE GOT: " + data)
+      processData(data);
+    }
+    xhr.send()
   }
 
   const on: EventOnBinding = (event, callback) =>
@@ -625,7 +666,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   const registerAPIRequestMiddleware = (middleware: APIRequestMiddleware): void => {
     fetchWithMiddleware = addMiddlewareToFetch(middleware)
-    eventSourceWithMiddleware = addMiddlewareToEventSource(middleware)
   }
 
   const refreshEvaluations = () => {
