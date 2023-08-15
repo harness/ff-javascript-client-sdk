@@ -519,7 +519,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       const reconnectDelayMs = getRandom(1000, 10000)
       logDebug('Stream disconnected, will reconnect in ' + reconnectDelayMs + 'ms')
       eventBus.emit(Event.DISCONNECTED)
-      setTimeout(() => startStream(), reconnectDelayMs)
+      setTimeout(startStream, reconnectDelayMs)
     };
 
     const onFailed = (msg: string) => {
