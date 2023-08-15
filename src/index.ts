@@ -547,7 +547,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     for (const [header, value] of Object.entries(sseHeaders)) {
       xhr.setRequestHeader(header, value)
     }
-    xhr.timeout = 86400000 // Force SSE to reconnect after 24hrs
+    xhr.timeout = 24 * 60 * 60 * 1000 // Force SSE to reconnect after 24hrs
     xhr.onerror = () => { onFailed('XMLHttpRequest error on SSE stream'); }
     xhr.onabort = () => { logDebug('SSE aborted'); onFailed(null); }
     xhr.ontimeout = () => { onFailed('SSE timeout'); }
