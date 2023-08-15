@@ -488,8 +488,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
 
     const processData = (data: any): void => {
-      const lines = data.toString().split(/\r?\n/);
-      lines.forEach((line) => processLine(line));
+      data.toString().split(/\r?\n/).forEach(processLine);
     }
 
     const processLine = (line: string): void => {
