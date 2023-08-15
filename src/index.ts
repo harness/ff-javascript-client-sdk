@@ -523,7 +523,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     };
 
     const onFailed = (msg: string) => {
-      if (msg != null) {
+      if (!!msg) {
         logError('Stream has issue', msg)
       }
       eventBus.emit(Event.ERROR_STREAM, msg)
