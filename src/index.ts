@@ -16,7 +16,7 @@ import { Event } from './types'
 import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToFetch } from './request'
-import { streamer } from "./stream";
+import { streamer } from './stream'
 
 const SDK_VERSION = '1.15.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
@@ -50,7 +50,6 @@ const convertValue = (evaluation: Evaluation) => {
 }
 
 const initialize = (apiKey: string, target: Target, options?: Options): Result => {
-
   let closed = false
   let environment: string
   let clusterIdentifier: string
@@ -325,7 +324,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         })
         .then(() => {
           if (closed) return
-
           startStream() // start stream only after we get all evaluations
         })
         .then(() => {
@@ -420,7 +418,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const startStream = () => {
-
     const handleFlagEvent = (event: StreamEvent): void => {
       switch (event.event) {
         case 'create':
@@ -428,7 +425,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           if (areEvaluationsValid(event.evaluations)) {
             event.evaluations.forEach(evaluation => {
               registerEvaluation(evaluation)
-            });
+            })
           } else {
             setTimeout(() => fetchFlag(event.identifier), 1000) // Wait a bit before fetching evaluation due to https://harness.atlassian.net/browse/FFM-583
           }
@@ -439,7 +436,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           if (areEvaluationsValid(event.evaluations)) {
             event.evaluations.forEach(evaluation => {
               registerEvaluation(evaluation)
-            });
+            })
           } else {
             fetchFlag(event.identifier)
           }
@@ -475,7 +472,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         if (areEvaluationsValid(event.evaluations)) {
           event.evaluations.forEach(evaluation => {
             registerEvaluation(evaluation)
-          });
+          })
         } else {
           fetchFlags()
         }
@@ -483,7 +480,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
 
     const url = `${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`
-    streamer(eventBus, configurations, url, apiKey, standardHeaders, (event) => {
+    streamer(eventBus, configurations, url, apiKey, standardHeaders, event => {
       if (event.domain === 'flag') {
         handleFlagEvent(event)
       } else if (event.domain === 'target-segment') {
@@ -491,7 +488,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       }
     })
   }
-
 
   const on: EventOnBinding = (event, callback) =>
     eventBus.on((event as unknown) as EventType, (callback as unknown) as WildcardHandler)
