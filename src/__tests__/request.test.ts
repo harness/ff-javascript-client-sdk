@@ -1,9 +1,4 @@
-import { EventSourcePolyfill } from 'event-source-polyfill'
-import { addMiddlewareToEventSource, addMiddlewareToFetch } from '../request'
-
-jest.mock('event-source-polyfill', () => ({
-  EventSourcePolyfill: jest.fn()
-}))
+import { addMiddlewareToFetch } from '../request'
 
 describe('request', () => {
   beforeEach(() => jest.clearAllMocks())
@@ -30,20 +25,6 @@ describe('request', () => {
       await wrappedFetch('someUrl', { headers: { header1: 'header1', header2: 'header2' } })
 
       expect(fetchMock).toHaveBeenCalledWith('someUrl', { headers: expect.objectContaining({ newHeader }) })
-    })
-  })
-
-  describe('addMiddlewareToEventSource', () => {
-    test('it should wrap the EventSource constructor and allow augmentation', async () => {
-      const newHeader = 'TEST HEADER'
-      const wrappedEventSource = addMiddlewareToEventSource(args => {
-        args[1].headers = { ...args[1].headers, newHeader }
-        return args
-      })
-
-      wrappedEventSource('someUrl', { headers: { header1: 'header1', header2: 'header2' } })
-
-      expect(EventSourcePolyfill).toHaveBeenCalledWith('someUrl', { headers: expect.objectContaining({ newHeader }) })
     })
   })
 })
