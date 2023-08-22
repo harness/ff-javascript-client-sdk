@@ -16,7 +16,7 @@ import { Event } from './types'
 import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToFetch } from './request'
-import { streamer } from './stream'
+import { Streamer } from './stream'
 
 const SDK_VERSION = '1.15.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
@@ -480,13 +480,15 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
 
     const url = `${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`
-    streamer(eventBus, configurations, url, apiKey, standardHeaders, event => {
+
+    eventSource = new Streamer(eventBus, configurations, url, apiKey, standardHeaders, event => {
       if (event.domain === 'flag') {
         handleFlagEvent(event)
       } else if (event.domain === 'target-segment') {
         handleSegmentEvent(event)
       }
     })
+    eventSource.start()
   }
 
   const on: EventOnBinding = (event, callback) =>
