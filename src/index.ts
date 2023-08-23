@@ -15,9 +15,10 @@ import type {
 import { Event } from './types'
 import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
-import { addMiddlewareToEventSource, addMiddlewareToFetch } from './request'
+import { addMiddlewareToFetch } from './request'
+import { Streamer } from './stream'
 
-const SDK_VERSION = '1.14.0'
+const SDK_VERSION = '1.15.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
@@ -58,7 +59,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let metricsCollectorEnabled = true
   let standardHeaders: Record<string, string> = {}
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
-  let eventSourceWithMiddleware = addMiddlewareToEventSource(args => args)
   let lastCacheRefreshTime = 0
   let initialised = false
 
@@ -324,7 +324,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         })
         .then(() => {
           if (closed) return
-
           startStream() // start stream only after we get all evaluations
         })
         .then(() => {
@@ -419,35 +418,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const startStream = () => {
-    // TODO: Implement polling when stream is disabled
-    if (!configurations.streamEnabled) {
-      logDebug('Stream is disabled by configuration. Note: Polling is not yet supported')
-      return
-    }
-
-    eventSource = eventSourceWithMiddleware(`${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`, {
-      headers: {
-        'API-Key': apiKey,
-        ...standardHeaders
-      }
-    })
-
-    eventSource.onopen = (event: any) => {
-      logDebug('Stream connected', event)
-      eventBus.emit(Event.CONNECTED)
-    }
-
-    eventSource.onclose = () => {
-      logDebug('Stream disconnected')
-      eventBus.emit(Event.DISCONNECTED)
-    }
-
-    eventSource.onerror = (event: any) => {
-      logError('Stream has issue', event)
-      eventBus.emit(Event.ERROR_STREAM, event)
-      eventBus.emit(Event.ERROR, event)
-    }
-
     const handleFlagEvent = (event: StreamEvent): void => {
       switch (event.event) {
         case 'create':
@@ -455,22 +425,22 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           if (areEvaluationsValid(event.evaluations)) {
             event.evaluations.forEach(evaluation => {
               registerEvaluation(evaluation)
-            });
+            })
           } else {
             setTimeout(() => fetchFlag(event.identifier), 1000) // Wait a bit before fetching evaluation due to https://harness.atlassian.net/browse/FFM-583
           }
-          
+
           break
         case 'patch':
           // if evaluation was sent in stream save it directly, else query for it
           if (areEvaluationsValid(event.evaluations)) {
             event.evaluations.forEach(evaluation => {
               registerEvaluation(evaluation)
-            });
+            })
           } else {
             fetchFlag(event.identifier)
           }
-          
+
           break
         case 'delete':
           delete storage[event.identifier]
@@ -479,9 +449,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           break
       }
     }
-    
+
     // check if Evaluation and it's fields are populated
-    const isEvaluationValid = (evaluation: Evaluation): boolean => { 
+    const isEvaluationValid = (evaluation: Evaluation): boolean => {
       if (!evaluation || !evaluation.flag || !evaluation.identifier || !evaluation.kind || !evaluation.value) {
         return false
       }
@@ -490,7 +460,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
 
     // check if Evaluations populated and each member is valid
-    const areEvaluationsValid = (evaluations: Evaluation[]): boolean => { 
+    const areEvaluationsValid = (evaluations: Evaluation[]): boolean => {
       if (!evaluations || evaluations.length == 0 || !evaluations.every(evaluation => isEvaluationValid(evaluation))) {
         return false
       }
@@ -502,24 +472,23 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         if (areEvaluationsValid(event.evaluations)) {
           event.evaluations.forEach(evaluation => {
             registerEvaluation(evaluation)
-          });
+          })
         } else {
           fetchFlags()
         }
       }
     }
 
-    eventSource.addEventListener('*', (msg: any) => {
-      const event: StreamEvent = JSON.parse(msg.data)
+    const url = `${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`
 
-      logDebug('Received event from stream: ', event)
-
+    eventSource = new Streamer(eventBus, configurations, url, apiKey, standardHeaders, event => {
       if (event.domain === 'flag') {
         handleFlagEvent(event)
       } else if (event.domain === 'target-segment') {
         handleSegmentEvent(event)
       }
     })
+    eventSource.start()
   }
 
   const on: EventOnBinding = (event, callback) =>
@@ -625,7 +594,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   const registerAPIRequestMiddleware = (middleware: APIRequestMiddleware): void => {
     fetchWithMiddleware = addMiddlewareToFetch(middleware)
-    eventSourceWithMiddleware = addMiddlewareToEventSource(middleware)
   }
 
   const refreshEvaluations = () => {
