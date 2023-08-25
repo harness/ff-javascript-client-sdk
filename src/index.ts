@@ -532,7 +532,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       return {
         type: 'error',
         defaultValue,
-        message: `The value for flag "${flagIdentifier}" is undefined. Returning default value.`
+        message: `The variation value for flag "${flagIdentifier}" is undefined. Returning default value.`
       };
     }
   };
