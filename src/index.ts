@@ -9,7 +9,7 @@ import type {
   Options,
   Result,
   StreamEvent,
-  Target,
+  Target, EnhancedVariationResult,
   VariationValue
 } from './types'
 import { Event } from './types'
@@ -505,30 +505,53 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   const variation = (flag: string, defaultValue: any) => {
     const value = storage[flag]
 
-    if (metricsCollectorEnabled && !hasProxy && value !== undefined) {
-      const featureValue = value
-      const featureIdentifier = flag
-
-      const entry = metrics.find(
-        _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
-      )
-
-      if (entry) {
-        updateMetrics(entry)
-        entry.variationIdentifier = evaluations[featureIdentifier as string]?.identifier || ''
-      } else {
-        metrics.push({
-          featureIdentifier: featureIdentifier as string,
-          featureValue,
-          count: 1,
-          variationIdentifier: evaluations[featureIdentifier].identifier || '',
-          lastAccessed: Date.now()
-        })
-      }
-    }
+    handleMetrics(flag, value)
 
     return value !== undefined ? value : defaultValue
   }
+
+  const enhancedVariation = (flagIdentifier: string, defaultValue: any): EnhancedVariationResult => {
+    if (!flagExists(flagIdentifier)) {
+      return { value: defaultValue, status: 'error', message: `The flag "${flagIdentifier}" does not exist in storage.` };
+    }
+
+    const value = storage[flagIdentifier];
+    handleMetrics(flagIdentifier, value);
+
+    return {
+      value: value !== undefined ? value : defaultValue,
+      status: value !== undefined ? 'success' : 'error',
+      message: value !== undefined ? undefined : `The value for flag "${flagIdentifier}" is undefined. Returning default value.`
+    };
+  };
+
+  const flagExists = (flag: string): boolean => {
+    return storage.hasOwnProperty(flag);
+  };
+
+  const handleMetrics = (flag: string, value: any) => {
+    if (!metricsCollectorEnabled || hasProxy || value === undefined) return;
+
+    const featureValue = value;
+    const featureIdentifier = flag;
+
+    const entry = metrics.find(
+        _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
+    );
+
+    if (entry) {
+      updateMetrics(entry);
+      entry.variationIdentifier = evaluations[featureIdentifier as string]?.identifier || '';
+    } else {
+      metrics.push({
+        featureIdentifier: featureIdentifier as string,
+        featureValue,
+        count: 1,
+        variationIdentifier: evaluations[featureIdentifier].identifier || '',
+        lastAccessed: Date.now()
+      });
+    }
+  };
 
   const close = () => {
     closed = true
@@ -606,7 +629,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
   }
 
-  return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware, refreshEvaluations }
+  return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware, refreshEvaluations, enhancedVariation }
 }
 
 export {
@@ -619,5 +642,6 @@ export {
   EventOffBinding,
   Result,
   Evaluation,
-  VariationValue
+  VariationValue,
+  EnhancedVariationResult
 }

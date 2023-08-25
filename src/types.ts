@@ -30,6 +30,14 @@ export enum Event {
 
 export type VariationValue = boolean | string | number | object | undefined
 
+// Used when callers, such as the Flutter SDK for Web, require to know if the variation failed
+// and the default value was returned.
+export type EnhancedVariationResult = {
+  value: VariationValue;
+  status: 'success' | 'error';
+  message?: string;
+};
+
 export interface Evaluation {
   flag: string // Feature flag identifier
   identifier: string // variation identifier
@@ -67,6 +75,7 @@ export interface Result {
   setEvaluations: (evaluations: Evaluation[]) => void
   registerAPIRequestMiddleware: (middleware: APIRequestMiddleware) => void
   refreshEvaluations: () => void
+  enhancedVariation: (flagIdentifier: string, defaultValue: string) => EnhancedVariationResult
 }
 
 type FetchArgs = Parameters<typeof fetch>
