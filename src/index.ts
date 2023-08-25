@@ -9,7 +9,8 @@ import type {
   Options,
   Result,
   StreamEvent,
-  Target, EnhancedVariationResult,
+  Target,
+  EnhancedVariationResult,
   VariationValue
 } from './types'
 import { Event } from './types'
