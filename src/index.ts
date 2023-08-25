@@ -533,9 +533,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         type: 'error',
         defaultValue,
         message: `The value for flag "${flagIdentifier}" is undefined. Returning default value.`
-        // Note: Since you're using discriminated unions with clear success/error types,
-        // you don't provide the default value in the error result. If you wanted to provide it,
-        // you'd need to adjust your type definitions.
       };
     }
   };
