@@ -137,10 +137,10 @@ switch (result.type) {
 }
 ```
 
-If you do not need to know that
+If you do not need to know the default variation was returned: 
 
 ```typescript
-const value = client.variation('Dark_Theme', false) // second argument is default value when variation does not exist
+const variationValue = client.variation('Dark_Theme', false) // second argument is default value when variation does not exist
 ```
 
 ### Cleaning up
