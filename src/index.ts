@@ -18,6 +18,7 @@ import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './uti
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
+import { enhancedVariation, variation } from './variation'
 
 const SDK_VERSION = '1.15.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
@@ -503,58 +504,45 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
   }
 
-  const variation = (flag: string, defaultValue: any) => {
-    const value = storage[flag]
-
-    handleMetrics(flag, value)
-
-    return value !== undefined ? value : defaultValue
-  }
-
-  const enhancedVariation = (flagIdentifier: string, defaultValue: any): EnhancedVariationResult => {
-    if (!flagExists(flagIdentifier)) {
-      return {
-        type: 'error',
-        defaultValue,
-        message: `The flag "${flagIdentifier}" does not exist in storage.`
-      };
-    }
-
-    const value = storage[flagIdentifier];
-    handleMetrics(flagIdentifier, value);
-
-    if (value !== undefined) {
-      return {
-        type: 'success',
-        value
-      };
-    } else {
-      return {
-        type: 'error',
-        defaultValue,
-        message: `The variation value for flag "${flagIdentifier}" is undefined. Returning default value.`
-      };
-    }
-  };
-
-
-  const flagExists = (flag: string): boolean => {
-    return storage.hasOwnProperty(flag);
-  };
+  // const enhancedVariation = (flagIdentifier: string, defaultValue: any): EnhancedVariationResult => {
+  //   if (!flagExists(flagIdentifier)) {
+  //     return {
+  //       type: 'error',
+  //       defaultValue,
+  //       message: `The flag "${flagIdentifier}" does not exist in storage.`
+  //     };
+  //   }
+  //
+  //   const value = storage[flagIdentifier];
+  //   handleMetrics(flagIdentifier, value);
+  //
+  //   if (value !== undefined) {
+  //     return {
+  //       type: 'success',
+  //       value
+  //     };
+  //   } else {
+  //     return {
+  //       type: 'error',
+  //       defaultValue,
+  //       message: `The variation value for flag "${flagIdentifier}" is undefined. Returning default value.`
+  //     };
+  //   }
+  // };
 
   const handleMetrics = (flag: string, value: any) => {
-    if (!metricsCollectorEnabled || hasProxy || value === undefined) return;
+    if (!metricsCollectorEnabled || hasProxy || value === undefined) return
 
-    const featureValue = value;
-    const featureIdentifier = flag;
+    const featureValue = value
+    const featureIdentifier = flag
 
     const entry = metrics.find(
-        _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
-    );
+      _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
+    )
 
     if (entry) {
-      updateMetrics(entry);
-      entry.variationIdentifier = evaluations[featureIdentifier as string]?.identifier || '';
+      updateMetrics(entry)
+      entry.variationIdentifier = evaluations[featureIdentifier as string]?.identifier || ''
     } else {
       metrics.push({
         featureIdentifier: featureIdentifier as string,
@@ -562,9 +550,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         count: 1,
         variationIdentifier: evaluations[featureIdentifier].identifier || '',
         lastAccessed: Date.now()
-      });
+      })
     }
-  };
+  }
 
   const close = () => {
     closed = true
@@ -642,7 +630,21 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
   }
 
-  return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware, refreshEvaluations, enhancedVariation }
+  return {
+    on,
+    off,
+    close,
+    setEvaluations,
+    registerAPIRequestMiddleware,
+    refreshEvaluations,
+    variation: (identifier: string, defaultValue: any) => {
+      return variation(storage, identifier, defaultValue, handleMetrics)
+    },
+
+    enhancedVariation: (flagIdentifier: string, defaultValue: any) => {
+      return enhancedVariation(storage, flagIdentifier, defaultValue, handleMetrics)
+    }
+  }
 }
 
 export {
