@@ -2,7 +2,7 @@ import { variation, enhancedVariation } from '../variation'; // Modify the impor
 
 describe('variation', () => {
     it('should return the stored value when it exists', () => {
-        const storage = { testFlag: true };
+        const storage = { testFlag: true, otherFlag: true, anotherFlag: false };
         const mockMetricsHandler = jest.fn();
 
         const result = variation(storage, 'testFlag', false, mockMetricsHandler);
@@ -23,11 +23,12 @@ describe('variation', () => {
 });
 
 describe('enhancedVariation', () => {
+    const flagIdentifier = 'testFlag';
     it('should return success type with the stored value when it exists', () => {
-        const storage = { testFlag: true };
+        const storage = { testFlag: true, otherFlag: true, anotherFlag: false };
         const mockMetricsHandler = jest.fn();
 
-        const result = enhancedVariation(storage, 'testFlag', false, mockMetricsHandler);
+        const result = enhancedVariation(storage, flagIdentifier, false, mockMetricsHandler);
 
         expect(result.type).toBe('success');
 
@@ -35,15 +36,15 @@ describe('enhancedVariation', () => {
             expect(result.value).toBe(true);
         }
 
-        expect(mockMetricsHandler).toBeCalledWith('testFlag', true);
+        expect(mockMetricsHandler).toBeCalledWith(flagIdentifier, true);
     });
 
 
     it('should return error type with default value when flag is missing', () => {
-        const storage = {};
+        const storage = {otherFlag: true};
         const mockMetricsHandler = jest.fn();
 
-        const result = enhancedVariation(storage, 'testFlag', false, mockMetricsHandler);
+        const result = enhancedVariation(storage, flagIdentifier, false, mockMetricsHandler);
 
         expect(result.type).toBe('error');
         if (result.type === 'error') {
@@ -54,10 +55,10 @@ describe('enhancedVariation', () => {
     });
 
     it('should return error type with default value when stored value is undefined', () => {
-        const storage = { testFlag: undefined };
+        const storage = { testFlag: undefined, otherFlag: true, anotherFlag: false };
         const mockMetricsHandler = jest.fn();
 
-        const result = enhancedVariation(storage, 'testFlag', false, mockMetricsHandler);
+        const result = enhancedVariation(storage, flagIdentifier, false, mockMetricsHandler);
 
         expect(result.type).toBe('error');
         if (result.type === 'error') {
