@@ -123,6 +123,22 @@ client.on(Event.ERROR_STREAM, error => {
 
 ### Getting value for a particular feature flag
 
+If you would like to know that the default variation was returned when getting the value, for example, if the provided flag identifier wasn't found:
+
+```typescript
+const result = client.enhancedVariation('Dark_Theme', false) // second argument is default value when variation does not exist
+switch (result.type) {
+  case 'success':
+    return result.value
+  case 'error':
+    // Log the error and return the default variation
+    console.error(result.message);
+    return result.defaultValue
+}
+```
+
+If you do not need to know that
+
 ```typescript
 const value = client.variation('Dark_Theme', false) // second argument is default value when variation does not exist
 ```
