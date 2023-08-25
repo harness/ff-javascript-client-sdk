@@ -512,18 +512,33 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   const enhancedVariation = (flagIdentifier: string, defaultValue: any): EnhancedVariationResult => {
     if (!flagExists(flagIdentifier)) {
-      return { value: defaultValue, status: 'error', message: `The flag "${flagIdentifier}" does not exist in storage.` };
+      return {
+        type: 'error',
+        defaultValue,
+        message: `The flag "${flagIdentifier}" does not exist in storage.`
+      };
     }
 
     const value = storage[flagIdentifier];
     handleMetrics(flagIdentifier, value);
 
-    return {
-      value: value !== undefined ? value : defaultValue,
-      status: value !== undefined ? 'success' : 'error',
-      message: value !== undefined ? undefined : `The value for flag "${flagIdentifier}" is undefined. Returning default value.`
-    };
+    if (value !== undefined) {
+      return {
+        type: 'success',
+        value
+      };
+    } else {
+      return {
+        type: 'error',
+        defaultValue,
+        message: `The value for flag "${flagIdentifier}" is undefined. Returning default value.`
+        // Note: Since you're using discriminated unions with clear success/error types,
+        // you don't provide the default value in the error result. If you wanted to provide it,
+        // you'd need to adjust your type definitions.
+      };
+    }
   };
+
 
   const flagExists = (flag: string): boolean => {
     return storage.hasOwnProperty(flag);

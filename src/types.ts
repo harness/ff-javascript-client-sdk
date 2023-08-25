@@ -32,11 +32,18 @@ export type VariationValue = boolean | string | number | object | undefined
 
 // Used when callers, such as the Flutter SDK for Web, require to know if the variation failed
 // and the default value was returned.
-export type EnhancedVariationResult = {
+type EnhancedVariationSuccess = {
+  type: 'success';
   value: VariationValue;
-  status: 'success' | 'error';
-  message?: string;
 };
+
+type EnhancedVariationError = {
+  type: 'error';
+  defaultValue: VariationValue
+  message: string;
+};
+
+export type EnhancedVariationResult = EnhancedVariationSuccess | EnhancedVariationError;
 
 export interface Evaluation {
   flag: string // Feature flag identifier
