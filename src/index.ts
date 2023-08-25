@@ -504,32 +504,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
   }
 
-  // const enhancedVariation = (flagIdentifier: string, defaultValue: any): EnhancedVariationResult => {
-  //   if (!flagExists(flagIdentifier)) {
-  //     return {
-  //       type: 'error',
-  //       defaultValue,
-  //       message: `The flag "${flagIdentifier}" does not exist in storage.`
-  //     };
-  //   }
-  //
-  //   const value = storage[flagIdentifier];
-  //   handleMetrics(flagIdentifier, value);
-  //
-  //   if (value !== undefined) {
-  //     return {
-  //       type: 'success',
-  //       value
-  //     };
-  //   } else {
-  //     return {
-  //       type: 'error',
-  //       defaultValue,
-  //       message: `The variation value for flag "${flagIdentifier}" is undefined. Returning default value.`
-  //     };
-  //   }
-  // };
-
   const handleMetrics = (flag: string, value: any) => {
     if (!metricsCollectorEnabled || hasProxy || value === undefined) return
 
