@@ -10,7 +10,6 @@ import type {
   Result,
   StreamEvent,
   Target,
-  EnhancedVariationResult,
   VariationValue
 } from './types'
 import { Event } from './types'
@@ -18,7 +17,7 @@ import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './uti
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
-import { enhancedVariation, variation } from './variation'
+import {variationFunction} from "./variation";
 
 const SDK_VERSION = '1.15.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
@@ -70,7 +69,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   const startMetricsCollector = () => {
     metricsCollectorEnabled = true
   }
-  let metrics: Array<MetricsInfo> = []
+  let metrics: MetricsInfo[] = []
   const eventBus = mitt()
   const configurations = { ...defaultOptions, ...options }
 
@@ -413,7 +412,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     if (value !== storage[evaluation.flag]) {
       logDebug('Flag variation has changed for ', evaluation.identifier)
       storage[evaluation.flag] = value
-      evaluations[evaluation.flag] = { ...evaluation, value: value }
+      evaluations[evaluation.flag] = { ...evaluation, value }
       sendEvent(evaluation)
     }
     startMetricsCollector()
@@ -604,8 +603,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
   }
 
-  const variationFunction = (identifier: string, defaultValue: any) => {
-    return variation(storage, identifier, defaultValue, handleMetrics)
+
+
+  const variation = (identifier: string, defaultValue: any, isDefault) => {
+    return variationFunction(identifier, defaultValue,  storage, handleMetrics, isDefault)
   };
 
   return {
@@ -615,7 +616,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     setEvaluations,
     registerAPIRequestMiddleware,
     refreshEvaluations,
-    variation: variationFunction,
+    variation
   }
 }
 
@@ -630,5 +631,4 @@ export {
   Result,
   Evaluation,
   VariationValue,
-  EnhancedVariationResult
 }

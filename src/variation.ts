@@ -1,47 +1,39 @@
-import type { EnhancedVariationResult, VariationValue } from './types'
+import type { VariationValue, VariationValueWithDebug } from './types'
 
-export function variation(
-  storage: Record<string, any>,
-  flag: string,
+export function variationFunction(
+  identifier: string,
   defaultValue: any,
+  storage: Record<string, any>,
+  metricsHandler: (flag: string, value: any) => void,
+  withDebug: true
+): VariationValueWithDebug
+export function variationFunction(
+  identifier: string,
+  defaultValue: any,
+  storage: Record<string, any>,
   metricsHandler: (flag: string, value: any) => void
+): VariationValue
+export function variationFunction(
+  identifier: string,
+  defaultValue: any,
+  storage: Record<string, any>,
+  metricsHandler: (flag: string, value: any) => void,
+  withDebug: false
+): VariationValue
+export function variationFunction(
+  identifier: string,
+  defaultValue: any,
+  storage: Record<string, any>,
+  metricsHandler: (flag: string, value: any) => void,
+  withDebug?: boolean
 ): VariationValue {
-  const value = storage[flag]
-    metricsHandler(flag, value)
-  return value !== undefined ? value : defaultValue
-}
+  const knownIdentifier = identifier in storage
+  const value = knownIdentifier ? storage[identifier] : defaultValue
 
-export function enhancedVariation(
-  storage: Record<string, any>,
-  flagIdentifier: string,
-  defaultValue: any,
-  metricsHandler: (flag: string, value: any) => void
-): EnhancedVariationResult {
-  if (!flagExists(storage, flagIdentifier)) {
-    return {
-      type: 'error',
-      defaultValue,
-      message: `The flag "${flagIdentifier}" does not exist in storage.`
-    }
+  if (knownIdentifier) {
+    metricsHandler(identifier, value)
   }
 
-  const value = storage[flagIdentifier]
-  metricsHandler(flagIdentifier, value)
-
-  if (value !== undefined) {
-    return {
-      type: 'success',
-      value
-    }
-  } else {
-    return {
-      type: 'error',
-      defaultValue,
-      message: `The variation value for flag "${flagIdentifier}" is undefined. Returning default value.`
-    }
-  }
+  return !withDebug ? value : { value, isDefaultValue: knownIdentifier }
 }
 
-const flagExists = (storage: Record<string, any>, flag: string): boolean => {
-  return storage.hasOwnProperty(flag)
-}

@@ -28,22 +28,14 @@ export enum Event {
   ERROR_STREAM = 'stream error'
 }
 
-export type VariationValue = boolean | string | number | object | undefined
-
 // Used when callers, such as the Flutter SDK for Web, require to know if the variation failed
 // and the default value was returned.
-type EnhancedVariationSuccess = {
-  type: 'success';
-  value: VariationValue;
-};
+export type VariationValue = boolean | string | number | object | undefined
 
-type EnhancedVariationError = {
-  type: 'error';
-  defaultValue: VariationValue
-  message: string;
-};
-
-export type EnhancedVariationResult = EnhancedVariationSuccess | EnhancedVariationError;
+export interface VariationValueWithDebug {
+  value: VariationValue
+  isDefaultValue: boolean
+}
 
 export interface Evaluation {
   flag: string // Feature flag identifier
@@ -77,7 +69,10 @@ export type EventOffBinding = <K extends keyof EventCallbackMapping>(
 export interface Result {
   on: EventOnBinding
   off: EventOffBinding
-  variation: (identifier: string, defaultValue: any) => VariationValue
+  variation:
+    | ((identifier: string, defaultValue: any) => VariationValue)
+    | ((identifier: string, defaultValue: any, withDebug: false) => VariationValue)
+    | ((identifier: string, defaultValue: any, withDebug: true) => VariationValueWithDebug)
   close: () => void
   setEvaluations: (evaluations: Evaluation[]) => void
   registerAPIRequestMiddleware: (middleware: APIRequestMiddleware) => void
