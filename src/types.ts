@@ -28,7 +28,6 @@ export enum Event {
   ERROR_STREAM = 'stream error'
 }
 
-
 export type VariationValue = boolean | string | number | object | undefined
 
 // Used when callers, such as the Flutter SDK for Web, require to know if the variation failed

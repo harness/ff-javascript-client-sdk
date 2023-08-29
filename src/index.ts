@@ -17,7 +17,7 @@ import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './uti
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
-import {variationFunction} from "./variation";
+import { variationFunction } from './variation'
 
 const SDK_VERSION = '1.15.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
@@ -603,11 +603,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
   }
 
-
-
   const variation = (identifier: string, defaultValue: any, isDefault) => {
-    return variationFunction(identifier, defaultValue,  storage, handleMetrics, isDefault)
-  };
+    return variationFunction(identifier, defaultValue, storage, handleMetrics, isDefault)
+  }
 
   return {
     on,
@@ -630,5 +628,5 @@ export {
   EventOffBinding,
   Result,
   Evaluation,
-  VariationValue,
+  VariationValue
 }
