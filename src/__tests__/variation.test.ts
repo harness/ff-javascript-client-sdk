@@ -31,7 +31,6 @@ describe('variation with debug', () => {
     const result = variationFunction('testFlag', false, storage, mockMetricsHandler, true)
 
     expect(result).toStrictEqual({ value: true, isDefaultValue: false })
-
     expect(mockMetricsHandler).toBeCalledWith(flagIdentifier, true)
   })
 
