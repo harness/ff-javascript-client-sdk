@@ -32,8 +32,6 @@ describe('variation with debug', () => {
 
     expect(result).toStrictEqual({ value: true, isDefaultValue: false })
 
-
-
     expect(mockMetricsHandler).toBeCalledWith(flagIdentifier, true)
   })
 
