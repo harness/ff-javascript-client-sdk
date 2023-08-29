@@ -28,10 +28,11 @@ export enum Event {
   ERROR_STREAM = 'stream error'
 }
 
-// Used when callers, such as the Flutter SDK for Web, require to know if the variation failed
-// and the default value was returned.
+
 export type VariationValue = boolean | string | number | object | undefined
 
+// Used when callers, such as the Flutter SDK for Web, require to know if the variation failed
+// and the default value was returned.
 export interface VariationValueWithDebug {
   value: VariationValue
   isDefaultValue: boolean
