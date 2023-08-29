@@ -42,5 +42,8 @@ describe('variation with debug', () => {
 
     expect(result).toStrictEqual({ value: false, isDefaultValue: true })
     expect(result.isDefaultValue).toBe(true)
+
+    expect(mockMetricsHandler).not.toBeCalled()
+
   })
 })
