@@ -82,7 +82,6 @@ export interface Result {
   setEvaluations: (evaluations: Evaluation[]) => void
   registerAPIRequestMiddleware: (middleware: APIRequestMiddleware) => void
   refreshEvaluations: () => void
-  enhancedVariation: (flagIdentifier: string, defaultValue: string) => EnhancedVariationResult
 }
 
 type FetchArgs = Parameters<typeof fetch>

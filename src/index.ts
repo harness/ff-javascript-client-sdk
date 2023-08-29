@@ -604,6 +604,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
   }
 
+  const variationFunction = (identifier: string, defaultValue: any) => {
+    return variation(storage, identifier, defaultValue, handleMetrics)
+  };
+
   return {
     on,
     off,
@@ -611,13 +615,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     setEvaluations,
     registerAPIRequestMiddleware,
     refreshEvaluations,
-    variation: (identifier: string, defaultValue: any) => {
-      return variation(storage, identifier, defaultValue, handleMetrics)
-    },
-
-    enhancedVariation: (flagIdentifier: string, defaultValue: any) => {
-      return enhancedVariation(storage, flagIdentifier, defaultValue, handleMetrics)
-    }
+    variation: variationFunction,
   }
 }
 
