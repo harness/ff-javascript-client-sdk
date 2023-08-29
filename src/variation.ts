@@ -27,13 +27,13 @@ export function variationFunction(
   metricsHandler: (flag: string, value: any) => void,
   withDebug?: boolean
 ): VariationValue {
-  const knownIdentifier = identifier in storage
-  const value = knownIdentifier ? storage[identifier] : defaultValue
+  const identifierExists = identifier in storage
+  const value = identifierExists ? storage[identifier] : defaultValue
 
-  if (knownIdentifier) {
+  if (identifierExists) {
     metricsHandler(identifier, value)
   }
 
-  return !withDebug ? value : { value, isDefaultValue: knownIdentifier }
+  return !withDebug ? value : { value, isDefaultValue: !identifierExists }
 }
 
