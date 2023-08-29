@@ -30,8 +30,9 @@ describe('variation with debug', () => {
 
     const result = variationFunction('testFlag', false, storage, mockMetricsHandler, true)
 
-    expect(result.value).toBe(true)
-    expect(result.isDefaultValue).toBe(false)
+    expect(result).toStrictEqual({ value: true, isDefaultValue: false })
+
+
 
     expect(mockMetricsHandler).toBeCalledWith(flagIdentifier, true)
   })
@@ -42,7 +43,7 @@ describe('variation with debug', () => {
 
     const result = variationFunction('testFlag', false, storage, mockMetricsHandler, true)
 
-    expect(result).toStrictEqual({ isDefaultValue: true, value: false })
+    expect(result).toStrictEqual({ value: false, isDefaultValue: true })
     expect(result.isDefaultValue).toBe(true)
   })
 })
