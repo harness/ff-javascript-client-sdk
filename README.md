@@ -128,10 +128,10 @@ If you would like to know that the default variation was returned when getting t
 const result = client.variation('Dark_Theme', false, true);
 ```
 
-When withDebug is set to true, the result object will have the following structure:
+When `withDebug` is set to true, the result object will have the following structure:
 
 ```typescript
-{
+interface VariationValueWithDebug {
   value: any,                 // The actual variation value
   isDefaultValue: boolean     // True if the default variation was returned, false otherwise
 }
@@ -201,7 +201,7 @@ const client = initialize('00000000-1111-2222-3333-444444444444', {
 The `cache` option can also be passed as an object with the following options.
 
 ```typescript
-export interface CacheOptions {
+interface CacheOptions {
   ttl?: number // maximum age of stored cache, in ms, before it is considered stale 
 }
 ```
@@ -227,7 +227,7 @@ client.setEvaluations(evals);
 In which `Evaluation` is defined as:
 
 ```typescript
-export interface Evaluation {
+interface Evaluation {
   flag: string // Feature flag identifier
   identifier: string // variation identifier
   value: boolean | string | number | object | undefined // variation value

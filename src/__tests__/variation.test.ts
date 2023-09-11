@@ -1,49 +1,49 @@
-import { variationFunction } from '../variation' // Modify the import based on your file structure.
+import { getVariation } from '../variation'
 
-describe('variation without debug', () => {
-  it('should return the stored value when it exists', () => {
-    const storage = { testFlag: true, otherFlag: true, anotherFlag: false }
-    const mockMetricsHandler = jest.fn()
+describe('getVariation', () => {
+  describe('without debug', () => {
+    it('should return the stored value when it exists', () => {
+      const storage = { testFlag: true, otherFlag: true, anotherFlag: false }
+      const mockMetricsHandler = jest.fn()
 
-    const result = variationFunction('testFlag', false, storage, mockMetricsHandler)
+      const result = getVariation('testFlag', false, storage, mockMetricsHandler)
 
-    expect(result).toBe(true)
-    expect(mockMetricsHandler).toBeCalledWith('testFlag', true)
+      expect(result).toBe(true)
+      expect(mockMetricsHandler).toHaveBeenCalledWith('testFlag', true)
+    })
+
+    it('should return the default value when stored value is undefined', () => {
+      const storage = {}
+      const mockMetricsHandler = jest.fn()
+
+      const result = getVariation('testFlag', false, storage, mockMetricsHandler)
+
+      expect(result).toBe(false)
+      expect(mockMetricsHandler).not.toHaveBeenCalled()
+    })
   })
 
-  it('should return the default value when stored value is undefined', () => {
-    const storage = {}
-    const mockMetricsHandler = jest.fn()
+  describe('with debug', () => {
+    const flagIdentifier = 'testFlag'
 
-    const result = variationFunction('testFlag', false, storage, mockMetricsHandler)
+    it('should return debug type with stored value', () => {
+      const storage = { testFlag: true, otherFlag: true, anotherFlag: false }
+      const mockMetricsHandler = jest.fn()
 
-    expect(result).toBe(false)
-    expect(mockMetricsHandler).not.toBeCalled()
-  })
-})
+      const result = getVariation('testFlag', false, storage, mockMetricsHandler, true)
 
-describe('variation with debug', () => {
-  const flagIdentifier = 'testFlag'
-  it('should return debug type with stored value', () => {
-    const storage = { testFlag: true, otherFlag: true, anotherFlag: false }
-    const mockMetricsHandler = jest.fn()
+      expect(result).toEqual({ value: true, isDefaultValue: false })
+      expect(mockMetricsHandler).toHaveBeenCalledWith(flagIdentifier, true)
+    })
 
-    const result = variationFunction('testFlag', false, storage, mockMetricsHandler, true)
+    it('should return debug type with default value when flag is missing', () => {
+      const storage = { otherFlag: true }
+      const mockMetricsHandler = jest.fn()
 
-    expect(result).toStrictEqual({ value: true, isDefaultValue: false })
-    expect(mockMetricsHandler).toBeCalledWith(flagIdentifier, true)
-  })
+      const result = getVariation('testFlag', false, storage, mockMetricsHandler, true)
 
-  it('should return debug type with default value when flag is missing', () => {
-    const storage = { otherFlag: true }
-    const mockMetricsHandler = jest.fn()
-
-    const result = variationFunction('testFlag', false, storage, mockMetricsHandler, true)
-
-    expect(result).toStrictEqual({ value: false, isDefaultValue: true })
-    expect(result.isDefaultValue).toBe(true)
-
-    expect(mockMetricsHandler).not.toBeCalled()
-
+      expect(result).toEqual({ value: false, isDefaultValue: true })
+      expect(mockMetricsHandler).not.toHaveBeenCalled()
+    })
   })
 })

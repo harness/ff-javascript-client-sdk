@@ -66,13 +66,17 @@ export type EventOffBinding = <K extends keyof EventCallbackMapping>(
   callback?: EventCallbackMapping[K]
 ) => void
 
+export type VariationFn = {
+  (identifier: string, defaultValue: any): VariationValue
+  (identifier: string, defaultValue: any, withDebug?: boolean): VariationValue | VariationValueWithDebug
+  (identifier: string, defaultValue: any, withDebug: false): VariationValue
+  (identifier: string, defaultValue: any, withDebug: true): VariationValueWithDebug
+}
+
 export interface Result {
   on: EventOnBinding
   off: EventOffBinding
-  variation:
-    | ((identifier: string, defaultValue: any) => VariationValue)
-    | ((identifier: string, defaultValue: any, withDebug: false) => VariationValue)
-    | ((identifier: string, defaultValue: any, withDebug: true) => VariationValueWithDebug)
+  variation: VariationFn
   close: () => void
   setEvaluations: (evaluations: Evaluation[]) => void
   registerAPIRequestMiddleware: (middleware: APIRequestMiddleware) => void
