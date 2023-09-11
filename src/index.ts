@@ -10,6 +10,7 @@ import type {
   Result,
   StreamEvent,
   Target,
+  VariationFn,
   VariationValue
 } from './types'
 import { Event } from './types'
@@ -17,8 +18,9 @@ import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './uti
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
+import { getVariation } from './variation'
 
-const SDK_VERSION = '1.15.0'
+const SDK_VERSION = '1.16.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
@@ -68,7 +70,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   const startMetricsCollector = () => {
     metricsCollectorEnabled = true
   }
-  let metrics: Array<MetricsInfo> = []
+  let metrics: MetricsInfo[] = []
   const eventBus = mitt()
   const configurations = { ...defaultOptions, ...options }
 
@@ -334,8 +336,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           // emit the ready event only if flags weren't already set using setEvaluations
           if (!hasExistingFlags) {
             stopMetricsCollector()
-            eventBus.emit(Event.READY, { ...storage })
+            const allFlags = { ...storage }
             startMetricsCollector()
+
+            eventBus.emit(Event.READY, allFlags)
           }
         })
         .then(() => {
@@ -411,7 +415,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     if (value !== storage[evaluation.flag]) {
       logDebug('Flag variation has changed for ', evaluation.identifier)
       storage[evaluation.flag] = value
-      evaluations[evaluation.flag] = { ...evaluation, value: value }
+      evaluations[evaluation.flag] = { ...evaluation, value }
       sendEvent(evaluation)
     }
     startMetricsCollector()
@@ -492,42 +496,38 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const on: EventOnBinding = (event, callback) =>
-    eventBus.on((event as unknown) as EventType, (callback as unknown) as WildcardHandler)
+    eventBus.on(event as unknown as EventType, callback as unknown as WildcardHandler)
 
   const off: EventOffBinding = (event, callback) => {
     if (event) {
-      eventBus.off((event as unknown) as '*', (callback as unknown) as WildcardHandler)
+      eventBus.off(event as unknown as '*', callback as unknown as WildcardHandler)
     } else {
       close()
     }
   }
 
-  const variation = (flag: string, defaultValue: any) => {
-    const value = storage[flag]
+  const handleMetrics = (flag: string, value: any) => {
+    if (!metricsCollectorEnabled || hasProxy || value === undefined) return
 
-    if (metricsCollectorEnabled && !hasProxy && value !== undefined) {
-      const featureValue = value
-      const featureIdentifier = flag
+    const featureValue = value
+    const featureIdentifier = flag
 
-      const entry = metrics.find(
-        _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
-      )
+    const entry = metrics.find(
+      _entry => _entry.featureIdentifier === featureIdentifier && _entry.featureValue === featureValue
+    )
 
-      if (entry) {
-        updateMetrics(entry)
-        entry.variationIdentifier = evaluations[featureIdentifier as string]?.identifier || ''
-      } else {
-        metrics.push({
-          featureIdentifier: featureIdentifier as string,
-          featureValue,
-          count: 1,
-          variationIdentifier: evaluations[featureIdentifier].identifier || '',
-          lastAccessed: Date.now()
-        })
-      }
+    if (entry) {
+      updateMetrics(entry)
+      entry.variationIdentifier = evaluations[featureIdentifier as string]?.identifier || ''
+    } else {
+      metrics.push({
+        featureIdentifier: featureIdentifier as string,
+        featureValue,
+        count: 1,
+        variationIdentifier: evaluations[featureIdentifier].identifier || '',
+        lastAccessed: Date.now()
+      })
     }
-
-    return value !== undefined ? value : defaultValue
   }
 
   const close = () => {
@@ -553,8 +553,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
         if (!hasExistingFlags) {
           stopMetricsCollector()
-          eventBus.emit(Event.READY, { ...storage })
+          const allFlags = { ...storage }
           startMetricsCollector()
+
+          eventBus.emit(Event.READY, allFlags)
         }
       }, doDefer)
     }
@@ -606,7 +608,19 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
   }
 
-  return { on, off, variation, close, setEvaluations, registerAPIRequestMiddleware, refreshEvaluations }
+  const variation = (identifier: string, defaultValue: any, withDebug = false) => {
+    return getVariation(identifier, defaultValue, storage, handleMetrics, withDebug)
+  }
+
+  return {
+    on,
+    off,
+    close,
+    setEvaluations,
+    registerAPIRequestMiddleware,
+    refreshEvaluations,
+    variation: variation as VariationFn
+  }
 }
 
 export {

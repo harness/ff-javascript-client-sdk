@@ -30,6 +30,13 @@ export enum Event {
 
 export type VariationValue = boolean | string | number | object | undefined
 
+// Used when callers, such as the Flutter SDK for Web, require to know if the variation failed
+// and the default value was returned.
+export interface VariationValueWithDebug {
+  value: VariationValue
+  isDefaultValue: boolean
+}
+
 export interface Evaluation {
   flag: string // Feature flag identifier
   identifier: string // variation identifier
@@ -59,10 +66,17 @@ export type EventOffBinding = <K extends keyof EventCallbackMapping>(
   callback?: EventCallbackMapping[K]
 ) => void
 
+export type VariationFn = {
+  (identifier: string, defaultValue: any): VariationValue
+  (identifier: string, defaultValue: any, withDebug?: boolean): VariationValue | VariationValueWithDebug
+  (identifier: string, defaultValue: any, withDebug: false): VariationValue
+  (identifier: string, defaultValue: any, withDebug: true): VariationValueWithDebug
+}
+
 export interface Result {
   on: EventOnBinding
   off: EventOffBinding
-  variation: (identifier: string, defaultValue: any) => VariationValue
+  variation: VariationFn
   close: () => void
   setEvaluations: (evaluations: Evaluation[]) => void
   registerAPIRequestMiddleware: (middleware: APIRequestMiddleware) => void

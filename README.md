@@ -123,10 +123,41 @@ client.on(Event.ERROR_STREAM, error => {
 
 ### Getting value for a particular feature flag
 
+If you would like to know that the default variation was returned when getting the value, for example, if the provided flag identifier wasn't found then pass true for the third argument withDebug:
 ```typescript
-const value = client.variation('Dark_Theme', false) // second argument is default value when variation does not exist
+const result = client.variation('Dark_Theme', false, true);
 ```
 
+When `withDebug` is set to true, the result object will have the following structure:
+
+```typescript
+interface VariationValueWithDebug {
+  value: any,                 // The actual variation value
+  isDefaultValue: boolean     // True if the default variation was returned, false otherwise
+}
+```
+
+For the example above, if the flag identifier 'Dark_Theme' is not found, result would look like:
+
+```typescript
+{
+  value: false,
+  isDefaultValue: true
+}
+```
+
+If you do not need to know the default variation was returned: 
+
+```typescript
+const variationValue = client.variation('Dark_Theme', false) // second argument is default value when variation does not exist
+```
+
+In this case, the result will be a direct value, either from the existing variation or the default value you provided. There won't be an object structure; you'll simply get the value itself.
+
+For the example above:
+
+- If the flag identifier 'Dark_Theme' exists in storage, variationValue would be the stored value for that identifier.
+- If the flag identifier 'Dark_Theme' does not exist, variationValue would be the default value provided, in this case, false
 ### Cleaning up
 
 Remove a listener of an event by `client.off`.
@@ -170,7 +201,7 @@ const client = initialize('00000000-1111-2222-3333-444444444444', {
 The `cache` option can also be passed as an object with the following options.
 
 ```typescript
-export interface CacheOptions {
+interface CacheOptions {
   ttl?: number // maximum age of stored cache, in ms, before it is considered stale 
 }
 ```
@@ -196,7 +227,7 @@ client.setEvaluations(evals);
 In which `Evaluation` is defined as:
 
 ```typescript
-export interface Evaluation {
+interface Evaluation {
   flag: string // Feature flag identifier
   identifier: string // variation identifier
   value: boolean | string | number | object | undefined // variation value

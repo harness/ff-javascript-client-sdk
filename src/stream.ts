@@ -1,4 +1,4 @@
-import { Evaluation, Event, StreamEvent } from './types'
+import { Event, StreamEvent } from './types'
 import { logError } from './utils'
 
 const SSE_TIMEOUT_MS = 30000
@@ -111,7 +111,7 @@ export class Streamer {
     let offset = 0
     let lastActivity = Date.now()
 
-    this.xhr.onprogress = event => {
+    this.xhr.onprogress = () => {
       lastActivity = Date.now()
       const data = this.xhr.responseText.slice(offset)
       offset += data.length
