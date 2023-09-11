@@ -336,8 +336,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           // emit the ready event only if flags weren't already set using setEvaluations
           if (!hasExistingFlags) {
             stopMetricsCollector()
-            eventBus.emit(Event.READY, { ...storage })
+            const allFlags = { ...storage }
             startMetricsCollector()
+
+            eventBus.emit(Event.READY, allFlags)
           }
         })
         .then(() => {
@@ -494,11 +496,11 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const on: EventOnBinding = (event, callback) =>
-    eventBus.on((event as unknown) as EventType, (callback as unknown) as WildcardHandler)
+    eventBus.on(event as unknown as EventType, callback as unknown as WildcardHandler)
 
   const off: EventOffBinding = (event, callback) => {
     if (event) {
-      eventBus.off((event as unknown) as '*', (callback as unknown) as WildcardHandler)
+      eventBus.off(event as unknown as '*', callback as unknown as WildcardHandler)
     } else {
       close()
     }
@@ -551,8 +553,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
         if (!hasExistingFlags) {
           stopMetricsCollector()
-          eventBus.emit(Event.READY, { ...storage })
+          const allFlags = { ...storage }
           startMetricsCollector()
+
+          eventBus.emit(Event.READY, allFlags)
         }
       }, doDefer)
     }
