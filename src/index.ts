@@ -14,7 +14,7 @@ import type {
   VariationValue
 } from './types'
 import { Event } from './types'
-import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
+import {defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL, MIN_POLLING_INTERVAL} from './utils'
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
@@ -60,10 +60,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let metricsSchedulerId: number
   let metricsCollectorEnabled = true
   let standardHeaders: Record<string, string> = {}
+  let pollIntervalID: number
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
   let lastCacheRefreshTime = 0
   let initialised = false
-  let pollInterval: number;
 
   const stopMetricsCollector = () => {
     metricsCollectorEnabled = false
@@ -80,11 +80,12 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const startPollingInterval = () => {
-    if (pollInterval) {
-      clearInterval(pollInterval); // clear existing interval if any
+    if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
+      configurations.pollingInterval = MIN_POLLING_INTERVAL
     }
+
     logDebug("starting poll interval")
-    pollInterval = window.setInterval(poll, 5000); // set new interval
+    pollIntervalID = window.setInterval(poll, configurations.pollingInterval); // set new interval
   }
 
   const poll = () => {
