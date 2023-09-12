@@ -29,12 +29,6 @@ export class Streamer {
       }
     }
 
-    // TODO: Implement polling when stream is disabled
-    if (!this.configurations.streamEnabled) {
-      logDebug('Stream is disabled by configuration. Note: Polling is not yet supported')
-      return
-    }
-
     const processData = (data: any): void => {
       data.toString().split(/\r?\n/).forEach(processLine)
     }

@@ -92,7 +92,6 @@ export interface Options {
   eventsSyncInterval?: number
   pollingInterval?: number,
   streamEnabled?: boolean
-  pollingEnabled?: boolean
   allAttributesPrivate?: boolean
   privateAttributeNames?: string[]
   debug?: boolean

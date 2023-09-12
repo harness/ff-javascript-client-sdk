@@ -328,7 +328,13 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         })
         .then(() => {
           if (closed) return
-          startStream() // start stream only after we get all evaluations
+          // start stream or polling only after we get all evaluations
+          if (configurations.streamEnabled) {
+            startStream()
+          } else {
+            logDebug('Stream is disabled by configuration. Using polling mode')
+            startPolling()
+          }
         })
         .then(() => {
           if (closed) return
