@@ -1,60 +1,76 @@
-import {logError, MIN_POLLING_INTERVAL} from "./utils";
-
+import { logError, MIN_POLLING_INTERVAL } from './utils'
+import type { Options } from './types'
 
 // Polling.ts
 
-export default class Polling {
-    private intterval
-    private intervalId?: number;
-    private readonly intervalTime: number;
-    private readonly callback: () => void;
+export default class Poller {
+  private timeoutId: number;
 
-    constructor(callback: () => void, intervalTime = 60000) {
-        this.callback = callback;
-        this.intervalTime = intervalTime;
+  constructor(
+      private interval: number,
+      private fetchFlagsFn: () => Promise<any | undefined>,
+      private configurations: Options,
+      private maxAttempts: number = 5 
+  ) {}
+
+  public async start(): Promise<void> {
+    const logDebug = (message: string, ...args: any[]) => {
+      if (this.configurations.debug) {
+        console.debug(`[FF-SDK] ${message}`, ...args);
+      }
     }
 
-    // Start the polling process
-    public start(): void {
-        if (this.intervalId) {
-            logError("Attempted to start polling interval ID exists")
-            this.intervalId = window.setInterval(this.callback, this.intervalTime);
+    for (let i = 0; i <= this.maxAttempts; i++) {
+      const error = await this.fetchFlagsFn();
+
+      if (error) {
+        logDebug('Error when polling for flag updates', error);
+
+        // If max retries haven't been reached, log and try again
+        if (i < this.maxAttempts) {
+          logDebug(`Retrying... Attempts left: ${this.maxAttempts - i}`);
+        } else {
+          logDebug('Max attempts reached. Will try again after the interval.');
+          break;
         }
+      } else {
+        logDebug('Successfully polled for flag updates');
+        break;
+      }
     }
 
-    // Stop the polling process
-    public stop(): void {
-        if (!this.intervalId) {
-            logError("Attempted to stop polling but no interval ID")
-            return
-        }
-        window.clearInterval(this.intervalId);
-        this.intervalId = undefined;
+    // Wait for the desired interval before the next poll
+    this.timeoutId = window.setTimeout(() => this.start(), this.interval);
+  }
+
+  public stop(): void {
+    if (this.timeoutId !== undefined) {
+      window.clearTimeout(this.timeoutId);
+      this.timeoutId = undefined;
     }
+  }
 }
 
 
-
-    // const startPollingInterval = () => {
-    //     if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
-    //         configurations.pollingInterval = MIN_POLLING_INTERVAL
-    //     }
-    //
-    //     logDebug("starting poll interval")
-    //     // TODO - do we need to check if pollInterID is already set? I don't think so, as when polling is stopped, we can
-    //     //  clear it then.
-    //     pollIntervalID = window.setInterval(poll, configurations.pollingInterval);
-    // }
-    //
-    // const stopPollingInterval = () => {
-    //     if (!pollIntervalID) {
-    //         logError("Attempted to stop polling but no interval ID")
-    //         return
-    //     }
-    //     clearInterval(pollIntervalID);
-    // }
-    //
-    // const poll = () => {
-    //
-    // }
-
+// const startPollingInterval = () => {
+//     if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
+//         configurations.pollingInterval = MIN_POLLING_INTERVAL
+//     }
+//
+//     logDebug("starting poll interval")
+//     // TODO - do we need to check if pollInterID is already set? I don't think so, as when polling is stopped, we can
+//     //  clear it then.
+//     pollIntervalID = window.setInterval(poll, configurations.pollingInterval);
+// }
+//
+// const stopPollingInterval = () => {
+//     if (!pollIntervalID) {
+//         logError("Attempted to stop polling but no interval ID")
+//         return
+//     }
+//     clearInterval(pollIntervalID);
+// }
+//
+// const poll = () => {
+//
+// }
