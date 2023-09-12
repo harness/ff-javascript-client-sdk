@@ -1,4 +1,3 @@
-import { logError, MIN_POLLING_INTERVAL } from './utils'
 import type { Options } from './types'
 
 export default class Poller {
@@ -6,7 +5,7 @@ export default class Poller {
   private maxAttempts: number = 5
 
   constructor(
-    private fetchFlagsFn: () => Promise<any | undefined>,
+    private fetchFlagsFn: () => Promise<any>,
     private configurations: Options,
     private pollInterval: number
   ) {}
@@ -48,25 +47,3 @@ export default class Poller {
   }
 }
 
-// const startPollingInterval = () => {
-//     if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
-//         configurations.pollingInterval = MIN_POLLING_INTERVAL
-//     }
-//
-//     logDebug("starting poll interval")
-//     // TODO - do we need to check if pollInterID is already set? I don't think so, as when polling is stopped, we can
-//     //  clear it then.
-//     pollIntervalID = window.setInterval(poll, configurations.pollingInterval);
-// }
-//
-// const stopPollingInterval = () => {
-//     if (!pollIntervalID) {
-//         logError("Attempted to stop polling but no interval ID")
-//         return
-//     }
-//     clearInterval(pollIntervalID);
-// }
-//
-// const poll = () => {
-//
-// }

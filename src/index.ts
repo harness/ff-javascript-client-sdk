@@ -14,12 +14,12 @@ import type {
   VariationValue
 } from './types'
 import { Event } from './types'
-import {defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL, MIN_POLLING_INTERVAL} from './utils'
+import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL, MIN_POLLING_INTERVAL } from './utils'
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
 import { getVariation } from './variation'
-import Poller from "./polling";
+import Poller from './polling'
 
 const SDK_VERSION = '1.16.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
@@ -57,7 +57,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let environment: string
   let clusterIdentifier: string
   let eventSource: any
-  let polling: any
+  let poller: any
   let jwtToken: string
   let metricsSchedulerId: number
   let metricsCollectorEnabled = true
@@ -501,7 +501,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
       configurations.pollingInterval = MIN_POLLING_INTERVAL
     }
-    const poller = new Poller(fetchFlags, configurations, configurations.pollingInterval )
+    poller = new Poller(fetchFlags, configurations, configurations.pollingInterval)
     poller.start()
   }
 
@@ -621,8 +621,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   const variation = (identifier: string, defaultValue: any, withDebug = false) => {
     return getVariation(identifier, defaultValue, storage, handleMetrics, withDebug)
   }
-
-  startPollingInterval();
 
   return {
     on,
