@@ -90,6 +90,7 @@ export interface Options {
   baseUrl?: string
   eventUrl?: string
   eventsSyncInterval?: number
+  pollingInterval?: number,
   streamEnabled?: boolean
   allAttributesPrivate?: boolean
   privateAttributeNames?: string[]

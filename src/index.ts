@@ -63,6 +63,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
   let lastCacheRefreshTime = 0
   let initialised = false
+  let pollInterval: number;
 
   const stopMetricsCollector = () => {
     metricsCollectorEnabled = false
@@ -76,6 +77,18 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   if (configurations.eventsSyncInterval < MIN_EVENTS_SYNC_INTERVAL) {
     configurations.eventsSyncInterval = MIN_EVENTS_SYNC_INTERVAL
+  }
+
+  const startPollingInterval = () => {
+    if (pollInterval) {
+      clearInterval(pollInterval); // clear existing interval if any
+    }
+    logDebug("starting poll interval")
+    pollInterval = window.setInterval(poll, 5000); // set new interval
+  }
+
+  const poll = () => {
+
   }
 
   const logDebug = (message: string, ...args: any[]) => {
@@ -611,6 +624,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   const variation = (identifier: string, defaultValue: any, withDebug = false) => {
     return getVariation(identifier, defaultValue, storage, handleMetrics, withDebug)
   }
+
+  startPollingInterval();
 
   return {
     on,
