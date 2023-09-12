@@ -11,29 +11,27 @@ export default class Poller {
     private pollInterval: number
   ) {}
 
-  public async start(): Promise<void> {
+  public start(): void {
+    this.attemptFetch().finally(() => {
+      this.timeoutId = window.setTimeout(() => this.start(), this.pollInterval)
+    })
+  }
 
-    for (let i = 0; i <= this.maxAttempts; i++) {
-      const error = await this.fetchFlagsFn()
+  private async attemptFetch(retries: number = 0): Promise<void> {
+    const error = await this.fetchFlagsFn()
 
-      if (error) {
-        this.logDebug('Error when polling for flag updates', error)
-
-        // If max retries haven't been reached, log and try again
-        if (i < this.maxAttempts) {
-          this.logDebug(`Retrying... Attempts left: ${this.maxAttempts - i}`)
-        } else {
-          this.logDebug('Max attempts reached. Will try again after the interval.')
-          break
-        }
-      } else {
-        this.logDebug('Successfully polled for flag updates')
-        break
-      }
+    if (!error) {
+      this.logDebug('Successfully polled for flag updates')
+      return
     }
 
-    // Wait for the desired interval before the next poll
-    this.timeoutId = window.setTimeout(() => this.start(), this.interval)
+    this.logDebug('Error when polling for flag updates', error)
+    if (retries < this.maxAttempts) {
+      this.logDebug(`Retrying... Attempts left: ${this.maxAttempts - retries}`)
+      await this.attemptFetch(retries + 1)
+    } else {
+      this.logDebug(`Max retries reached. Will poll again in next interval: ${this.pollInterval}`)
+    }
   }
 
   public stop(): void {

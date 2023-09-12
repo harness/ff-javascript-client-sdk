@@ -502,6 +502,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       configurations.pollingInterval = MIN_POLLING_INTERVAL
     }
     const poller = new Poller(fetchFlags, configurations, configurations.pollingInterval )
+    poller.start()
   }
 
   const on: EventOnBinding = (event, callback) =>
