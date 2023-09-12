@@ -4,53 +4,52 @@ import type { Options } from './types'
 // Polling.ts
 
 export default class Poller {
-  private timeoutId: number;
+  private timeoutId: number
 
   constructor(
-      private interval: number,
-      private fetchFlagsFn: () => Promise<any | undefined>,
-      private configurations: Options,
-      private maxAttempts: number = 5 
+    private interval: number,
+    private fetchFlagsFn: () => Promise<any | undefined>,
+    private configurations: Options,
+    private maxAttempts: number = 5
   ) {}
 
   public async start(): Promise<void> {
-    const logDebug = (message: string, ...args: any[]) => {
-      if (this.configurations.debug) {
-        console.debug(`[FF-SDK] ${message}`, ...args);
-      }
-    }
-
     for (let i = 0; i <= this.maxAttempts; i++) {
-      const error = await this.fetchFlagsFn();
+      const error = await this.fetchFlagsFn()
 
       if (error) {
-        logDebug('Error when polling for flag updates', error);
+        this.logDebug('Error when polling for flag updates', error)
 
         // If max retries haven't been reached, log and try again
         if (i < this.maxAttempts) {
-          logDebug(`Retrying... Attempts left: ${this.maxAttempts - i}`);
+          this.logDebug(`Retrying... Attempts left: ${this.maxAttempts - i}`)
         } else {
-          logDebug('Max attempts reached. Will try again after the interval.');
-          break;
+          this.logDebug('Max attempts reached. Will try again after the interval.')
+          break
         }
       } else {
-        logDebug('Successfully polled for flag updates');
-        break;
+        this.logDebug('Successfully polled for flag updates')
+        break
       }
     }
 
     // Wait for the desired interval before the next poll
-    this.timeoutId = window.setTimeout(() => this.start(), this.interval);
+    this.timeoutId = window.setTimeout(() => this.start(), this.interval)
   }
 
   public stop(): void {
     if (this.timeoutId !== undefined) {
-      window.clearTimeout(this.timeoutId);
-      this.timeoutId = undefined;
+      window.clearTimeout(this.timeoutId)
+      this.timeoutId = undefined
+    }
+  }
+
+  private logDebug(message: string, ...args: any[]): void {
+    if (this.configurations.debug) {
+      console.debug(`[FF-SDK] ${message}`, ...args)
     }
   }
 }
-
 
 // const startPollingInterval = () => {
 //     if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
