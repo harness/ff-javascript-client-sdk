@@ -56,11 +56,11 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let environment: string
   let clusterIdentifier: string
   let eventSource: any
+  let polling: any
   let jwtToken: string
   let metricsSchedulerId: number
   let metricsCollectorEnabled = true
   let standardHeaders: Record<string, string> = {}
-  let pollIntervalID: number
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
   let lastCacheRefreshTime = 0
   let initialised = false
@@ -77,29 +77,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   if (configurations.eventsSyncInterval < MIN_EVENTS_SYNC_INTERVAL) {
     configurations.eventsSyncInterval = MIN_EVENTS_SYNC_INTERVAL
-  }
-
-  const startPollingInterval = () => {
-    if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
-      configurations.pollingInterval = MIN_POLLING_INTERVAL
-    }
-
-    logDebug("starting poll interval")
-    // TODO - do we need to check if pollInterID is already set? I don't think so, as when polling is stopped, we can
-    //  clear it then.
-    pollIntervalID = window.setInterval(poll, configurations.pollingInterval);
-  }
-
-  const stopPollingInterval = () => {
-    if (!pollIntervalID) {
-      logError("Attempted to stop polling but no interval ID")
-      return
-    }
-    clearInterval(pollIntervalID);
-  }
-
-  const poll = () => {
-
   }
 
   const logDebug = (message: string, ...args: any[]) => {
