@@ -85,7 +85,17 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
 
     logDebug("starting poll interval")
-    pollIntervalID = window.setInterval(poll, configurations.pollingInterval); // set new interval
+    // TODO - do we need to check if pollInterID is already set? I don't think so, as when polling is stopped, we can
+    //  clear it then.
+    pollIntervalID = window.setInterval(poll, configurations.pollingInterval);
+  }
+
+  const stopPollingInterval = () => {
+    if (!pollIntervalID) {
+      logError("Attempted to stop polling but no interval ID")
+      return
+    }
+    clearInterval(pollIntervalID);
   }
 
   const poll = () => {
