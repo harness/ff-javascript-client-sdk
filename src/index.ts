@@ -19,6 +19,7 @@ import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluat
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
 import { getVariation } from './variation'
+import Poller from "./polling";
 
 const SDK_VERSION = '1.16.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
@@ -494,6 +495,13 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       }
     })
     eventSource.start()
+  }
+
+  const startPolling = () => {
+    if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
+      configurations.pollingInterval = MIN_POLLING_INTERVAL
+    }
+    const poller = new Poller(fetchFlags, configurations, configurations.pollingInterval )
   }
 
   const on: EventOnBinding = (event, callback) =>

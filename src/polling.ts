@@ -1,19 +1,18 @@
 import { logError, MIN_POLLING_INTERVAL } from './utils'
 import type { Options } from './types'
 
-// Polling.ts
-
 export default class Poller {
   private timeoutId: number
+  private maxAttempts: number = 5
 
   constructor(
-    private interval: number,
     private fetchFlagsFn: () => Promise<any | undefined>,
     private configurations: Options,
-    private maxAttempts: number = 5
+    private pollInterval: number
   ) {}
 
   public async start(): Promise<void> {
+
     for (let i = 0; i <= this.maxAttempts; i++) {
       const error = await this.fetchFlagsFn()
 
