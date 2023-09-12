@@ -13,7 +13,7 @@ export class Streamer {
   private xhr: XMLHttpRequest
   private closed: boolean = false
 
-  constructor(eventBus, configurations, url, apiKey, standardHeaders, eventCallback) {
+  constructor(eventBus, configurations, url, apiKey, standardHeaders, fallbackPoller, eventCallback) {
     this.eventBus = eventBus
     this.configurations = configurations
     this.url = url

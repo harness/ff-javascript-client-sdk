@@ -80,6 +80,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     configurations.eventsSyncInterval = MIN_EVENTS_SYNC_INTERVAL
   }
 
+  if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
+    configurations.pollingInterval = MIN_POLLING_INTERVAL
+  }
+
   const logDebug = (message: string, ...args: any[]) => {
     if (configurations.debug) {
       // tslint:disable-next-line:no-console
@@ -429,6 +433,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     startMetricsCollector()
   }
 
+  // We instantiate the Poller here so it can be used as a fallback for streaming, but we don't start it yet.
+  poller = new Poller(fetchFlags, configurations, configurations.pollingInterval)
+
   const startStream = () => {
     const handleFlagEvent = (event: StreamEvent): void => {
       switch (event.event) {
@@ -493,7 +500,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
     const url = `${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`
 
-    eventSource = new Streamer(eventBus, configurations, url, apiKey, standardHeaders, event => {
+    eventSource = new Streamer(eventBus, configurations, url, apiKey, standardHeaders, poller, event => {
       if (event.domain === 'flag') {
         handleFlagEvent(event)
       } else if (event.domain === 'target-segment') {
@@ -504,10 +511,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const startPolling = () => {
-    if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
-      configurations.pollingInterval = MIN_POLLING_INTERVAL
-    }
-    poller = new Poller(fetchFlags, configurations, configurations.pollingInterval)
     poller.start()
   }
 
