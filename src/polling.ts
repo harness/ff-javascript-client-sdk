@@ -34,9 +34,9 @@ export default class Poller {
 
       // Retry fetching flags of flags
       if (i < this.maxAttempts) {
-        this.logDebug(`Polling for flags attempt #${i} failed. Remaining attempts: ${this.maxAttempts - i}.`);
+        this.logDebug(`Polling for flags attempt #${i} failed. Remaining attempts: ${this.maxAttempts - i}.`)
       } else {
-        this.logDebug(`Maximum attempts reached for polling for flags. Next poll in ${this.pollInterval}ms.`);
+        this.logDebug(`Maximum attempts reached for polling for flags. Next poll in ${this.pollInterval}ms.`)
       }
     }
   }
