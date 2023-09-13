@@ -50,7 +50,7 @@ describe('Poller', () => {
 
     jest.advanceTimersByTime(pollInterval)
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < maxAttempts; i++) {
       await Promise.resolve()
     }
     await Promise.resolve()
