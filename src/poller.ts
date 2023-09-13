@@ -18,7 +18,9 @@ export default class Poller {
     }
 
     this.isRunning = true
-    this.poll()
+
+    // Don't start polling immediately as we have alreadu fetched flags on client initialization
+    window.setTimeout(() => this.poll(), this.configurations.pollingInterval)
   }
 
   public poll(): void {
@@ -51,7 +53,7 @@ export default class Poller {
     if (this.timeoutId !== undefined) {
       window.clearTimeout(this.timeoutId)
       this.timeoutId = undefined
-      this.isRunning = false;
+      this.isRunning = false
     }
   }
 

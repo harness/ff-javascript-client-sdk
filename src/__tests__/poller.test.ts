@@ -37,7 +37,6 @@ describe('Poller', () => {
     await Promise.resolve()
     expect(fetchFlagsFn).toHaveBeenCalledTimes(2)
     expect(logSpy).toHaveBeenCalledWith('Error when polling for flag updates', expect.any(Error))
-    // expect(logSpy).toHaveBeenCalledWith(`Maximum attempts reached for polling for flags. Next poll in ${pollInterval}ms.`);
   })
 
   it('should not retry after max attempts are exceeded', async () => {
@@ -48,6 +47,8 @@ describe('Poller', () => {
     const logSpy = jest.spyOn(poller as any, 'logDebug')
 
     poller.start()
+
+    jest.advanceTimersByTime(pollInterval)
 
     for (let i = 0; i < 5; i++) {
       await Promise.resolve()
@@ -66,8 +67,8 @@ describe('Poller', () => {
     const logSpy = jest.spyOn(poller as any, 'logDebug')
 
     poller.start()
-    jest.advanceTimersByTime(pollInterval) // Simulate time for one poll
-    await Promise.resolve() // Ensure promise has resolved
+    jest.advanceTimersByTime(pollInterval)
+    await Promise.resolve()
 
     expect(fetchFlagsFn).toHaveBeenCalledTimes(1)
     expect(logSpy).toHaveBeenCalledWith('Successfully polled for flag updates')
