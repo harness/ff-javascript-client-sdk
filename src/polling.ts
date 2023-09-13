@@ -34,9 +34,9 @@ export default class Poller {
 
       // Retry fetching flags of flags
       if (i < this.maxAttempts) {
-        this.logDebug(`Retrying... Attempts left: ${this.maxAttempts - i}`)
+        this.logDebug(`Polling for flags attempt #${i} failed. Remaining attempts: ${this.maxAttempts - i}.`);
       } else {
-        this.logDebug('Max attempts reached. Will try again after the interval.')
+        this.logDebug(`Maximum attempts reached for polling for flags. Next poll in ${this.pollInterval}ms.`);
       }
     }
   }
@@ -54,7 +54,7 @@ export default class Poller {
 
   private logDebug(message: string, ...args: any[]): void {
     if (this.configurations.debug) {
-      console.debug(`[FF-SDK] ${message}`, ...args)
+      console.debug(`[FF-SDK] Poller: ${message}`, ...args)
     }
   }
 }
