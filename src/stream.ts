@@ -1,5 +1,6 @@
 import { Event, StreamEvent } from './types'
 import { logError } from './utils'
+import type Poller from "./polling";
 
 const SSE_TIMEOUT_MS = 30000
 
@@ -12,7 +13,7 @@ export class Streamer {
   private readonly eventCallback: any
   private xhr: XMLHttpRequest
   private closed: boolean = false
-  private fallbackPoller
+  private fallbackPoller: Poller
 
   constructor(eventBus, configurations, url, apiKey, standardHeaders, fallbackPoller, eventCallback) {
     this.eventBus = eventBus
