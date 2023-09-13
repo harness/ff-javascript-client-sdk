@@ -57,7 +57,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let environment: string
   let clusterIdentifier: string
   let eventSource: any
-  let poller: any
+  let poller: Poller
   let jwtToken: string
   let metricsSchedulerId: number
   let metricsCollectorEnabled = true
