@@ -53,7 +53,6 @@ describe('Poller', () => {
     for (let i = 0; i < maxAttempts; i++) {
       await Promise.resolve()
     }
-    await Promise.resolve()
     expect(fetchFlagsFn).toHaveBeenCalledTimes(5)
     expect(logSpy).toHaveBeenCalledWith('Error when polling for flag updates', expect.any(Error))
     expect(logSpy).toHaveBeenCalledWith(
