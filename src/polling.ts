@@ -21,21 +21,25 @@ export default class Poller {
     })
   }
 
-  private async attemptFetch(attempts: number = 0): Promise<void> {
-    const error = await this.fetchFlagsFn()
+  private async attemptFetch(): Promise<void> {
+    for (let i = 0; i < this.maxAttempts; i++) {
+      const error = await this.fetchFlagsFn();
 
-    if (!error) {
-      this.logDebug('Successfully polled for flag updates')
-      return
+      if (!error) {
+        this.logDebug('Successfully polled for flag updates');
+        return;
+      }
+
+      this.logDebug('Error when polling for flag updates', error);
+
+      // Retry fetching flags of flags
+      if (i < this.maxAttempts - 1) {
+        this.logDebug(`Retrying... Attempts left: ${this.maxAttempts - i - 1}`);
+      } else {
+        this.logDebug('Max retries reached. Will try again after the interval.');
+      }
     }
 
-    this.logDebug('Error when polling for flag updates', error)
-    if (attempts < this.maxAttempts) {
-      this.logDebug(`Retrying... Attempts left: ${this.maxAttempts - attempts}`)
-      await this.attemptFetch(attempts + 1)
-    } else {
-      this.logDebug(`Max retries reached. Will poll again in next interval: ${this.pollInterval}`)
-    }
   }
 
   public stop(): void {
