@@ -12,6 +12,7 @@ export class Streamer {
   private readonly eventCallback: any
   private xhr: XMLHttpRequest
   private closed: boolean = false
+  private fallbackPoller
 
   constructor(eventBus, configurations, url, apiKey, standardHeaders, fallbackPoller, eventCallback) {
     this.eventBus = eventBus
@@ -20,6 +21,7 @@ export class Streamer {
     this.apiKey = apiKey
     this.standardHeaders = standardHeaders
     this.eventCallback = eventCallback
+    this.fallbackPoller = fallbackPoller
   }
 
   start() {
@@ -62,6 +64,12 @@ export class Streamer {
       if (!!msg) {
         logError('Stream has issue', msg)
       }
+
+      // Fallback to polling while we have a stream failure
+      if (!this.fallbackPoller.isPolling()) {
+        this.fallbackPoller.start();
+      }
+
       this.eventBus.emit(Event.ERROR_STREAM, msg)
       this.eventBus.emit(Event.ERROR, msg)
       onDisconnect()
@@ -99,6 +107,10 @@ export class Streamer {
         onFailed(`HTTP code ${this.xhr.status}`)
         return
       }
+      // if we are in polling mode due to a streaming error, then stop polling
+      if (this.fallbackPoller.isPolling()) {
+        this.fallbackPoller.stop();
+      }
       onConnected()
     }
 
@@ -128,6 +140,10 @@ export class Streamer {
     this.closed = true
     if (this.xhr) {
       this.xhr.abort()
+    }
+    // if we are still in polling mode when close is called, then stop polling
+    if (this.fallbackPoller.isPolling()) {
+      this.fallbackPoller.stop();
     }
   }
 }
