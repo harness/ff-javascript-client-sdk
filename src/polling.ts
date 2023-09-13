@@ -51,6 +51,7 @@ export default class Poller {
     if (this.timeoutId !== undefined) {
       window.clearTimeout(this.timeoutId)
       this.timeoutId = undefined
+      this.isRunning = false;
     }
   }
 
