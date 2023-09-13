@@ -40,7 +40,7 @@ export default class Poller {
 
       this.logDebug('Error when polling for flag updates', error)
 
-      // Retry fetching flags of flags
+      // Retry fetching flags
       if (i < this.maxAttempts) {
         this.logDebug(`Polling for flags attempt #${i} failed. Remaining attempts: ${this.maxAttempts - i}.`)
       } else {
