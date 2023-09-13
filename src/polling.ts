@@ -23,7 +23,7 @@ export default class Poller {
 
   private poll(): void {
     this.attemptFetch().finally(() => {
-      this.timeoutId = window.setTimeout(() => this.poll(), 5000)
+      this.timeoutId = window.setTimeout(() => this.poll(), this.configurations.pollingInterval)
     })
   }
 
