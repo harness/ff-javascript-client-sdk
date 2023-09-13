@@ -4,7 +4,7 @@ jest.useFakeTimers()
 
 describe('Poller', () => {
   let fetchFlagsFn: jest.Mock
-  let configurations: any
+  let configurations: object
   let pollInterval: number
   let maxAttempts: number
 
