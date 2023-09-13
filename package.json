@@ -1,6 +1,6 @@
 {
   "name": "@harnessio/ff-javascript-client-sdk",
-  "version": "1.16.0",
+  "version": "1.17.0-rc.1",
   "author": "Harness",
   "license": "Apache-2.0",
   "main": "dist/sdk.cjs.js",
@@ -40,7 +40,8 @@
   },
   "dependencies": {
     "jwt-decode": "^3.1.2",
-    "mitt": "^2.1.0"
+    "mitt": "^2.1.0",
+    "tslib": "^2.6.2"
   },
   "keywords": [
     "Harness",
