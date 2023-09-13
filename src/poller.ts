@@ -21,14 +21,14 @@ export default class Poller {
     this.poll()
   }
 
-  private poll(): void {
+  public poll(): void {
     this.attemptFetch().finally(() => {
       this.timeoutId = window.setTimeout(() => this.poll(), this.configurations.pollingInterval)
     })
   }
 
   private async attemptFetch(): Promise<void> {
-    for (let i = 1; i < this.maxAttempts; i++) {
+    for (let i = 1; i <= this.maxAttempts; i++) {
       const error = await this.fetchFlagsFn()
 
       if (!error) {
