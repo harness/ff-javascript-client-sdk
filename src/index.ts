@@ -19,7 +19,7 @@ import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluat
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
 import { getVariation } from './variation'
-import Poller from './polling'
+import Poller from './poller'
 
 const SDK_VERSION = '1.16.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`

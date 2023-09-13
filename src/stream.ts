@@ -1,6 +1,6 @@
 import { Event, StreamEvent } from './types'
 import { logError } from './utils'
-import type Poller from "./polling";
+import type Poller from "./poller";
 
 const SSE_TIMEOUT_MS = 30000
 
