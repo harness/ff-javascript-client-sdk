@@ -11,7 +11,7 @@ describe('Poller', () => {
   beforeEach(() => {
     configurations = {}
     fetchFlagsFn = jest.fn()
-    pollInterval = 3000
+    pollInterval = 60000
     maxAttempts = 5
   })
 
