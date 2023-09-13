@@ -2,6 +2,7 @@ import type { Options } from './types'
 
 export default class Poller {
   private timeoutId: number
+  private isRunning: boolean
 
   constructor(
     private fetchFlagsFn: () => Promise<any>,
@@ -16,8 +17,13 @@ export default class Poller {
       return
     }
 
+    this.isRunning = true
+    this.poll()
+  }
+
+  private poll(): void {
     this.attemptFetch().finally(() => {
-      this.timeoutId = window.setTimeout(() => this.start(), this.pollInterval)
+      this.timeoutId = window.setTimeout(() => this.poll(), 5000)
     })
   }
 
@@ -49,7 +55,7 @@ export default class Poller {
   }
 
   public isPolling(): boolean {
-    return this.timeoutId !== undefined
+    return this.isRunning
   }
 
   private logDebug(message: string, ...args: any[]): void {

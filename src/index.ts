@@ -65,6 +65,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
   let lastCacheRefreshTime = 0
   let initialised = false
+  let pollingMaxAttempts = 5
 
   const stopMetricsCollector = () => {
     metricsCollectorEnabled = false
@@ -434,7 +435,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   // We instantiate the Poller here so it can be used as a fallback for streaming, but we don't start it yet.
-  poller = new Poller(fetchFlags, configurations, configurations.pollingInterval)
+  poller = new Poller(fetchFlags, configurations, configurations.pollingInterval, pollingMaxAttempts)
 
   const startStream = () => {
     const handleFlagEvent = (event: StreamEvent): void => {
