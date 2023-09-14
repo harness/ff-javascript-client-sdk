@@ -14,7 +14,7 @@ export default class Poller {
 
   public start(): void {
     if (this.isPolling()) {
-      this.logDebug('Polling was requested but is already running - only one poller can run at a time.')
+      this.logDebug('Already polling.')
       return
     }
 
