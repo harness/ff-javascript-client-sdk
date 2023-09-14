@@ -18,6 +18,11 @@ export default class Poller {
       return
     }
 
+    // Defensive check to ensure polling is enabled. This comes into play if streaming attempts to fallback
+    if (!this.configurations.pollingEnabled) {
+      return
+    }
+
     this.isRunning = true
 
     // Don't start polling immediately as we have already fetched flags on client initialization

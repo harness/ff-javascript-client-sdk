@@ -65,9 +65,7 @@ export class Streamer {
       }
 
       // Fallback to polling while we have a stream failure
-      if (!this.fallbackPoller.isPolling()) {
-        this.fallbackPoller.start();
-      }
+      this.fallBackToPolling();
 
       this.eventBus.emit(Event.ERROR_STREAM, msg)
       this.eventBus.emit(Event.ERROR, msg)
@@ -135,12 +133,24 @@ export class Streamer {
     this.xhr.send()
   }
 
+
+
   close(): void {
     this.closed = true
     if (this.xhr) {
       this.xhr.abort()
     }
     // if we are still in polling mode when close is called, then stop polling
+    this.stopFallBackPolling();
+  }
+
+  private fallBackToPolling() {
+    if (!this.fallbackPoller.isPolling() && this.configurations.pollingEnabled) {
+      this.fallbackPoller.start();
+    }
+  }
+
+  private stopFallBackPolling() {
     if (this.fallbackPoller.isPolling()) {
       this.fallbackPoller.stop();
     }
