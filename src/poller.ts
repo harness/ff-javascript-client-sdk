@@ -8,7 +8,7 @@ export default class Poller {
     private fetchFlagsFn: () => Promise<any>,
     private configurations: Options,
     private pollInterval: number,
-    private maxAttempts: number
+    private maxAttempts = 5
   ) {}
 
   public start(): void {
