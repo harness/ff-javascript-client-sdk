@@ -352,11 +352,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       initialised = true
     })
     .catch(error => {
-      if (error.message.includes('Authentication')) {
-        logError('Authentication error: ', error)
-        eventBus.emit(Event.ERROR_AUTH, error)
-      }
-
+      logError('Authentication error: ', error)
+      eventBus.emit(Event.ERROR_AUTH, error)
       eventBus.emit(Event.ERROR, error)
     })
 
