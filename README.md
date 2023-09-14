@@ -105,7 +105,7 @@ const options = {
   pollingEnabled: false, // Enable or disable polling - default is disabled. Enable to fallback to polling if streaming encounters an issue.
 }
 
-const cf = initialize(
+const client = initialize(
         'YOUR_SDK_KEY',
         {
           identifier: 'Harness1',
