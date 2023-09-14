@@ -10,6 +10,7 @@ export const defaultOptions: Options = {
   eventsSyncInterval: MIN_EVENTS_SYNC_INTERVAL,
   pollingInterval: MIN_POLLING_INTERVAL,
   streamEnabled: true,
+  pollingEnabled: false,
   allAttributesPrivate: false,
   privateAttributeNames: [],
   cache: false

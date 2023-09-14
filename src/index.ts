@@ -291,7 +291,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let storage: Record<string, any> = createStorage()
 
   authenticate(apiKey, configurations)
-    .then((token: string) => {
+    .then(async (token: string) => {
       if (closed) return
 
       jwtToken = token
@@ -327,45 +327,34 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       const hasExistingFlags = !!Object.keys(evaluations).length
 
       // When authentication is done, fetch all flags
-      fetchFlags()
-        .then(() => {
-          logDebug('Fetch all flags ok', storage)
-        })
-        .then(() => {
-          if (closed) return
-          // start stream or polling only after we get all evaluations
-          if (configurations.streamEnabled) {
-            startStream()
-          } else {
-            logDebug('Stream is disabled by configuration. Using polling mode')
-            startPolling()
-          }
-        })
-        .then(() => {
-          if (closed) return
-
-          logDebug('Event stream ready', { storage })
-
-          // emit the ready event only if flags weren't already set using setEvaluations
-          if (!hasExistingFlags) {
-            stopMetricsCollector()
-            const allFlags = { ...storage }
-            startMetricsCollector()
-
-            eventBus.emit(Event.READY, allFlags)
-          }
-        })
-        .then(() => {
-          if (closed) return
-          initialised = true
-        })
-        .catch(err => {
-          eventBus.emit(Event.ERROR, err)
-        })
+      const error = await fetchFlags()
+      if (!error) {
+        logDebug('Fetch all flags ok', storage)
+      }
+      if (closed) return
+      // Start stream or polling only after we get all evaluations
+      if (configurations.streamEnabled) {
+        startStream()
+      } else {
+        logDebug('Stream is disabled by configuration. Using polling mode')
+        startPolling()
+      }
+      logDebug('Event stream ready', { storage })
+      // Emit the ready event only if flags weren't already set using setEvaluations
+      if (!hasExistingFlags) {
+        stopMetricsCollector()
+        const allFlags = { ...storage }
+        startMetricsCollector()
+        eventBus.emit(Event.READY, allFlags)
+      }
+      initialised = true
     })
     .catch(error => {
-      logError('Authentication error: ', error)
-      eventBus.emit(Event.ERROR_AUTH, error)
+      if (error.message.includes('Authentication')) {
+        logError('Authentication error: ', error)
+        eventBus.emit(Event.ERROR_AUTH, error)
+      }
+
       eventBus.emit(Event.ERROR, error)
     })
 
