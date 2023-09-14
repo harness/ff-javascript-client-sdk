@@ -65,7 +65,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
   let lastCacheRefreshTime = 0
   let initialised = false
-  let pollingMaxAttempts = 5
 
   const stopMetricsCollector = () => {
     metricsCollectorEnabled = false
