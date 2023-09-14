@@ -334,12 +334,19 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       if (closed) return
       // Start stream or polling only after we get all evaluations
       if (configurations.streamEnabled) {
+        logDebug('Streaming mode enabled')
         startStream()
-      } else {
-        logDebug('Stream is disabled by configuration. Using polling mode')
+      }
+
+      if (!configurations.streamEnabled && configurations.pollingEnabled) {
+        logDebug('Polling mode enabled')
         startPolling()
       }
-      
+
+      if (!configurations.streamEnabled && !configurations.pollingEnabled) {
+        logDebug('Streaming and polling mode disabled')
+      }
+
       // Emit the ready event only if flags weren't already set using setEvaluations
       if (!hasExistingFlags) {
         stopMetricsCollector()
