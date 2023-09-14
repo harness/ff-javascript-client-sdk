@@ -50,7 +50,7 @@ export default class Poller {
   }
 
   public stop(): void {
-    if (this.timeoutId !== undefined) {
+    if (this.timeoutId) {
       window.clearTimeout(this.timeoutId)
       this.timeoutId = undefined
       this.isRunning = false
