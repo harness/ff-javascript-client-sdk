@@ -1,5 +1,5 @@
 import type { Options } from './types'
-import { getRandom } from './utils'
+import {getRandom, logError} from './utils'
 
 export default class Poller {
   private timeoutId: number
@@ -39,7 +39,7 @@ export default class Poller {
         return
       }
 
-      this.logDebug('Error when polling for flag updates', error)
+      logError('Error when polling for flag updates', error)
 
       // Retry fetching flags
       if (attempt >= this.maxAttempts) {
