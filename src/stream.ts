@@ -104,10 +104,12 @@ export class Streamer {
         onFailed(`HTTP code ${this.xhr.status}`)
         return
       }
+
       // if we are in polling mode due to a streaming error, then stop polling
       if (this.fallbackPoller.isPolling()) {
         this.fallbackPoller.stop();
       }
+
       onConnected()
     }
 
