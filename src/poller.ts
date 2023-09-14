@@ -30,7 +30,7 @@ export default class Poller {
   }
 
   private async attemptFetch(): Promise<void> {
-    for (let i = 1; i <= this.maxAttempts; i++) {
+    for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
       const error = await this.fetchFlagsFn()
 
       if (!error) {
@@ -41,8 +41,8 @@ export default class Poller {
       this.logDebug('Error when polling for flag updates', error)
 
       // Retry fetching flags
-      if (i < this.maxAttempts) {
-        this.logDebug(`Polling for flags attempt #${i} failed. Remaining attempts: ${this.maxAttempts - i}.`)
+      if (attempt < this.maxAttempts) {
+        this.logDebug(`Polling for flags attempt #${attempt} failed. Remaining attempts: ${this.maxAttempts - attempt}.`)
       } else {
         this.logDebug(`Maximum attempts reached for polling for flags. Next poll in ${this.pollInterval}ms.`)
       }
