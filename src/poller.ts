@@ -1,4 +1,5 @@
 import type { Options } from './types'
+import { getRandom } from './utils'
 
 export default class Poller {
   private timeoutId: number
@@ -41,13 +42,15 @@ export default class Poller {
       this.logDebug('Error when polling for flag updates', error)
 
       // Retry fetching flags
-      if (attempt < this.maxAttempts) {
-        this.logDebug(
-          `Polling for flags attempt #${attempt} failed. Remaining attempts: ${this.maxAttempts - attempt}.`
-        )
-      } else {
+      if (attempt >= this.maxAttempts) {
         this.logDebug(`Maximum attempts reached for polling for flags. Next poll in ${this.pollInterval}ms.`)
+        return
       }
+
+      this.logDebug(`Polling for flags attempt #${attempt} failed. Remaining attempts: ${this.maxAttempts - attempt}.`)
+
+      const delay = getRandom(1000, 10000)
+      await new Promise(res => setTimeout(res, delay))
     }
   }
 

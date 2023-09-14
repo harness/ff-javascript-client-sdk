@@ -1,7 +1,12 @@
 import Poller from '../poller'
 import type { Options } from '../types'
+import {getRandom} from "../utils";
 
 jest.useFakeTimers()
+
+jest.mock('../utils.ts', () => ({
+  getRandom: jest.fn()
+}))
 
 interface PollerArgs {
   fetchFlags: jest.MockedFunction<() => Promise<any>>;
@@ -63,6 +68,11 @@ describe('Poller', () => {
       return Promise.resolve(new Error('Fetch flags Error'))
     })
 
+    const attemptDelay = 5000;
+    (getRandom as jest.Mock).mockReturnValue(attemptDelay)
+
+
+
     const logSpy = jest.spyOn(poller as any, 'logDebug')
 
     poller.start()
@@ -70,7 +80,11 @@ describe('Poller', () => {
     jest.advanceTimersByTime(pollInterval)
 
     for (let i = 0; i < maxAttempts; i++) {
+      jest.advanceTimersByTime(attemptDelay)
+      // We need to wait for the fetchFlags promise and the timeout promise to resolve
       await Promise.resolve()
+      await Promise.resolve()
+
     }
 
     expect(fetchFlags).toHaveBeenCalledTimes(5)

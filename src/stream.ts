@@ -1,5 +1,5 @@
 import { Event, StreamEvent } from './types'
-import { logError } from './utils'
+import {getRandom, logError} from './utils'
 import type Poller from "./poller";
 
 const SSE_TIMEOUT_MS = 30000
@@ -44,9 +44,7 @@ export class Streamer {
       }
     }
 
-    const getRandom = (min, max) => {
-      return Math.round(Math.random() * (max - min) + min)
-    }
+
 
     const onConnected = () => {
       logDebug('Stream connected')

@@ -25,3 +25,7 @@ export const defer = (fn: Function, doDefer = true): void => {
     fn()
   }
 }
+
+export const getRandom = (min, max) => {
+  return Math.round(Math.random() * (max - min) + min)
+}
