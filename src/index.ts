@@ -339,7 +339,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         logDebug('Stream is disabled by configuration. Using polling mode')
         startPolling()
       }
-      logDebug('Event stream ready', { storage })
+      
       // Emit the ready event only if flags weren't already set using setEvaluations
       if (!hasExistingFlags) {
         stopMetricsCollector()
