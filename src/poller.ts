@@ -66,7 +66,7 @@ export default class Poller {
     return this.isRunning
   }
 
-  private logDebug(message: string, ...args: any[]): void {
+  private logDebug(message: string, ...args: unknown[]): void {
     if (this.configurations.debug) {
       console.debug(`[FF-SDK] Poller: ${message}`, ...args)
     }
