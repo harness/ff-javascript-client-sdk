@@ -20,7 +20,7 @@ export default class Poller {
 
     this.isRunning = true
 
-    // Don't start polling immediately as we have alreadu fetched flags on client initialization
+    // Don't start polling immediately as we have already fetched flags on client initialization
     window.setTimeout(() => this.poll(), this.configurations.pollingInterval)
   }
 
