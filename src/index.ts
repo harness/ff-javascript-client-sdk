@@ -336,14 +336,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       if (configurations.streamEnabled) {
         logDebug('Streaming mode enabled')
         startStream()
-      }
-
-      if (!configurations.streamEnabled && configurations.pollingEnabled) {
+      } else if (configurations.pollingEnabled) {
         logDebug('Polling mode enabled')
         startPolling()
-      }
-
-      if (!configurations.streamEnabled && !configurations.pollingEnabled) {
+      } else {
         logDebug('Streaming and polling mode disabled')
       }
 
