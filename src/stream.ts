@@ -1,5 +1,5 @@
 import { Event, StreamEvent } from './types'
-import { logError } from './utils'
+import {getRandom, logError, reconnectAfterDelay} from './utils'
 import type Poller from "./poller";
 
 const SSE_TIMEOUT_MS = 30000
@@ -44,9 +44,7 @@ export class Streamer {
       }
     }
 
-    const getRandom = (min, max) => {
-      return Math.round(Math.random() * (max - min) + min)
-    }
+
 
     const onConnected = () => {
       logDebug('Stream connected')
@@ -58,7 +56,7 @@ export class Streamer {
       const reconnectDelayMs = getRandom(1000, 10000)
       logDebug('Stream disconnected, will reconnect in ' + reconnectDelayMs + 'ms')
       this.eventBus.emit(Event.DISCONNECTED)
-      setTimeout(() => this.start(), reconnectDelayMs)
+      reconnectAfterDelay(() => this.start(), reconnectDelayMs);
     }
 
     const onFailed = (msg: string) => {
