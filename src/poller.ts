@@ -3,12 +3,12 @@ import type { Options } from './types'
 export default class Poller {
   private timeoutId: number
   private isRunning: boolean
+  private maxAttempts = 5
 
   constructor(
     private fetchFlagsFn: () => Promise<any>,
     private configurations: Options,
-    private pollInterval: number,
-    private maxAttempts = 5
+    private pollInterval: number
   ) {}
 
   public start(): void {
@@ -42,7 +42,9 @@ export default class Poller {
 
       // Retry fetching flags
       if (attempt < this.maxAttempts) {
-        this.logDebug(`Polling for flags attempt #${attempt} failed. Remaining attempts: ${this.maxAttempts - attempt}.`)
+        this.logDebug(
+          `Polling for flags attempt #${attempt} failed. Remaining attempts: ${this.maxAttempts - attempt}.`
+        )
       } else {
         this.logDebug(`Maximum attempts reached for polling for flags. Next poll in ${this.pollInterval}ms.`)
       }
