@@ -102,7 +102,7 @@ To configure the modes:
 
 const options = {
   streamEnabled: true, // Enable or disable streaming - default is enabled
-  pollingEnabled: false, // Enable or disable polling - default is disabled. Enable to fallback to polling if streaming encounters an issue.
+  pollingEnabled: false, // Enable or disable polling - default is disabled. Enable to fallback to polling if streaming is enabled and encounters an issue.
 }
 
 const client = initialize(
