@@ -2,21 +2,28 @@ import Poller from '../poller'
 
 jest.useFakeTimers()
 
+interface PollerArgs {
+  fetchFlags: () => Promise<any>
+  configurations: Partial<Options>
+  pollInterval: number
+  maxAttempts: number
+}
+
+const getPoller = (overrides: Partial<PollerArgs> = {}): Poller => {
+  const args: PollerArgs = {
+    fetchFlags: jest.fn(),
+    configurations: {},
+    pollInterval: 60000,
+    maxAttempts: 5,
+    ...overrides
+  }
+
+  return new Poller(args.fetchFlags, args.configurations, args.pollInterval, args.maxAttempts)
+}
+
 describe('Poller', () => {
-  let fetchFlagsFn: jest.Mock
-  let configurations: object
-  let pollInterval: number
-  let maxAttempts: number
-
-  beforeEach(() => {
-    configurations = {}
-    fetchFlagsFn = jest.fn()
-    pollInterval = 60000
-    maxAttempts = 5
-  })
-
   it('should not start polling if it is already polling', () => {
-    const poller = new Poller(fetchFlagsFn, configurations, pollInterval, maxAttempts)
+    const poller = getPoller()
     const logSpy = jest.spyOn(poller as any, 'logDebug')
 
     poller.start()
