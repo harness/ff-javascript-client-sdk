@@ -21,6 +21,7 @@ interface TestArgs {
   delayMs: number
 }
 
+let currentPoller: Poller
 const getPoller = (overrides: Partial<PollerArgs> = {}): Poller => {
   const args: PollerArgs = {
     fetchFlags: jest.fn(),
@@ -28,7 +29,9 @@ const getPoller = (overrides: Partial<PollerArgs> = {}): Poller => {
     ...overrides
   }
 
-  return new Poller(args.fetchFlags, args.configurations)
+  currentPoller = new Poller(args.fetchFlags, args.configurations)
+
+  return currentPoller
 }
 
 const getTestArgs = (overrides: Partial<TestArgs> = {}): TestArgs => {
@@ -44,12 +47,17 @@ const getTestArgs = (overrides: Partial<TestArgs> = {}): TestArgs => {
 }
 
 describe('Poller', () => {
+  afterEach(() => {
+    jest.clearAllMocks()
+    currentPoller?.stop()
+  })
   it('should not start polling if it is already polling', () => {
-    const poller = getPoller({ configurations: { debug: true } })
-    getTestArgs()
+    getPoller({ configurations: { debug: true } })
+    const testArgs = getTestArgs()
 
-    poller.start()
-    poller.start()
+    currentPoller.start()
+    currentPoller.start()
+    expect(testArgs.logSpy).toHaveBeenCalledTimes(1)
   })
 
   it('should retry fetching if there is an error', async () => {
@@ -65,12 +73,12 @@ describe('Poller', () => {
 
     const pollInterval = 60000
 
-    const poller = getPoller({
+    getPoller({
       fetchFlags: fetchFlagsMock,
       configurations: { pollingInterval: pollInterval, debug: true }
     })
 
-    poller.start()
+    currentPoller.start()
 
     jest.advanceTimersByTime(pollInterval)
 
@@ -84,6 +92,7 @@ describe('Poller', () => {
     await Promise.resolve()
 
     expect(fetchFlagsMock).toHaveBeenCalledTimes(2)
+    expect(testArgs.logSpy).toHaveBeenCalledTimes(2)
   })
 
   it('should not retry after max attempts are exceeded', async () => {
@@ -101,14 +110,14 @@ describe('Poller', () => {
 
     const pollInterval = 60000
 
-    const poller = getPoller({
+    getPoller({
       fetchFlags: fetchFlagsMock,
       configurations: { pollingInterval: pollInterval, debug: true }
     })
 
     const testArgs = getTestArgs()
 
-    poller.start()
+    currentPoller.start()
 
     jest.advanceTimersByTime(pollInterval)
 
@@ -120,22 +129,24 @@ describe('Poller', () => {
     }
 
     expect(fetchFlagsMock).toHaveBeenCalledTimes(5)
+    expect(testArgs.logSpy).toHaveBeenCalledTimes(6)
   })
 
   it('should successfully fetch flags without retrying on success', async () => {
     const pollInterval = 60000
     const fetchFlagsMock = jest.fn().mockResolvedValue(null)
 
-    const poller = getPoller({
+     getPoller({
       fetchFlags: fetchFlagsMock,
       configurations: { pollingInterval: pollInterval, debug: true }
     })
-    getTestArgs()
+    const testArgs = getTestArgs()
 
-    poller.start()
+    currentPoller.start()
     jest.advanceTimersByTime(pollInterval)
     await Promise.resolve()
 
     expect(fetchFlagsMock).toHaveBeenCalledTimes(1)
+    expect(testArgs.logSpy).toHaveBeenCalledTimes(2)
   })
 })
