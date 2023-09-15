@@ -9,8 +9,6 @@ jest.mock('../utils.ts', () => ({
   logError: jest.fn()
 }))
 
-jest.mock()
-
 interface PollerArgs {
   fetchFlags: jest.MockedFunction<() => Promise<any>>
   configurations: Partial<Options>
