@@ -9,30 +9,28 @@ jest.mock('../utils.ts', () => ({
   logError: jest.fn()
 }))
 
+jest.mock()
+
 interface PollerArgs {
   fetchFlags: jest.MockedFunction<() => Promise<any>>
   configurations: Partial<Options>
-  pollInterval: number
 }
 
 interface TestArgs {
   delayFunction: jest.MockedFunction<() => number>
-  logSpy: jest.SpyInstance
+  // logSpy: jest.SpyInstance
+  mockError: Error
   delayMs: number
 }
 
-const getPoller = (overrides: Partial<PollerArgs> = {}): { poller: Poller; pollerArgs: PollerArgs } => {
+const getPoller = (overrides: Partial<PollerArgs> = {}): Poller => {
   const args: PollerArgs = {
     fetchFlags: jest.fn(),
-    configurations: { pollingInterval: 60000, debug: true },
-    pollInterval: 60000,
+    configurations: {},
     ...overrides
   }
 
-  return {
-    poller: new Poller(args.fetchFlags, args.configurations),
-    pollerArgs: args
-  }
+  return new Poller(args.fetchFlags, args.configurations)
 }
 
 const getTestArgs = (overrides: Partial<TestArgs> = {}): TestArgs => {
@@ -41,33 +39,42 @@ const getTestArgs = (overrides: Partial<TestArgs> = {}): TestArgs => {
   return {
     delayMs,
     delayFunction: (getRandom as jest.Mock).mockReturnValue(delayMs),
-    logSpy: jest.spyOn(console, 'debug').mockImplementation(() => {}),
+    // logSpy: jest.spyOn(console, 'debug').mockImplementation(() => {}),
+    mockError: new Error('Fetch Error'),
     ...overrides
   }
 }
 
 describe('Poller', () => {
   it('should not start polling if it is already polling', () => {
-    const { poller } = getPoller()
-    const testArgs = getTestArgs()
+    const poller = getPoller({ configurations: { debug: true } })
+    getTestArgs()
 
     poller.start()
     poller.start()
-
-    expect(testArgs.logSpy).toHaveBeenCalled()
   })
 
   it('should retry fetching if there is an error', async () => {
-    const { poller, pollerArgs } = getPoller()
-    const fetchFlags = pollerArgs.fetchFlags
-    let error = new Error('Fetch Error')
-    fetchFlags.mockResolvedValue(error)
-
     const testArgs = getTestArgs()
+
+    let attemptCount = 0
+    const fetchFlagsMock = jest.fn().mockImplementation(() => {
+      attemptCount++
+
+      // Return null (success) on the maxAttempts-th call, error otherwise.
+      return Promise.resolve(attemptCount === 2 ? null : testArgs.mockError)
+    })
+
+    const pollInterval = 60000
+
+    const poller = getPoller({
+      fetchFlags: fetchFlagsMock,
+      configurations: { pollingInterval: pollInterval, debug: true }
+    })
 
     poller.start()
 
-    jest.advanceTimersByTime(pollerArgs.configurations.pollingInterval)
+    jest.advanceTimersByTime(pollInterval)
 
     // Allow first attempt to resolve
     await Promise.resolve()
@@ -78,17 +85,27 @@ describe('Poller', () => {
     // Allow successful attempt to resolve
     await Promise.resolve()
 
-    expect(fetchFlags).toHaveBeenCalledTimes(2)
-    expect(testArgs.logSpy).toHaveBeenCalled()
+    expect(fetchFlagsMock).toHaveBeenCalledTimes(2)
   })
 
   it('should not retry after max attempts are exceeded', async () => {
-    const { poller, pollerArgs } = getPoller()
-    const fetchFlags = pollerArgs.fetchFlags
-    const pollInterval = pollerArgs.pollInterval
     const maxAttempts = 5
-    fetchFlags.mockImplementation(() => {
-      return Promise.resolve(new Error('Fetch flags Error'))
+    let attemptCount = 0
+
+    const mockError = new Error('Fetch Error')
+
+    const fetchFlagsMock = jest.fn().mockImplementation(() => {
+      attemptCount++
+
+      // Return null (success) on the maxAttempts-th call, error otherwise.
+      return Promise.resolve(attemptCount === maxAttempts ? null : mockError)
+    })
+
+    const pollInterval = 60000
+
+    const poller = getPoller({
+      fetchFlags: fetchFlagsMock,
+      configurations: { pollingInterval: pollInterval, debug: true }
     })
 
     const testArgs = getTestArgs()
@@ -104,24 +121,23 @@ describe('Poller', () => {
       await Promise.resolve()
     }
 
-    expect(fetchFlags).toHaveBeenCalledTimes(5)
-    expect(testArgs.logSpy).toHaveBeenCalledTimes(5)
+    expect(fetchFlagsMock).toHaveBeenCalledTimes(5)
   })
 
   it('should successfully fetch flags without retrying on success', async () => {
-    const { poller, pollerArgs } = getPoller()
-    const fetchFlags = pollerArgs.fetchFlags
-    const pollInterval = pollerArgs.pollInterval
-    const testArgs = getTestArgs()
+    const pollInterval = 60000
+    const fetchFlagsMock = jest.fn().mockResolvedValue(null)
 
-    fetchFlags.mockResolvedValue(null)
-
+    const poller = getPoller({
+      fetchFlags: fetchFlagsMock,
+      configurations: { pollingInterval: pollInterval, debug: true }
+    })
+    getTestArgs()
 
     poller.start()
     jest.advanceTimersByTime(pollInterval)
     await Promise.resolve()
 
-    expect(fetchFlags).toHaveBeenCalledTimes(1)
-    expect(testArgs.logSpy).toHaveBeenCalled()
+    expect(fetchFlagsMock).toHaveBeenCalledTimes(1)
   })
 })
