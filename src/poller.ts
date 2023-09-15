@@ -1,8 +1,8 @@
 import type { Options } from './types'
-import {getRandom, logError} from './utils'
+import { getRandom, logError } from './utils'
 
 export default class Poller {
-  private timeoutId: number
+  private timeoutId: any
   private isRunning: boolean
   private maxAttempts = 5
 
@@ -26,12 +26,12 @@ export default class Poller {
     this.isRunning = true
 
     // Don't start polling immediately as we have already fetched flags on client initialization
-    this.timeoutId = window.setTimeout(() => this.poll(), this.configurations.pollingInterval)
+    this.timeoutId = setTimeout(() => this.poll(), this.configurations.pollingInterval)
   }
 
   private poll(): void {
     this.attemptFetch().finally(() => {
-      this.timeoutId = window.setTimeout(() => this.poll(), this.configurations.pollingInterval)
+      this.timeoutId = setTimeout(() => this.poll(), this.configurations.pollingInterval)
     })
   }
 
@@ -61,7 +61,7 @@ export default class Poller {
 
   public stop(): void {
     if (this.timeoutId) {
-      window.clearTimeout(this.timeoutId)
+      clearTimeout(this.timeoutId)
       this.timeoutId = undefined
       this.isRunning = false
     }
