@@ -58,6 +58,7 @@ export default class Poller {
       clearTimeout(this.timeoutId)
       this.timeoutId = undefined
       this.isRunning = false
+      this.logDebug("Polling stopped")
     }
   }
 
