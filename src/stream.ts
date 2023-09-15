@@ -97,8 +97,7 @@ export class Streamer {
         return
       }
 
-      // if we are in polling mode due to a streaming error, then stop polling
-      this.stopFallBackPolling()
+
       onConnected()
     }
 
@@ -106,6 +105,8 @@ export class Streamer {
     let lastActivity = Date.now()
 
     this.xhr.onprogress = () => {
+      // if we are in polling mode due to a recovered streaming error, then stop polling
+      this.stopFallBackPolling()
       lastActivity = Date.now()
       const data = this.xhr.responseText.slice(offset)
       offset += data.length
@@ -135,14 +136,14 @@ export class Streamer {
 
   private fallBackToPolling() {
     if (!this.fallbackPoller.isPolling() && this.configurations.pollingEnabled) {
-      logError('Falling back to polling mode while stream recovers')
+      this.logDebug('Falling back to polling mode while stream recovers')
       this.fallbackPoller.start()
     }
   }
 
   private stopFallBackPolling() {
     if (this.fallbackPoller.isPolling()) {
-      logError('Stopping fallback polling mode')
+      this.logDebug('Stopping fallback polling mode')
       this.fallbackPoller.stop()
     }
   }
