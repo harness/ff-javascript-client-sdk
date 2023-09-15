@@ -75,7 +75,7 @@ const client = initialize('00000000-1111-2222-3333-444444444444', {
 
 ## Streaming and Polling Mode
 
-By default, Harness Feature Flags SDK has streaming enabled and polling disabled. Both modes can be toggled according to your preference using the SDK's configurations.
+By default, Harness Feature Flags SDK has streaming enabled and polling disabled. Both modes can be toggled according to your preference using the SDK's configuration.
 
 ### Streaming Mode
 Streaming mode establishes a continuous connection between your application and Harness' servers. This allows for real-time updates on feature flags without requiring periodic checks. If an error occurs while streaming and `pollingEnabled` is set to `true`, the SDK will automatically fall back to polling mode until streaming can be reestablished. If `pollingEnabled` is `false`, streaming will attempt to reconnect without falling back to polling.
