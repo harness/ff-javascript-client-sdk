@@ -14,7 +14,13 @@ import type {
   VariationValue
 } from './types'
 import { Event } from './types'
-import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL, MIN_POLLING_INTERVAL } from './utils'
+import {
+  defer,
+  getConfiguration,
+  logError,
+  MIN_EVENTS_SYNC_INTERVAL,
+  MIN_POLLING_INTERVAL
+} from './utils'
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
@@ -74,7 +80,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
   let metrics: MetricsInfo[] = []
   const eventBus = mitt()
-  const configurations = { ...defaultOptions, ...options }
+  const configurations = getConfiguration(options)
 
   if (configurations.eventsSyncInterval < MIN_EVENTS_SYNC_INTERVAL) {
     configurations.eventsSyncInterval = MIN_EVENTS_SYNC_INTERVAL
@@ -327,13 +333,13 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
       // When authentication is done, fetch all flags
       const error = await fetchFlags()
-      
+
       if (!error) {
         logDebug('Fetch all flags ok', storage)
       }
-      
+
       if (closed) return
-      
+
       // Start stream or polling only after we get all evaluations
       if (configurations.streamEnabled) {
         logDebug('Streaming mode enabled')
@@ -426,7 +432,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   // We instantiate the Poller here so it can be used as a fallback for streaming, but we don't start it yet.
-  poller = new Poller(fetchFlags, configurations, configurations.pollingInterval)
+  poller = new Poller(fetchFlags, configurations)
 
   const startStream = () => {
     const handleFlagEvent = (event: StreamEvent): void => {

@@ -16,6 +16,16 @@ export const defaultOptions: Options = {
   cache: false
 }
 
+export const getConfiguration = (options: Options): Options => {
+  const config = { ...defaultOptions, ...options }
+
+  if (config.pollingEnabled === undefined) {
+    config.pollingEnabled = config.streamEnabled
+  }
+
+  return config
+}
+
 // tslint:disable-next-line:no-console
 export const logError = (message: string, ...args: any[]) => console.error(`[FF-SDK] ${message}`, ...args)
 
