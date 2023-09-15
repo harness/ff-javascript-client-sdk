@@ -9,17 +9,11 @@ export default class Poller {
   constructor(
     private fetchFlagsFn: () => Promise<any>,
     private configurations: Options,
-    private pollInterval: number
   ) {}
 
   public start(): void {
     if (this.isPolling()) {
       this.logDebug('Already polling.')
-      return
-    }
-
-    // Defensive check to ensure polling is enabled. This comes into play if streaming attempts to fallback
-    if (!this.configurations.pollingEnabled) {
       return
     }
 
@@ -48,11 +42,11 @@ export default class Poller {
 
       // Retry fetching flags
       if (attempt >= this.maxAttempts) {
-        this.logDebug(`Maximum attempts reached for polling for flags. Next poll in ${this.pollInterval}ms.`)
+        this.logDebug(`Maximum attempts reached for polling for flags. Next poll in ${this.configurations.pollingInterval}ms.`)
         return
       }
 
-      this.logDebug(`Polling for flags attempt #${attempt} failed. Remaining attempts: ${this.maxAttempts - attempt}.`)
+      this.logDebug(`Polling for flags attempt #${attempt} failed. Remaining attempts: ${this.maxAttempts - attempt}`, error)
 
       const delay = getRandom(1000, 10000)
       await new Promise(res => setTimeout(res, delay))
