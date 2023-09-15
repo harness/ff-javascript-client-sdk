@@ -93,10 +93,6 @@ for a session or when the application operates in an environment where regular u
 
 To use the SDK with both modes disabled:
 
-### Configurations
-While both streaming and polling can be enabled, if both are active, streaming takes precedence. 
-If streaming encounters an issue and `pollingEnabled` is set to `true`, the SDK will switch to polling mode as a backup until streaming is recovered. If `pollingEnabled` is set to `false`, the SDK will continue attempting to reconnect via streaming.
-
 To configure the modes:
 
 ```typescript
