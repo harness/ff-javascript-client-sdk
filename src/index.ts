@@ -327,10 +327,13 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
       // When authentication is done, fetch all flags
       const error = await fetchFlags()
+      
       if (!error) {
         logDebug('Fetch all flags ok', storage)
       }
+      
       if (closed) return
+      
       // Start stream or polling only after we get all evaluations
       if (configurations.streamEnabled) {
         logDebug('Streaming mode enabled')
