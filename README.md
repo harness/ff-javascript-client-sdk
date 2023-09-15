@@ -107,16 +107,15 @@ const options = {
 }
 
 const client = initialize(
-        'YOUR_SDK_KEY',
-        {
-          identifier: 'Harness1',
-          attributes: {
-            lastUpdated: Date(),
-            host: location.href
-          }
-        },
-        options,
-
+  'YOUR_SDK_KEY',
+  {
+    identifier: 'Harness1',
+    attributes: {
+      lastUpdated: Date(),
+      host: location.href
+    }
+  },
+  options
 )
 ```
 
