@@ -13,7 +13,6 @@ interface PollerArgs {
   fetchFlags: jest.MockedFunction<() => Promise<any>>
   configurations: Partial<Options>
   pollInterval: number
-  maxAttempts: number
 }
 
 interface TestArgs {
@@ -27,7 +26,6 @@ const getPoller = (overrides: Partial<PollerArgs> = {}): { poller: Poller; polle
     fetchFlags: jest.fn(),
     configurations: { pollingInterval: 60000, debug: true },
     pollInterval: 60000,
-    maxAttempts: 5,
     ...overrides
   }
 
@@ -88,7 +86,7 @@ describe('Poller', () => {
     const { poller, pollerArgs } = getPoller()
     const fetchFlags = pollerArgs.fetchFlags
     const pollInterval = pollerArgs.pollInterval
-    const maxAttempts = pollerArgs.maxAttempts
+    const maxAttempts = 5
     fetchFlags.mockImplementation(() => {
       return Promise.resolve(new Error('Fetch flags Error'))
     })
