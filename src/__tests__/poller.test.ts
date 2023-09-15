@@ -16,7 +16,7 @@ interface PollerArgs {
 
 interface TestArgs {
   delayFunction: jest.MockedFunction<() => number>
-  // logSpy: jest.SpyInstance
+  logSpy: jest.SpyInstance
   mockError: Error
   delayMs: number
 }
@@ -37,7 +37,7 @@ const getTestArgs = (overrides: Partial<TestArgs> = {}): TestArgs => {
   return {
     delayMs,
     delayFunction: (getRandom as jest.Mock).mockReturnValue(delayMs),
-    // logSpy: jest.spyOn(console, 'debug').mockImplementation(() => {}),
+    logSpy: jest.spyOn(console, 'debug').mockImplementation(() => {}),
     mockError: new Error('Fetch Error'),
     ...overrides
   }
