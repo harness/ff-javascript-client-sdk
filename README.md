@@ -53,6 +53,7 @@ interface Options {
   eventUrl?: string
   eventsSyncInterval?: number
   pollingInterval?: number
+  pollingEnabled?: boolean
   streamEnabled?: boolean
   allAttributesPrivate?: boolean
   privateAttributeNames?: string[]
