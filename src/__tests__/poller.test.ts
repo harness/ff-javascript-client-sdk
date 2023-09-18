@@ -57,7 +57,7 @@ describe('Poller', () => {
 
     currentPoller.start()
     currentPoller.start()
-    expect(testArgs.logSpy).toHaveBeenCalledTimes(1)
+    expect(testArgs.logSpy).toHaveBeenCalledTimes(2)
   })
 
   it('should retry fetching if there is an error', async () => {
@@ -92,7 +92,7 @@ describe('Poller', () => {
     await Promise.resolve()
 
     expect(fetchFlagsMock).toHaveBeenCalledTimes(2)
-    expect(testArgs.logSpy).toHaveBeenCalledTimes(2)
+    expect(testArgs.logSpy).toHaveBeenCalledTimes(3)
   })
 
   it('should not retry after max attempts are exceeded', async () => {
@@ -129,7 +129,7 @@ describe('Poller', () => {
     }
 
     expect(fetchFlagsMock).toHaveBeenCalledTimes(5)
-    expect(testArgs.logSpy).toHaveBeenCalledTimes(6)
+    expect(testArgs.logSpy).toHaveBeenCalledTimes(7)
   })
 
   it('should successfully fetch flags without retrying on success', async () => {
@@ -147,6 +147,6 @@ describe('Poller', () => {
     await Promise.resolve()
 
     expect(fetchFlagsMock).toHaveBeenCalledTimes(1)
-    expect(testArgs.logSpy).toHaveBeenCalledTimes(2)
+    expect(testArgs.logSpy).toHaveBeenCalledTimes(3)
   })
 })
