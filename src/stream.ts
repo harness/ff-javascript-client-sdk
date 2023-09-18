@@ -13,6 +13,7 @@ export class Streamer {
   private readonly eventCallback: any
   private xhr: XMLHttpRequest
   private closed: boolean = false
+  private readTimeoutCheckerId: any
   private fallbackPoller: Poller
 
   constructor(eventBus, configurations, url, apiKey, standardHeaders, fallbackPoller, eventCallback) {
@@ -44,7 +45,7 @@ export class Streamer {
     }
 
     const onDisconnect = () => {
-      clearInterval(readTimeoutCheckerId)
+      clearInterval(this.readTimeoutCheckerId)
       const reconnectDelayMs = getRandom(1000, 10000)
       this.logDebug('Stream disconnected, will reconnect in ' + reconnectDelayMs + 'ms')
       this.eventBus.emit(Event.DISCONNECTED)
@@ -114,7 +115,7 @@ export class Streamer {
       processData(data)
     }
 
-    const readTimeoutCheckerId = setInterval(() => {
+    this.readTimeoutCheckerId = setInterval(() => {
       // this task will kill and restart the SSE connection if no data or heartbeat has arrived in a while
       if (lastActivity < Date.now() - SSE_TIMEOUT_MS) {
         logError('SSE read timeout')
@@ -130,6 +131,8 @@ export class Streamer {
     if (this.xhr) {
       this.xhr.abort()
     }
+    // Stop the task that listens for heartbeats
+    clearInterval(this.readTimeoutCheckerId)
     // if we are still in polling mode when close is called, then stop polling
     this.stopFallBackPolling()
   }
