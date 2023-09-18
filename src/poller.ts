@@ -1,6 +1,6 @@
 import type { Options } from './types'
 import { getRandom, logError } from './utils'
-import {Event} from "./types";
+import { Event } from './types'
 
 export default class Poller {
   private timeoutId: any
@@ -10,7 +10,9 @@ export default class Poller {
   constructor(
     private fetchFlagsFn: () => Promise<any>,
     private configurations: Options,
-    private eventBus: any
+    private eventBus: any,
+    // Used to emit the updates retrieved in polling intervals
+    private storage: Record<string, any>
   ) {}
 
   public start(): void {
@@ -25,7 +27,6 @@ export default class Poller {
     this.logDebug(`Starting poller, first poll will be in ${this.configurations.pollingInterval}ms`)
     // Don't start polling immediately as we have already fetched flags on client initialization
     this.timeoutId = setTimeout(() => this.poll(), this.configurations.pollingInterval)
-
   }
 
   private poll(): void {
@@ -40,6 +41,7 @@ export default class Poller {
 
       if (!error) {
         this.logDebug(`Successfully polled for flag updates, next poll in ${this.configurations.pollingInterval}ms. `)
+        this.eventBus.emit(Event.POLLING_CHANGES, this.storage)
         return
       }
 
@@ -47,11 +49,16 @@ export default class Poller {
 
       // Retry fetching flags
       if (attempt >= this.maxAttempts) {
-        this.logDebug(`Maximum attempts reached for polling for flags. Next poll in ${this.configurations.pollingInterval}ms.`)
+        this.logDebug(
+          `Maximum attempts reached for polling for flags. Next poll in ${this.configurations.pollingInterval}ms.`
+        )
         return
       }
 
-      this.logDebug(`Polling for flags attempt #${attempt} failed. Remaining attempts: ${this.maxAttempts - attempt}`, error)
+      this.logDebug(
+        `Polling for flags attempt #${attempt} failed. Remaining attempts: ${this.maxAttempts - attempt}`,
+        error
+      )
 
       const delay = getRandom(1000, 10000)
       await new Promise(res => setTimeout(res, delay))
@@ -64,7 +71,7 @@ export default class Poller {
       this.timeoutId = undefined
       this.isRunning = false
       this.eventBus.emit(Event.POLLING_STOPPED)
-      this.logDebug("Polling stopped")
+      this.logDebug('Polling stopped')
     }
   }
 

@@ -426,7 +426,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   // We instantiate the Poller here so it can be used as a fallback for streaming, but we don't start it yet.
-  poller = new Poller(fetchFlags, configurations, eventBus)
+  poller = new Poller(fetchFlags, configurations, eventBus, storage)
 
   const startStream = () => {
     const handleFlagEvent = (event: StreamEvent): void => {
