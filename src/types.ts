@@ -16,6 +16,7 @@ export interface StreamEvent {
 export enum Event {
   READY = 'ready',
   CONNECTED = 'connected',
+  RESUMED = 'resumed',
   DISCONNECTED = 'disconnected',
   FLAGS_LOADED = 'flags loaded',
   CACHE_LOADED = 'cache loaded',

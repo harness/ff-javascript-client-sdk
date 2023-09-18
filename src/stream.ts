@@ -15,6 +15,7 @@ export class Streamer {
   private closed: boolean = false
   private readTimeoutCheckerId: any
   private fallbackPoller: Poller
+  private streamDisconnected: boolean
 
   constructor(eventBus, configurations, url, apiKey, standardHeaders, fallbackPoller, eventCallback) {
     this.eventBus = eventBus
@@ -42,9 +43,14 @@ export class Streamer {
     const onConnected = () => {
       this.logDebug('Stream connected')
       this.eventBus.emit(Event.CONNECTED)
+      if (this.streamDisconnected) {
+        this.eventBus.emit(Event.RESUMED)
+        this.streamDisconnected = false
+      }
     }
 
     const onDisconnect = () => {
+      this.streamDisconnected = true
       clearInterval(this.readTimeoutCheckerId)
       const reconnectDelayMs = getRandom(1000, 10000)
       this.logDebug('Stream disconnected, will reconnect in ' + reconnectDelayMs + 'ms')
@@ -97,7 +103,6 @@ export class Streamer {
         onFailed(`HTTP code ${this.xhr.status}`)
         return
       }
-
 
       onConnected()
     }
