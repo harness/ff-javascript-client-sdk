@@ -1,5 +1,6 @@
 import type { Options } from './types'
 import { getRandom, logError } from './utils'
+import {Event} from "./types";
 
 export default class Poller {
   private timeoutId: any
@@ -9,6 +10,7 @@ export default class Poller {
   constructor(
     private fetchFlagsFn: () => Promise<any>,
     private configurations: Options,
+    private eventBus: any
   ) {}
 
   public start(): void {
@@ -18,6 +20,7 @@ export default class Poller {
     }
 
     this.isRunning = true
+    this.eventBus.emit(Event.POLLING)
 
     this.logDebug(`Starting poller, first poll will be in ${this.configurations.pollingInterval}ms`)
     // Don't start polling immediately as we have already fetched flags on client initialization
@@ -60,6 +63,7 @@ export default class Poller {
       clearTimeout(this.timeoutId)
       this.timeoutId = undefined
       this.isRunning = false
+      this.eventBus.emit(Event.POLLING_STOPPED)
       this.logDebug("Polling stopped")
     }
   }
