@@ -544,7 +544,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   const close = () => {
     closed = true
     if (configurations.streamEnabled) {
-
       logDebug('Closing event stream')
 
       if (typeof eventSource?.close === 'function') {
