@@ -18,6 +18,8 @@ export enum Event {
   CONNECTED = 'connected',
   RESUMED = 'resumed',
   DISCONNECTED = 'disconnected',
+  POLLING = 'polling',
+  POLLING_STOPPED = 'polling stopped',
   FLAGS_LOADED = 'flags loaded',
   CACHE_LOADED = 'cache loaded',
   CHANGED = 'changed',
