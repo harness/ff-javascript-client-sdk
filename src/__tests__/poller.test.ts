@@ -1,6 +1,7 @@
 import Poller from '../poller'
 import type { Options } from '../types'
 import { getRandom } from '../utils'
+import {Event} from "../types";
 
 jest.useFakeTimers()
 
@@ -9,8 +10,13 @@ jest.mock('../utils.ts', () => ({
   logError: jest.fn()
 }))
 
+const mockEventBus = {
+  emit: jest.fn()
+};
+
 interface PollerArgs {
-  fetchFlags: jest.MockedFunction<() => Promise<any>>
+  fetchFlags: jest.MockedFunction<() => Promise<any>>,
+  eventBus:  typeof mockEventBus,
   configurations: Partial<Options>
 }
 
@@ -26,10 +32,11 @@ const getPoller = (overrides: Partial<PollerArgs> = {}): Poller => {
   const args: PollerArgs = {
     fetchFlags: jest.fn(),
     configurations: {},
+    eventBus: mockEventBus,
     ...overrides
   }
 
-  currentPoller = new Poller(args.fetchFlags, args.configurations)
+  currentPoller = new Poller(args.fetchFlags, args.configurations, args.eventBus)
 
   return currentPoller
 }
@@ -58,6 +65,8 @@ describe('Poller', () => {
     currentPoller.start()
     currentPoller.start()
     expect(testArgs.logSpy).toHaveBeenCalledTimes(2)
+
+    expect(mockEventBus.emit).toHaveBeenCalled();
   })
 
   it('should retry fetching if there is an error', async () => {
@@ -148,5 +157,36 @@ describe('Poller', () => {
 
     expect(fetchFlagsMock).toHaveBeenCalledTimes(1)
     expect(testArgs.logSpy).toHaveBeenCalledTimes(3)
+  })
+
+  it('should stop polling when stop is called', () => {
+    const pollInterval = 60000
+    const fetchFlagsMock = jest.fn().mockResolvedValue(null)
+
+    getPoller({
+      fetchFlags: fetchFlagsMock,
+      configurations: { pollingInterval: pollInterval, debug: true }
+    })
+
+    // Start the poller
+    currentPoller.start()
+
+    expect(mockEventBus.emit).toHaveBeenCalledWith(Event.POLLING)
+
+    // At this point, the poller will be scheduled to run after the pollingInterval.
+    // Before advancing the timers, we stop the poller.
+    currentPoller.stop()
+
+    // Now we'll check that eventBus.emit was called with POLLING_STOPPED.
+    expect(mockEventBus.emit).toHaveBeenCalledWith(Event.POLLING_STOPPED)
+
+    // Ensure the debug message for polling stopped is logged.
+    expect(fetchFlagsMock).not.toHaveBeenCalled()
+
+    // Advance timers to ensure that the poller doesn't actually poll after being stopped.
+    jest.advanceTimersByTime(pollInterval)
+
+    expect(fetchFlagsMock).not.toHaveBeenCalled()
+
   })
 })
