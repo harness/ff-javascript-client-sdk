@@ -1,7 +1,7 @@
 import Poller from '../poller'
 import type { Options } from '../types'
 import { getRandom } from '../utils'
-import {Event} from "../types";
+import { Event } from '../types'
 
 jest.useFakeTimers()
 
@@ -12,11 +12,11 @@ jest.mock('../utils.ts', () => ({
 
 const mockEventBus = {
   emit: jest.fn()
-};
+}
 
 interface PollerArgs {
-  fetchFlags: jest.MockedFunction<() => Promise<any>>,
-  eventBus:  typeof mockEventBus,
+  fetchFlags: jest.MockedFunction<() => Promise<any>>
+  eventBus: typeof mockEventBus
   configurations: Partial<Options>
 }
 
@@ -66,7 +66,7 @@ describe('Poller', () => {
     currentPoller.start()
     expect(testArgs.logSpy).toHaveBeenCalledTimes(2)
 
-    expect(mockEventBus.emit).toHaveBeenCalled();
+    expect(mockEventBus.emit).toHaveBeenCalled()
   })
 
   it('should retry fetching if there is an error', async () => {
@@ -145,7 +145,7 @@ describe('Poller', () => {
     const pollInterval = 60000
     const fetchFlagsMock = jest.fn().mockResolvedValue(null)
 
-     getPoller({
+    getPoller({
       fetchFlags: fetchFlagsMock,
       configurations: { pollingInterval: pollInterval, debug: true }
     })
@@ -187,6 +187,5 @@ describe('Poller', () => {
     jest.advanceTimersByTime(pollInterval)
 
     expect(fetchFlagsMock).not.toHaveBeenCalled()
-
   })
 })
