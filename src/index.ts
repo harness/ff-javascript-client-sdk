@@ -5,6 +5,7 @@ import type {
   Evaluation,
   EventOffBinding,
   EventOnBinding,
+  FetchFlagsResult,
   MetricsInfo,
   Options,
   Result,
@@ -360,7 +361,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       eventBus.emit(Event.ERROR, error)
     })
 
-  const fetchFlags = async () => {
+  const fetchFlags = async (): Promise<FetchFlagsResult> => {
     try {
       const res = await fetchWithMiddleware(
         `${configurations.baseUrl}/client/env/${environment}/target/${target.identifier}/evaluations?cluster=${clusterIdentifier}`,
@@ -373,16 +374,18 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         const data = await res.json()
         data.forEach(registerEvaluation)
         eventBus.emit(Event.FLAGS_LOADED, data)
+        return { type: 'success', data: data }
       } else {
         logError('Features fetch operation error: ', res)
         eventBus.emit(Event.ERROR_FETCH_FLAGS, res)
         eventBus.emit(Event.ERROR, res)
+        return { type: 'error', error: res }
       }
     } catch (error) {
       logError('Features fetch operation error: ', error)
       eventBus.emit(Event.ERROR_FETCH_FLAGS, error)
       eventBus.emit(Event.ERROR, error)
-      return error
+      return { type: 'error', error: error }
     }
   }
 

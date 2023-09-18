@@ -48,6 +48,8 @@ export interface Evaluation {
   deleted?: boolean // mark that feature flag is deleted
 }
 
+export type FetchFlagsResult = { type: 'success'; data: Evaluation[] } | { type: 'error'; error: any }
+
 export interface EventCallbackMapping {
   [Event.READY]: (flags: Record<string, VariationValue>) => void
   [Event.CONNECTED]: () => void
@@ -95,7 +97,7 @@ export interface Options {
   baseUrl?: string
   eventUrl?: string
   eventsSyncInterval?: number
-  pollingInterval?: number,
+  pollingInterval?: number
   streamEnabled?: boolean
   pollingEnabled?: boolean
   allAttributesPrivate?: boolean
