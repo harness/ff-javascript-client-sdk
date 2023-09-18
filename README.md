@@ -144,6 +144,22 @@ client.on(Event.DISCONNECTED, () => {
   // Event happens when connection is disconnected
 })
 
+client.on(Event.CONNECTED, () => {
+  // Event happens when connection established
+})
+
+client.on(Event.RESUMED, () => {
+  // Event happens when a connection has disconnected but then reconnected
+})
+
+client.on(Event.POLLING, () => {
+  // Event happens when polling begins
+})
+
+client.on(Event.POLLING_STOPPED, () => {
+  // Event happens when polling stops
+})
+
 client.on(Event.ERROR, error => {
   // Event happens when connection some error has occurred
 })
