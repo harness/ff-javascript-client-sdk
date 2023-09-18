@@ -36,7 +36,7 @@ export default class Poller {
       const error = await this.fetchFlagsFn()
 
       if (!error) {
-        this.logDebug('Successfully polled for flag updates')
+        this.logDebug(`Successfully polled for flag updates, next poll in ${this.configurations.pollingInterval}ms. `)
         return
       }
 
