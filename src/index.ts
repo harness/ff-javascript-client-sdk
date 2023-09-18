@@ -14,11 +14,18 @@ import type {
   VariationValue
 } from './types'
 import { Event } from './types'
-import { defaultOptions, defer, logError, MIN_EVENTS_SYNC_INTERVAL } from './utils'
+import {
+  defer,
+  getConfiguration,
+  logError,
+  MIN_EVENTS_SYNC_INTERVAL,
+  MIN_POLLING_INTERVAL
+} from './utils'
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
 import { getVariation } from './variation'
+import Poller from './poller'
 
 const SDK_VERSION = '1.16.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
@@ -56,6 +63,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let environment: string
   let clusterIdentifier: string
   let eventSource: any
+  let poller: Poller
   let jwtToken: string
   let metricsSchedulerId: number
   let metricsCollectorEnabled = true
@@ -72,10 +80,14 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
   let metrics: MetricsInfo[] = []
   const eventBus = mitt()
-  const configurations = { ...defaultOptions, ...options }
+  const configurations = getConfiguration(options)
 
   if (configurations.eventsSyncInterval < MIN_EVENTS_SYNC_INTERVAL) {
     configurations.eventsSyncInterval = MIN_EVENTS_SYNC_INTERVAL
+  }
+
+  if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
+    configurations.pollingInterval = MIN_POLLING_INTERVAL
   }
 
   const logDebug = (message: string, ...args: any[]) => {
@@ -284,7 +296,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let storage: Record<string, any> = createStorage()
 
   authenticate(apiKey, configurations)
-    .then((token: string) => {
+    .then(async (token: string) => {
       if (closed) return
 
       jwtToken = token
@@ -320,35 +332,33 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       const hasExistingFlags = !!Object.keys(evaluations).length
 
       // When authentication is done, fetch all flags
-      fetchFlags()
-        .then(() => {
-          logDebug('Fetch all flags ok', storage)
-        })
-        .then(() => {
-          if (closed) return
-          startStream() // start stream only after we get all evaluations
-        })
-        .then(() => {
-          if (closed) return
+      const error = await fetchFlags()
 
-          logDebug('Event stream ready', { storage })
+      if (!error) {
+        logDebug('Fetch all flags ok', storage)
+      }
 
-          // emit the ready event only if flags weren't already set using setEvaluations
-          if (!hasExistingFlags) {
-            stopMetricsCollector()
-            const allFlags = { ...storage }
-            startMetricsCollector()
+      if (closed) return
 
-            eventBus.emit(Event.READY, allFlags)
-          }
-        })
-        .then(() => {
-          if (closed) return
-          initialised = true
-        })
-        .catch(err => {
-          eventBus.emit(Event.ERROR, err)
-        })
+      // Start stream or polling only after we get all evaluations
+      if (configurations.streamEnabled) {
+        logDebug('Streaming mode enabled')
+        startStream()
+      } else if (configurations.pollingEnabled) {
+        logDebug('Polling mode enabled')
+        startPolling()
+      } else {
+        logDebug('Streaming and polling mode disabled')
+      }
+
+      // Emit the ready event only if flags weren't already set using setEvaluations
+      if (!hasExistingFlags) {
+        stopMetricsCollector()
+        const allFlags = { ...storage }
+        startMetricsCollector()
+        eventBus.emit(Event.READY, allFlags)
+      }
+      initialised = true
     })
     .catch(error => {
       logError('Authentication error: ', error)
@@ -421,6 +431,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     startMetricsCollector()
   }
 
+  // We instantiate the Poller here so it can be used as a fallback for streaming, but we don't start it yet.
+  poller = new Poller(fetchFlags, configurations)
+
   const startStream = () => {
     const handleFlagEvent = (event: StreamEvent): void => {
       switch (event.event) {
@@ -485,7 +498,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
     const url = `${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`
 
-    eventSource = new Streamer(eventBus, configurations, url, apiKey, standardHeaders, event => {
+    eventSource = new Streamer(eventBus, configurations, url, apiKey, standardHeaders, poller, event => {
       if (event.domain === 'flag') {
         handleFlagEvent(event)
       } else if (event.domain === 'target-segment') {
@@ -493,6 +506,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       }
     })
     eventSource.start()
+  }
+
+  const startPolling = () => {
+    poller.start()
   }
 
   const on: EventOnBinding = (event, callback) =>

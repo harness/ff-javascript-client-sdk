@@ -52,6 +52,8 @@ interface Options {
   baseUrl?: string
   eventUrl?: string
   eventsSyncInterval?: number
+  pollingInterval?: number
+  pollingEnabled?: boolean
   streamEnabled?: boolean
   allAttributesPrivate?: boolean
   privateAttributeNames?: string[]
@@ -71,7 +73,53 @@ const client = initialize('00000000-1111-2222-3333-444444444444', {
 })
 ```
 
-### Listening to events from the `client` instance.
+
+## Streaming and Polling Mode
+
+By default, Harness Feature Flags SDK has streaming enabled and polling enabled. Both modes can be toggled according to your preference using the SDK's configuration.
+
+### Streaming Mode
+Streaming mode establishes a continuous connection between your application and the Feature Flags service. 
+This allows for real-time updates on feature flags without requiring periodic checks. 
+If an error occurs while streaming and `pollingEnabled` is set to `true`,
+the SDK will automatically fall back to polling mode until streaming can be reestablished. 
+If `pollingEnabled` is `false`, streaming will attempt to reconnect without falling back to polling.
+
+### Polling Mode
+In polling mode, the SDK will periodically check with the Feature Flags service to retrieve updates for feature flags. The frequency of these checks can be adjusted using the SDK's configurations.
+
+### No Streaming or Polling
+If both streaming and polling modes are disabled (`streamEnabled: false` and `pollingEnabled: false`), 
+the SDK will not automatically fetch feature flag updates after the initial fetch. 
+This means that after the initial load, any changes made to the feature flags on the Harness server will not be reflected in the application until the SDK is re-initialized or one of the modes is re-enabled.
+
+This configuration might be useful in specific scenarios where you want to ensure a consistent set of feature flags 
+for a session or when the application operates in an environment where regular updates are not necessary. However, it's essential to be aware that this configuration can lead to outdated flag evaluations if the flags change on the server.
+
+To configure the modes:
+
+```typescript
+
+const options = {
+  streamEnabled: true, // Enable or disable streaming - default is enabled
+  pollingEnabled: true, // Enable or disable polling - default is enabled if stream enabled, or disabled if stream disabled.
+  pollingInterval: 60000, // Polling interval in ms, default is 60000ms which is the minimum. If set below this, will default to 60000ms.
+}
+
+const client = initialize(
+  'YOUR_SDK_KEY',
+  {
+    identifier: 'Harness1',
+    attributes: {
+      lastUpdated: Date(),
+      host: location.href
+    }
+  },
+  options
+)
+```
+
+## Listening to events from the `client` instance.
 
 ```typescript
 client.on(Event.READY, flags => {

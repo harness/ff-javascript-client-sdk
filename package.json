@@ -1,6 +1,6 @@
 {
   "name": "@harnessio/ff-javascript-client-sdk",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "author": "Harness",
   "license": "Apache-2.0",
   "main": "dist/sdk.cjs.js",
@@ -31,6 +31,7 @@
     "jest-junit": "^16.0.0",
     "prettier": "^3.0.3",
     "ts-jest": "^29.1.1",
+    "tslib": "^2.6.2",
     "typescript": "^5.2.2"
   },
   "description": "Basic library for integrating CF into javascript applications.",
