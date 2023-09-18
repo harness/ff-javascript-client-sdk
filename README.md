@@ -145,11 +145,7 @@ client.on(Event.DISCONNECTED, () => {
 })
 
 client.on(Event.CONNECTED, () => {
-  // Event happens when connection established
-})
-
-client.on(Event.RESUMED, () => {
-  // Event happens when a connection has disconnected but then reconnected
+  // Event happens when connection has been lost and reestablished 
 })
 
 client.on(Event.POLLING, () => {

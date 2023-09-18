@@ -16,7 +16,6 @@ export interface StreamEvent {
 export enum Event {
   READY = 'ready',
   CONNECTED = 'connected',
-  RESUMED = 'resumed',
   DISCONNECTED = 'disconnected',
   POLLING = 'polling',
   POLLING_STOPPED = 'polling stopped',
@@ -51,6 +50,8 @@ export interface Evaluation {
 export interface EventCallbackMapping {
   [Event.READY]: (flags: Record<string, VariationValue>) => void
   [Event.CONNECTED]: () => void
+  [Event.POLLING]: () => void
+  [Event.POLLING_STOPPED]: () => void
   [Event.DISCONNECTED]: () => void
   [Event.FLAGS_LOADED]: (evaluations: Evaluation[]) => void
   [Event.CACHE_LOADED]: (evaluations: Evaluation[]) => void
