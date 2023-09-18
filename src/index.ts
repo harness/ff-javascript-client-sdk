@@ -14,13 +14,7 @@ import type {
   VariationValue
 } from './types'
 import { Event } from './types'
-import {
-  defer,
-  getConfiguration,
-  logError,
-  MIN_EVENTS_SYNC_INTERVAL,
-  MIN_POLLING_INTERVAL
-} from './utils'
+import { defer, getConfiguration, logError, MIN_EVENTS_SYNC_INTERVAL, MIN_POLLING_INTERVAL } from './utils'
 import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
@@ -549,16 +543,24 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   const close = () => {
     closed = true
+    if (configurations.streamEnabled) {
 
-    logDebug('Closing event stream')
+      logDebug('Closing event stream')
+
+      if (typeof eventSource?.close === 'function') {
+        eventSource.close()
+      }
+
+      eventBus.all.clear()
+    }
+
+    if (configurations.pollingEnabled && poller.isPolling()) {
+      logDebug('Closing Poller')
+      poller.stop()
+    }
     storage = createStorage()
     evaluations = {}
     clearTimeout(metricsSchedulerId)
-    eventBus.all.clear()
-
-    if (typeof eventSource?.close === 'function') {
-      eventSource.close()
-    }
   }
 
   const setEvaluations = (evals: Evaluation[], doDefer = true): void => {
