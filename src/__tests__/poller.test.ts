@@ -1,5 +1,5 @@
 import Poller from '../poller'
-import type { Options } from '../types'
+import type { FetchFlagsResult, Options } from '../types'
 import { getRandom } from '../utils'
 import { Event } from '../types'
 
@@ -15,8 +15,8 @@ const mockEventBus = {
 }
 
 interface PollerArgs {
-  fetchFlags: jest.MockedFunction<() => Promise<any>>
-  eventBus: typeof mockEventBus,
+  fetchFlags: jest.MockedFunction<() => Promise<FetchFlagsResult>>
+  eventBus: typeof mockEventBus
   storage: Record<string, any>
   configurations: Partial<Options>
 }
@@ -75,11 +75,18 @@ describe('Poller', () => {
     const testArgs = getTestArgs()
 
     let attemptCount = 0
-    const fetchFlagsMock = jest.fn().mockImplementation(() => {
+    const fetchFlagsMock: jest.Mock<Promise<FetchFlagsResult>> = jest.fn().mockImplementation((): Promise<FetchFlagsResult> => {
       attemptCount++
 
       // Return null (success) on the maxAttempts-th call, error otherwise.
-      return Promise.resolve(attemptCount === 2 ? null : testArgs.mockError)
+      return Promise.resolve(
+        attemptCount === 2
+          ? ({
+              type: 'success',
+              data: [{ flag: 'flag1', kind: 'boolean', value: true, identifier: 'true' }]
+            }  )
+          : { type: 'error', error: testArgs.mockError } as FetchFlagsResult
+      )
     })
 
     const pollInterval = 60000
