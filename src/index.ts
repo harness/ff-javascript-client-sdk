@@ -329,7 +329,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       // When authentication is done, fetch all flags
       const fetchFlagsResult = await fetchFlags()
 
-      if (fetchFlagsResult.type === "success") {
+      if (fetchFlagsResult.type === 'success') {
         logDebug('Fetch all flags ok', storage)
       }
 

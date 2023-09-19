@@ -201,7 +201,6 @@ describe('Poller', () => {
     // Use this just to mock the calls to console.debug
     getTestArgs()
 
-
     // Start the poller
     currentPoller.start()
 
