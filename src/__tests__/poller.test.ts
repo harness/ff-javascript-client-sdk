@@ -17,7 +17,6 @@ const mockEventBus = {
 interface PollerArgs {
   fetchFlags: jest.MockedFunction<() => Promise<FetchFlagsResult>>
   eventBus: typeof mockEventBus
-  storage: Record<string, any>
   configurations: Partial<Options>
 }
 
@@ -34,11 +33,10 @@ const getPoller = (overrides: Partial<PollerArgs> = {}): Poller => {
     fetchFlags: jest.fn(),
     configurations: {},
     eventBus: mockEventBus,
-    storage: {},
     ...overrides
   }
 
-  currentPoller = new Poller(args.fetchFlags, args.configurations, args.eventBus, args.storage)
+  currentPoller = new Poller(args.fetchFlags, args.configurations, args.eventBus)
 
   return currentPoller
 }
