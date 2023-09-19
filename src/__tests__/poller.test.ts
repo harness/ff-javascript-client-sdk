@@ -110,7 +110,7 @@ describe('Poller', () => {
     await Promise.resolve()
 
     expect(fetchFlagsMock).toHaveBeenCalledTimes(2)
-    expect(testArgs.logSpy).toHaveBeenCalledTimes(3)
+    expect(testArgs.logSpy).toHaveBeenCalledTimes(2)
   })
 
   it('should not retry after max attempts are exceeded', async () => {

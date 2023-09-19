@@ -28,7 +28,6 @@ export default class Poller {
     // Don't start polling immediately as we have already fetched flags on client initialization
     // TODO UNCOMMENT THIS!!!!!!!!
     this.timeoutId = setTimeout(() => this.poll(), this.configurations.pollingInterval)
-    this.poll()
   }
 
   private poll(): void {
