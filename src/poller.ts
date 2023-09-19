@@ -1,6 +1,6 @@
 import type { Options } from './types'
 import { getRandom, logError } from './utils'
-import {Event, FetchFlagsResult} from './types'
+import { Event, FetchFlagsResult } from './types'
 
 export default class Poller {
   private timeoutId: any
@@ -10,10 +10,9 @@ export default class Poller {
   constructor(
     private fetchFlagsFn: () => Promise<FetchFlagsResult>,
     private configurations: Options,
-    private eventBus: any,
-    // Used to emit the updates retrieved in polling intervals
-    private storage: Record<string, any>
-  ) {}
+    private eventBus: any
+  ) // Used to emit the updates retrieved in polling intervals
+  {}
 
   public start(): void {
     if (this.isPolling()) {
