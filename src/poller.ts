@@ -1,6 +1,6 @@
 import type { Options } from './types'
 import { getRandom, logError } from './utils'
-import {Event} from "./types";
+import { Event, FetchFlagsResult } from './types'
 
 export default class Poller {
   private timeoutId: any
@@ -8,10 +8,11 @@ export default class Poller {
   private maxAttempts = 5
 
   constructor(
-    private fetchFlagsFn: () => Promise<any>,
+    private fetchFlagsFn: () => Promise<FetchFlagsResult>,
     private configurations: Options,
     private eventBus: any
-  ) {}
+  ) // Used to emit the updates retrieved in polling intervals
+  {}
 
   public start(): void {
     if (this.isPolling()) {
@@ -23,9 +24,9 @@ export default class Poller {
     this.eventBus.emit(Event.POLLING)
 
     this.logDebug(`Starting poller, first poll will be in ${this.configurations.pollingInterval}ms`)
+
     // Don't start polling immediately as we have already fetched flags on client initialization
     this.timeoutId = setTimeout(() => this.poll(), this.configurations.pollingInterval)
-
   }
 
   private poll(): void {
@@ -36,22 +37,28 @@ export default class Poller {
 
   private async attemptFetch(): Promise<void> {
     for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
-      const error = await this.fetchFlagsFn()
+      const result = await this.fetchFlagsFn()
 
-      if (!error) {
+      if (result.type === 'success') {
         this.logDebug(`Successfully polled for flag updates, next poll in ${this.configurations.pollingInterval}ms. `)
+        this.eventBus.emit(Event.POLLING_CHANGED, result.data)
         return
       }
 
-      logError('Error when polling for flag updates', error)
+      logError('Error when polling for flag updates', result.error)
 
       // Retry fetching flags
       if (attempt >= this.maxAttempts) {
-        this.logDebug(`Maximum attempts reached for polling for flags. Next poll in ${this.configurations.pollingInterval}ms.`)
+        this.logDebug(
+          `Maximum attempts reached for polling for flags. Next poll in ${this.configurations.pollingInterval}ms.`
+        )
         return
       }
 
-      this.logDebug(`Polling for flags attempt #${attempt} failed. Remaining attempts: ${this.maxAttempts - attempt}`, error)
+      this.logDebug(
+        `Polling for flags attempt #${attempt} failed. Remaining attempts: ${this.maxAttempts - attempt}`,
+        result.error
+      )
 
       const delay = getRandom(1000, 10000)
       await new Promise(res => setTimeout(res, delay))
@@ -64,7 +71,7 @@ export default class Poller {
       this.timeoutId = undefined
       this.isRunning = false
       this.eventBus.emit(Event.POLLING_STOPPED)
-      this.logDebug("Polling stopped")
+      this.logDebug('Polling stopped')
     }
   }
 

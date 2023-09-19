@@ -132,6 +132,8 @@ export class Streamer {
     }
     // Stop the task that listens for heartbeats
     clearInterval(this.readTimeoutCheckerId)
+
+    this.eventBus.emit(Event.STOPPED)
     // if we are still in polling mode when close is called, then stop polling
     this.stopFallBackPolling()
   }

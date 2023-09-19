@@ -17,8 +17,10 @@ export enum Event {
   READY = 'ready',
   CONNECTED = 'connected',
   DISCONNECTED = 'disconnected',
+  STOPPED = 'stopped',
   POLLING = 'polling',
   POLLING_STOPPED = 'polling stopped',
+  POLLING_CHANGED = 'polling changed',
   FLAGS_LOADED = 'flags loaded',
   CACHE_LOADED = 'cache loaded',
   CHANGED = 'changed',
@@ -47,11 +49,15 @@ export interface Evaluation {
   deleted?: boolean // mark that feature flag is deleted
 }
 
+export type FetchFlagsResult = { type: 'success'; data: Evaluation[] } | { type: 'error'; error: any }
+
 export interface EventCallbackMapping {
   [Event.READY]: (flags: Record<string, VariationValue>) => void
   [Event.CONNECTED]: () => void
+  [Event.STOPPED]: () => void
   [Event.POLLING]: () => void
   [Event.POLLING_STOPPED]: () => void
+  [Event.POLLING_CHANGED]: () => void
   [Event.DISCONNECTED]: () => void
   [Event.FLAGS_LOADED]: (evaluations: Evaluation[]) => void
   [Event.CACHE_LOADED]: (evaluations: Evaluation[]) => void
@@ -94,7 +100,7 @@ export interface Options {
   baseUrl?: string
   eventUrl?: string
   eventsSyncInterval?: number
-  pollingInterval?: number,
+  pollingInterval?: number
   streamEnabled?: boolean
   pollingEnabled?: boolean
   allAttributesPrivate?: boolean

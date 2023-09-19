@@ -137,7 +137,7 @@ client.on(Event.CACHE_LOADED, evaluations => {
 
 client.on(Event.CHANGED, flagInfo => {
   // Event happens when a changed event is pushed
-  // flagInfo contains information about the updated feature flag
+  // flagInfo contains the updated feature flag
 })
 
 client.on(Event.DISCONNECTED, () => {
@@ -150,6 +150,11 @@ client.on(Event.CONNECTED, () => {
 
 client.on(Event.POLLING, () => {
   // Event happens when polling begins
+})
+
+client.on(Event.POLLING_CHANGED, flagInfo => {
+  // Event happens when SDK polls for flags
+  // flagInfo contains the polled feature flags
 })
 
 client.on(Event.POLLING_STOPPED, () => {
