@@ -78,7 +78,6 @@ describe('Poller', () => {
       .mockImplementation((): Promise<FetchFlagsResult> => {
         attemptCount++
 
-        // Return null (success) on the maxAttempts-th call, error otherwise.
         return Promise.resolve(
           attemptCount === 2
             ? {
