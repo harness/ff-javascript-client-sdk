@@ -198,6 +198,10 @@ describe('Poller', () => {
       configurations: { pollingInterval: pollInterval, debug: true }
     })
 
+    // Use this just to mock the calls to console.debug
+    getTestArgs()
+
+
     // Start the poller
     currentPoller.start()
 
@@ -210,10 +214,10 @@ describe('Poller', () => {
     // Now we'll check that eventBus.emit was called with POLLING_STOPPED.
     expect(mockEventBus.emit).toHaveBeenCalledWith(Event.POLLING_STOPPED)
 
-    // Ensure the debug message for polling stopped is logged.
+    // Ensure that fetchFlags isn't called after the poller has been stopped
     expect(fetchFlagsMock).not.toHaveBeenCalled()
 
-    // Advance timers to ensure that the poller doesn't actually poll after being stopped.
+    // As a final check, advance timers to ensure that the poller doesn't poll after an elapsed interval.
     jest.advanceTimersByTime(pollInterval)
 
     expect(fetchFlagsMock).not.toHaveBeenCalled()
