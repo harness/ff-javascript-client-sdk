@@ -57,8 +57,8 @@ const getTestArgs = (overrides: Partial<TestArgs> = {}): TestArgs => {
 
 describe('Poller', () => {
   afterEach(() => {
+    currentPoller.stop()
     jest.clearAllMocks()
-    currentPoller?.stop()
   })
   it('should not start polling if it is already polling', () => {
     getPoller({ configurations: { debug: true } })
