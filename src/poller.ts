@@ -25,8 +25,8 @@ export default class Poller {
     this.eventBus.emit(Event.POLLING)
 
     this.logDebug(`Starting poller, first poll will be in ${this.configurations.pollingInterval}ms`)
+
     // Don't start polling immediately as we have already fetched flags on client initialization
-    // TODO UNCOMMENT THIS!!!!!!!!
     this.timeoutId = setTimeout(() => this.poll(), this.configurations.pollingInterval)
   }
 

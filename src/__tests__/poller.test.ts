@@ -75,19 +75,21 @@ describe('Poller', () => {
     const testArgs = getTestArgs()
 
     let attemptCount = 0
-    const fetchFlagsMock: jest.Mock<Promise<FetchFlagsResult>> = jest.fn().mockImplementation((): Promise<FetchFlagsResult> => {
-      attemptCount++
+    const fetchFlagsMock: jest.Mock<Promise<FetchFlagsResult>> = jest
+      .fn()
+      .mockImplementation((): Promise<FetchFlagsResult> => {
+        attemptCount++
 
-      // Return null (success) on the maxAttempts-th call, error otherwise.
-      return Promise.resolve(
-        attemptCount === 2
-          ? ({
-              type: 'success',
-              data: [{ flag: 'flag1', kind: 'boolean', value: true, identifier: 'true' }]
-            }  )
-          : { type: 'error', error: testArgs.mockError } as FetchFlagsResult
-      )
-    })
+        // Return null (success) on the maxAttempts-th call, error otherwise.
+        return Promise.resolve(
+          attemptCount === 2
+            ? {
+                type: 'success',
+                data: [{ flag: 'flag1', kind: 'boolean', value: true, identifier: 'true' }]
+              }
+            : ({ type: 'error', error: testArgs.mockError } as FetchFlagsResult)
+        )
+      })
 
     const pollInterval = 60000
 
@@ -117,14 +119,23 @@ describe('Poller', () => {
     const maxAttempts = 5
     let attemptCount = 0
 
-    const mockError = new Error('Fetch Error')
+    const fetchFlagsMock: jest.Mock<Promise<FetchFlagsResult>> = jest
+      .fn()
+      .mockImplementation((): Promise<FetchFlagsResult> => {
+        attemptCount++
 
-    const fetchFlagsMock = jest.fn().mockImplementation(() => {
-      attemptCount++
+        // Return null (success) on the maxAttempts-th call, error otherwise.
+        // return Promise.resolve(attemptCount === maxAttempts ? null : mockError)
 
-      // Return null (success) on the maxAttempts-th call, error otherwise.
-      return Promise.resolve(attemptCount === maxAttempts ? null : mockError)
-    })
+        return Promise.resolve(
+          attemptCount === maxAttempts
+            ? {
+                type: 'success',
+                data: [{ flag: 'flag1', kind: 'boolean', value: true, identifier: 'true' }]
+              }
+            : ({ type: 'error', error: testArgs.mockError } as FetchFlagsResult)
+        )
+      })
 
     const pollInterval = 60000
 
@@ -147,12 +158,22 @@ describe('Poller', () => {
     }
 
     expect(fetchFlagsMock).toHaveBeenCalledTimes(5)
-    expect(testArgs.logSpy).toHaveBeenCalledTimes(7)
+    expect(testArgs.logSpy).toHaveBeenCalledTimes(6)
   })
 
   it('should successfully fetch flags without retrying on success', async () => {
     const pollInterval = 60000
-    const fetchFlagsMock = jest.fn().mockResolvedValue(null)
+    const fetchFlagsMock: jest.Mock<Promise<FetchFlagsResult>> = jest
+      .fn()
+      .mockImplementation((): Promise<FetchFlagsResult> => {
+        // Return null (success) on the maxAttempts-th call, error otherwise.
+        // return Promise.resolve(attemptCount === maxAttempts ? null : mockError)
+
+        return Promise.resolve({
+          type: 'success',
+          data: [{ flag: 'flag1', kind: 'boolean', value: true, identifier: 'true' }]
+        })
+      })
 
     getPoller({
       fetchFlags: fetchFlagsMock,
@@ -165,7 +186,7 @@ describe('Poller', () => {
     await Promise.resolve()
 
     expect(fetchFlagsMock).toHaveBeenCalledTimes(1)
-    expect(testArgs.logSpy).toHaveBeenCalledTimes(3)
+    expect(testArgs.logSpy).toHaveBeenCalledTimes(2)
   })
 
   it('should stop polling when stop is called', () => {
