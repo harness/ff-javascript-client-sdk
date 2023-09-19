@@ -121,9 +121,6 @@ describe('Poller', () => {
       .mockImplementation((): Promise<FetchFlagsResult> => {
         attemptCount++
 
-        // Return null (success) on the maxAttempts-th call, error otherwise.
-        // return Promise.resolve(attemptCount === maxAttempts ? null : mockError)
-
         return Promise.resolve(
           attemptCount === maxAttempts
             ? {
@@ -163,9 +160,6 @@ describe('Poller', () => {
     const fetchFlagsMock: jest.Mock<Promise<FetchFlagsResult>> = jest
       .fn()
       .mockImplementation((): Promise<FetchFlagsResult> => {
-        // Return null (success) on the maxAttempts-th call, error otherwise.
-        // return Promise.resolve(attemptCount === maxAttempts ? null : mockError)
-
         return Promise.resolve({
           type: 'success',
           data: [{ flag: 'flag1', kind: 'boolean', value: true, identifier: 'true' }]
