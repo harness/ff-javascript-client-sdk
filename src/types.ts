@@ -17,6 +17,7 @@ export enum Event {
   READY = 'ready',
   CONNECTED = 'connected',
   DISCONNECTED = 'disconnected',
+  STOPPED = 'stopped',
   POLLING = 'polling',
   POLLING_STOPPED = 'polling stopped',
   POLLING_CHANGED = 'polling changed',
@@ -53,8 +54,10 @@ export type FetchFlagsResult = { type: 'success'; data: Evaluation[] } | { type:
 export interface EventCallbackMapping {
   [Event.READY]: (flags: Record<string, VariationValue>) => void
   [Event.CONNECTED]: () => void
+  [Event.STOPPED]: () => void
   [Event.POLLING]: () => void
   [Event.POLLING_STOPPED]: () => void
+  [Event.POLLING_CHANGED]: () => void
   [Event.DISCONNECTED]: () => void
   [Event.FLAGS_LOADED]: (evaluations: Evaluation[]) => void
   [Event.CACHE_LOADED]: (evaluations: Evaluation[]) => void
