@@ -64,6 +64,8 @@ describe('Poller', () => {
 
     currentPoller.start()
     currentPoller.start()
+    expect(mockEventBus.emit).toHaveBeenNthCalledWith(1, Event.POLLING)
+
     expect(testArgs.logSpy).toHaveBeenCalledTimes(2)
 
     expect(mockEventBus.emit).toHaveBeenCalled()
