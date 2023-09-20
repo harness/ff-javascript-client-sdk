@@ -104,7 +104,7 @@ export class Streamer {
         onFailed(`HTTP code ${this.xhr.status}`)
         return
       }
-      
+
       if (!this.connectionOpened) {
         onConnected()
         this.connectionOpened = true;
@@ -143,6 +143,7 @@ export class Streamer {
   }
 
   close(): void {
+    this.connectionOpened = false
     this.closed = true
     if (this.xhr) {
       this.xhr.abort()
