@@ -15,6 +15,7 @@ export class Streamer {
   private closed: boolean = false
   private readTimeoutCheckerId: any
   private fallbackPoller: Poller
+  private connectionOpened = false;
 
   constructor(eventBus, configurations, url, apiKey, standardHeaders, fallbackPoller, eventCallback) {
     this.eventBus = eventBus
@@ -81,30 +82,46 @@ export class Streamer {
     }
     this.xhr.timeout = 24 * 60 * 60 * 1000 // Force SSE to reconnect after 24hrs
     this.xhr.onerror = () => {
+      this.connectionOpened = false;
       onFailed('XMLHttpRequest error on SSE stream')
     }
     this.xhr.onabort = () => {
+      this.connectionOpened = false;
       this.logDebug('SSE aborted')
       if (!this.closed) {
         onFailed(null)
       }
     }
     this.xhr.ontimeout = () => {
+      this.connectionOpened = false;
       onFailed('SSE timeout')
     }
+
+    // XMLHttpRequest doesn't fire an `onload` event when used to open an SSE connection, but leaving this listener
+    // here, in case there are some edge cases where it's fired and so need to handle the reconnect.
     this.xhr.onload = () => {
       if (this.xhr.status >= 400 && this.xhr.status <= 599) {
         onFailed(`HTTP code ${this.xhr.status}`)
         return
       }
+      
+      if (!this.connectionOpened) {
+        onConnected()
+        this.connectionOpened = true;
+      }
 
-      onConnected()
     }
 
     let offset = 0
     let lastActivity = Date.now()
 
     this.xhr.onprogress = () => {
+      // XMLHttpRequest doesn't fire an `onload` event when used to open an SSE connection, so we fire the
+      // CONNECTED event here if we haven't already done so per unique connection event.
+      if (!this.connectionOpened) {
+        onConnected()
+        this.connectionOpened = true;
+      }
       // if we are in polling mode due to a recovered streaming error, then stop polling
       this.stopFallBackPolling()
       lastActivity = Date.now()
