@@ -423,12 +423,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       logDebug('Flag variation has changed for ', evaluation.identifier)
       storage[evaluation.flag] = value
       evaluations[evaluation.flag] = { ...evaluation, value }
-
-      // We want to notify for streaming events only.
-      // Polling emits its own events, so don't want to duplicate these.
-      if (configurations.streamEnabled && !poller.isPolling()) {
-        sendEvent(evaluation)
-      }
+      sendEvent(evaluation)
     }
     startMetricsCollector()
   }
