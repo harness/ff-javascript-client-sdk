@@ -20,7 +20,6 @@ export enum Event {
   STOPPED = 'stopped',
   POLLING = 'polling',
   POLLING_STOPPED = 'polling stopped',
-  POLLING_CHANGED = 'polling changed',
   FLAGS_LOADED = 'flags loaded',
   CACHE_LOADED = 'cache loaded',
   CHANGED = 'changed',
@@ -57,7 +56,6 @@ export interface EventCallbackMapping {
   [Event.STOPPED]: () => void
   [Event.POLLING]: () => void
   [Event.POLLING_STOPPED]: () => void
-  [Event.POLLING_CHANGED]: () => void
   [Event.DISCONNECTED]: () => void
   [Event.FLAGS_LOADED]: (evaluations: Evaluation[]) => void
   [Event.CACHE_LOADED]: (evaluations: Evaluation[]) => void

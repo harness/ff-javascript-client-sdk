@@ -41,7 +41,6 @@ export default class Poller {
 
       if (result.type === 'success') {
         this.logDebug(`Successfully polled for flag updates, next poll in ${this.configurations.pollingInterval}ms. `)
-        this.eventBus.emit(Event.POLLING_CHANGED, result.data)
         return
       }
 
