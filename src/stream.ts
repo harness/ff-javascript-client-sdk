@@ -15,7 +15,8 @@ export class Streamer {
   private closed: boolean = false
   private readTimeoutCheckerId: any
   private fallbackPoller: Poller
-  private connectionOpened = false;
+  private connectionOpened = false
+  private disconnectEventEmitted = false
 
   constructor(eventBus, configurations, url, apiKey, standardHeaders, fallbackPoller, eventCallback) {
     this.eventBus = eventBus
@@ -49,7 +50,10 @@ export class Streamer {
       clearInterval(this.readTimeoutCheckerId)
       const reconnectDelayMs = getRandom(1000, 10000)
       this.logDebug('Stream disconnected, will reconnect in ' + reconnectDelayMs + 'ms')
-      this.eventBus.emit(Event.DISCONNECTED)
+      if (!this.disconnectEventEmitted) {
+        this.eventBus.emit(Event.DISCONNECTED)
+        this.disconnectEventEmitted = true
+      }
       setTimeout(() => this.start(), reconnectDelayMs)
     }
 
@@ -82,18 +86,18 @@ export class Streamer {
     }
     this.xhr.timeout = 24 * 60 * 60 * 1000 // Force SSE to reconnect after 24hrs
     this.xhr.onerror = () => {
-      this.connectionOpened = false;
+      this.connectionOpened = false
       onFailed('XMLHttpRequest error on SSE stream')
     }
     this.xhr.onabort = () => {
-      this.connectionOpened = false;
+      this.connectionOpened = false
       this.logDebug('SSE aborted')
       if (!this.closed) {
         onFailed(null)
       }
     }
     this.xhr.ontimeout = () => {
-      this.connectionOpened = false;
+      this.connectionOpened = false
       onFailed('SSE timeout')
     }
 
@@ -107,9 +111,9 @@ export class Streamer {
 
       if (!this.connectionOpened) {
         onConnected()
-        this.connectionOpened = true;
+        this.connectionOpened = true
+        this.disconnectEventEmitted = false
       }
-
     }
 
     let offset = 0
@@ -120,7 +124,8 @@ export class Streamer {
       // CONNECTED event here if we haven't already done so per unique connection event.
       if (!this.connectionOpened) {
         onConnected()
-        this.connectionOpened = true;
+        this.connectionOpened = true
+        this.disconnectEventEmitted = false
       }
       // if we are in polling mode due to a recovered streaming error, then stop polling
       this.stopFallBackPolling()
