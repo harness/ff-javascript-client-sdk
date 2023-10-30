@@ -101,7 +101,15 @@ export interface Options {
   pollingInterval?: number
   streamEnabled?: boolean
   pollingEnabled?: boolean
+  /**
+   * @deprecated This property was never supported and was mistakenly included in the API.
+   * It will be removed in the next version.
+   */
   allAttributesPrivate?: boolean
+  /**
+   * @deprecated This property was never supported and was mistakenly included in the API.
+   * It will be removed in the next version.
+   */
   privateAttributeNames?: string[]
   debug?: boolean
   cache?: boolean | CacheOptions
