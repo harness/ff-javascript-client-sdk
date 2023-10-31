@@ -102,12 +102,12 @@ export interface Options {
   streamEnabled?: boolean
   pollingEnabled?: boolean
   /**
-   * @deprecated This property was never supported and was mistakenly included in the API.
+   * @deprecated This feature was only available during initial alpha builds and was mistakenly not removed from the API
    * It will be removed in the next version.
    */
   allAttributesPrivate?: boolean
   /**
-   * @deprecated This property was never supported and was mistakenly included in the API.
+   * @deprecated This feature was only available during initial alpha builds and was mistakenly not removed from the API
    * It will be removed in the next version.
    */
   privateAttributeNames?: string[]
