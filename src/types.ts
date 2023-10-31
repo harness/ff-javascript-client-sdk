@@ -102,13 +102,13 @@ export interface Options {
   streamEnabled?: boolean
   pollingEnabled?: boolean
   /**
-   * @deprecated This feature was only available during initial alpha builds and was mistakenly not removed from the API
-   * It will be removed in the next version.
+   * @deprecated This feature was only available during initial alpha builds and was mistakenly not removed from the
+   * API. It will be removed in the next version.
    */
   allAttributesPrivate?: boolean
   /**
-   * @deprecated This feature was only available during initial alpha builds and was mistakenly not removed from the API
-   * It will be removed in the next version.
+   * @deprecated This feature was only available during initial alpha builds and was mistakenly not removed from the
+   * API. It will be removed in the next version.
    */
   privateAttributeNames?: string[]
   debug?: boolean
