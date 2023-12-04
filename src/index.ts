@@ -22,7 +22,7 @@ import { Streamer } from './stream'
 import { getVariation } from './variation'
 import Poller from './poller'
 
-const SDK_VERSION = '1.16.0'
+const SDK_VERSION = '1.21.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
@@ -307,6 +307,13 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         'Harness-AccountID': decoded.accountID,
         'Harness-EnvironmentID': decoded.environmentIdentifier,
         'Harness-SDK-Info': SDK_INFO
+      }
+
+      const targetHeader = btoa(JSON.stringify(target))
+
+      // ensure encoded target is less than 1/4 of 1 MB
+      if (targetHeader.length < 262144) {
+        standardHeaders['Harness-Target'] = targetHeader
       }
 
       logDebug('Authenticated', decoded)
