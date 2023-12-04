@@ -310,7 +310,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       }
 
       const targetHeader = btoa(JSON.stringify(target))
-      if (targetHeader.length < 512) {
+
+      // ensure encoded target is less than 1/4 of 1 MB
+      if (targetHeader.length < 262144) {
         standardHeaders['Harness-Target'] = targetHeader
       }
 
