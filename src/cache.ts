@@ -1,15 +1,20 @@
 import type { CacheOptions, Evaluation } from './types'
 
-export function getCacheId(targetIdentifier: string): string {
-  return 'HARNESS_FF_CACHE_' + targetIdentifier
+export async function getCacheId(seed: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(seed)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  const cacheId = hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+
+  return 'HARNESS_FF_CACHE_' + cacheId
 }
 
-export function loadFromCache(targetIdentifier: string, cacheOptions: CacheOptions = {}): Evaluation[] {
-  const cacheId = getCacheId(targetIdentifier)
+export function loadFromCache(cacheId: string, cacheOptions: CacheOptions = {}): Evaluation[] {
   const timestamp = parseInt(window.localStorage.getItem(cacheId + '.ts'))
 
   if (cacheOptions?.ttl && !isNaN(timestamp) && timestamp + cacheOptions.ttl < Date.now()) {
-    clearCachedEvaluations(targetIdentifier)
+    clearCachedEvaluations(cacheId)
     return []
   }
 
@@ -24,14 +29,13 @@ export function loadFromCache(targetIdentifier: string, cacheOptions: CacheOptio
   return []
 }
 
-export function saveToCache(targetIdentifier: string, evaluations: Evaluation[]): void {
-  const cacheId = getCacheId(targetIdentifier)
+export function saveToCache(cacheId: string, evaluations: Evaluation[]): void {
   window.localStorage.setItem(cacheId, JSON.stringify(evaluations))
   window.localStorage.setItem(cacheId + '.ts', Date.now().toString())
 }
 
-export function updateCachedEvaluation(targetIdentifier: string, evaluation: Evaluation): void {
-  const cachedEvals = loadFromCache(targetIdentifier)
+export function updateCachedEvaluation(cacheId: string, evaluation: Evaluation): void {
+  const cachedEvals = loadFromCache(cacheId)
   const existingEval = cachedEvals.find(({ flag }) => flag === evaluation.flag)
 
   if (existingEval) {
@@ -40,22 +44,21 @@ export function updateCachedEvaluation(targetIdentifier: string, evaluation: Eva
     cachedEvals.push(evaluation)
   }
 
-  saveToCache(targetIdentifier, cachedEvals)
+  saveToCache(cacheId, cachedEvals)
 }
 
-export function removeCachedEvaluation(targetIdentifier: string, flagIdentifier: string): void {
-  const cachedEvals = loadFromCache(targetIdentifier)
+export function removeCachedEvaluation(cacheId: string, flagIdentifier: string): void {
+  const cachedEvals = loadFromCache(cacheId)
   const existingEvalIndex = cachedEvals.findIndex(({ flag }) => flag === flagIdentifier)
 
   if (existingEvalIndex > -1) {
     cachedEvals.splice(existingEvalIndex, 1)
 
-    saveToCache(targetIdentifier, cachedEvals)
+    saveToCache(cacheId, cachedEvals)
   }
 }
 
-export function clearCachedEvaluations(targetIdentifier: string): void {
-  const cacheId = getCacheId(targetIdentifier)
+export function clearCachedEvaluations(cacheId: string): void {
   window.localStorage.removeItem(cacheId)
   window.localStorage.removeItem(cacheId + '.ts')
 }

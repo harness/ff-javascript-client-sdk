@@ -16,13 +16,13 @@ import type {
 } from './types'
 import { Event } from './types'
 import { defer, getConfiguration, logError, MIN_EVENTS_SYNC_INTERVAL, MIN_POLLING_INTERVAL } from './utils'
-import { loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
+import { getCacheId, loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
 import { getVariation } from './variation'
 import Poller from './poller'
 
-const SDK_VERSION = '1.21.0'
+const SDK_VERSION = '1.22.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
@@ -591,34 +591,36 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   if (configurations.cache && 'localStorage' in window) {
-    let initialLoad = true
+    getCacheId(target.identifier + apiKey).then(cacheId => {
+      let initialLoad = true
 
-    const cachedEvaluations = loadFromCache(
-      target.identifier,
-      typeof configurations.cache === 'boolean' ? {} : configurations.cache
-    )
+      const cachedEvaluations = loadFromCache(
+        cacheId,
+        typeof configurations.cache === 'boolean' ? {} : configurations.cache
+      )
 
-    if (!!cachedEvaluations?.length) {
-      defer(() => {
-        logDebug('loading from cache', cachedEvaluations)
-        setEvaluations(cachedEvaluations, false)
-        eventBus.emit(Event.CACHE_LOADED, cachedEvaluations)
-      })
-    }
-
-    on(Event.FLAGS_LOADED, evaluations => {
-      saveToCache(target.identifier, evaluations)
-      initialLoad = false
-    })
-
-    on(Event.CHANGED, evaluation => {
-      if (!initialLoad) {
-        if (evaluation.deleted) {
-          removeCachedEvaluation(target.identifier, evaluation.flag)
-        } else {
-          updateCachedEvaluation(target.identifier, evaluation)
-        }
+      if (!!cachedEvaluations?.length) {
+        defer(() => {
+          logDebug('loading from cache', cachedEvaluations)
+          setEvaluations(cachedEvaluations, false)
+          eventBus.emit(Event.CACHE_LOADED, cachedEvaluations)
+        })
       }
+
+      on(Event.FLAGS_LOADED, evaluations => {
+        saveToCache(cacheId, evaluations)
+        initialLoad = false
+      })
+
+      on(Event.CHANGED, evaluation => {
+        if (!initialLoad) {
+          if (evaluation.deleted) {
+            removeCachedEvaluation(cacheId, evaluation.flag)
+          } else {
+            updateCachedEvaluation(cacheId, evaluation)
+          }
+        }
+      })
     })
   }
 
