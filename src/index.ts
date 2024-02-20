@@ -89,7 +89,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     try {
       const { Platform } = require("react-native");
       if  (Platform.OS === 'android') {
-        console.warn("SDKCODE:1007 workaround applied - Android React Native detected - streaming will be disabled and polling enabled")
+        console.info("SDKCODE:1007 Android React Native detected - streaming will be disabled and polling enabled")
         configurations.pollingEnabled = true
         configurations.streamEnabled = false
       }
