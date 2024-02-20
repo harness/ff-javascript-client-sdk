@@ -85,6 +85,19 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     configurations.pollingInterval = MIN_POLLING_INTERVAL
   }
 
+  if (configurations.streamEnabled) {
+    try {
+      const { Platform } = require("react-native");
+      if  (Platform.OS === 'android') {
+        console.warn("SDKCODE:1007 workaround applied - Android React Native detected - streaming will be disabled and polling enabled")
+        configurations.pollingEnabled = true
+        configurations.streamEnabled = false
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+
   const logDebug = (message: string, ...args: any[]) => {
     if (configurations.debug) {
       // tslint:disable-next-line:no-console
