@@ -22,7 +22,7 @@ import { Streamer } from './stream'
 import { getVariation } from './variation'
 import Poller from './poller'
 
-const SDK_VERSION = '1.23.0'
+const SDK_VERSION = '1.24.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
