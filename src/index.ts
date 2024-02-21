@@ -22,7 +22,7 @@ import { Streamer } from './stream'
 import { getVariation } from './variation'
 import Poller from './poller'
 
-const SDK_VERSION = '1.23.0'
+const SDK_VERSION = '1.24.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
@@ -83,6 +83,19 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
     configurations.pollingInterval = MIN_POLLING_INTERVAL
+  }
+
+  if (configurations.streamEnabled) {
+    try {
+      const { Platform } = require("react-native");
+      if  (Platform.OS === 'android') {
+        console.info("SDKCODE:1007 Android React Native detected - streaming will be disabled and polling enabled")
+        configurations.pollingEnabled = true
+        configurations.streamEnabled = false
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   const logDebug = (message: string, ...args: any[]) => {
