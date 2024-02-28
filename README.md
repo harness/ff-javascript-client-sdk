@@ -55,9 +55,8 @@ interface Options {
   pollingInterval?: number
   pollingEnabled?: boolean
   streamEnabled?: boolean
-  allAttributesPrivate?: boolean
-  privateAttributeNames?: string[]
-  debug?: boolean
+  debug?: boolean,
+  cache?: boolean | CacheOptions
 }
 ```
 
@@ -158,6 +157,10 @@ client.on(Event.POLLING_STOPPED, () => {
 
 client.on(Event.ERROR, error => {
   // Event happens when connection some error has occurred
+})
+
+client.on(Event.ERROR_CACHE, error => {
+  // Event happens when an error occurs when accessing the cache
 })
 
 client.on(Event.ERROR_AUTH, error => {
@@ -262,7 +265,11 @@ The `cache` option can also be passed as an object with the following options.
 
 ```typescript
 interface CacheOptions {
-  ttl?: number // maximum age of stored cache, in ms, before it is considered stale 
+  // maximum age of stored cache, in ms, before it is considered stale
+  ttl?: number
+  // storage mechanism to use, conforming to the Web Storage API standard, can be either synchronous or asynchronous
+  // defaults to localStorage
+  storage?: AsyncStorage | SyncStorage
 }
 ```
 
