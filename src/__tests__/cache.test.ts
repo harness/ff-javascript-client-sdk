@@ -1,150 +1,151 @@
-import {
-  clearCachedEvaluations,
-  getCacheId,
-  loadFromCache,
-  removeCachedEvaluation,
-  saveToCache,
-  updateCachedEvaluation
-} from '../cache'
-import type { Evaluation } from '../types'
-import { TextEncoder, TextDecoder } from 'util'
-import crypto from 'crypto'
+import type { AsyncStorage, Evaluation, SyncStorage } from '../types'
+import { getCache } from '../cache'
 
-Object.defineProperty(global.self, 'crypto', {
-  value: {
-    subtle: crypto.webcrypto.subtle
-  }
-})
-Object.assign(global, { TextDecoder, TextEncoder })
+const sampleEvaluations: Evaluation[] = [
+  { flag: 'flag1', value: 'false', kind: 'boolean', identifier: 'false' },
+  { flag: 'flag2', value: 'true', kind: 'boolean', identifier: 'true' },
+  { flag: 'flag3', value: 'false', kind: 'boolean', identifier: 'false' }
+]
 
-describe('Cache', () => {
-  const cacheId = 'some-cache-id'
+const sampleSyncStorage: SyncStorage = {
+  getItem() {
+    return null
+  },
+  setItem() {},
+  removeItem() {}
+}
 
-  function primeCache(): Evaluation[] {
-    const evals = [
-      {
-        flag: 'F1',
-        deleted: false,
-        value: 'true',
-        identifier: 'true',
-        kind: 'boolean'
-      }
-    ]
+const sampleAsyncStorage: AsyncStorage = {
+  async getItem() {
+    return null
+  },
+  async setItem() {},
+  async removeItem() {}
+}
 
-    window.localStorage.setItem(cacheId, JSON.stringify(evals))
-
-    return evals
-  }
-
+describe('getCache', () => {
   beforeEach(() => {
-    window.localStorage.clear()
+    jest.resetAllMocks()
   })
 
-  describe('getCacheId', () => {
-    test('it should prefix the target ID', async () => {
-      expect(await getCacheId('yatta')).toBe(
-        'HARNESS_FF_CACHE_248ad761f624bc5b0aed163c1d1585f562b4c058616a41f1919d00f669adbf1c'
+  describe.each([
+    ['sync', sampleSyncStorage],
+    ['async', sampleAsyncStorage]
+  ])('with %s storage', (_, storage) => {
+    test('it should return evaluations stored in cache', async () => {
+      jest.spyOn(storage, 'getItem').mockReturnValue(JSON.stringify(sampleEvaluations))
+      const cache = await getCache('something', { storage })
+
+      expect(await cache.loadFromCache()).toEqual(sampleEvaluations)
+    })
+
+    test('it should try to remove the existing cache if the ttl has expired', async () => {
+      jest.spyOn(storage, 'getItem').mockImplementation(key => {
+        if (key.endsWith('.ts')) {
+          return (Date.now() - 100000).toString()
+        }
+
+        return JSON.stringify(sampleEvaluations)
+      })
+      const removeItemMock = jest.spyOn(storage, 'removeItem')
+
+      const cache = await getCache('something', { storage, ttl: 1000 })
+
+      expect(await cache.loadFromCache()).toEqual([])
+      expect(removeItemMock).toHaveBeenCalledWith('HARNESS_FF_CACHE_c29tZXRoaW5n')
+      expect(removeItemMock).toHaveBeenCalledWith('HARNESS_FF_CACHE_c29tZXRoaW5n.ts')
+    })
+
+    test('it should not try to remove the existing cache if the ttl has not expired', async () => {
+      jest.spyOn(storage, 'getItem').mockImplementation(key => {
+        if (key.endsWith('.ts')) {
+          return Date.now().toString()
+        }
+
+        return JSON.stringify(sampleEvaluations)
+      })
+      const removeItemMock = jest.spyOn(storage, 'removeItem')
+
+      const cache = await getCache('something', { storage, ttl: 1000 })
+
+      expect(await cache.loadFromCache()).toEqual(sampleEvaluations)
+      expect(removeItemMock).not.toHaveBeenCalled()
+    })
+
+    test('it should try to save evaluations to the cache', async () => {
+      const setItemMock = jest.spyOn(storage, 'setItem')
+      const cache = await getCache('something', { storage })
+
+      await cache.saveToCache(sampleEvaluations)
+
+      expect(setItemMock).toHaveBeenCalledWith('HARNESS_FF_CACHE_c29tZXRoaW5n', JSON.stringify(sampleEvaluations))
+      expect(setItemMock).toHaveBeenCalledWith(
+        'HARNESS_FF_CACHE_c29tZXRoaW5n.ts',
+        expect.stringContaining(Date.now().toString().substring(0, 8))
       )
     })
-  })
 
-  describe('loadFromCache', () => {
-    test('it should return an empty array if nothing is stored', async () => {
-      expect(loadFromCache(cacheId)).toEqual([])
+    test('it should try to update a specific evaluation if it exists', async () => {
+      jest.spyOn(storage, 'getItem').mockReturnValue(JSON.stringify(sampleEvaluations))
+      const setItemMock = jest.spyOn(storage, 'setItem')
+
+      const cache = await getCache('something', { storage })
+      const newEvaluation = { flag: 'flag3', value: 'true', kind: 'boolean', identifier: 'true' }
+
+      await cache.updateCachedEvaluation(newEvaluation)
+
+      expect(setItemMock).toHaveBeenCalledWith(
+        'HARNESS_FF_CACHE_c29tZXRoaW5n',
+        expect.stringContaining(JSON.stringify(newEvaluation))
+      )
+      expect(setItemMock).toHaveBeenCalledWith(
+        'HARNESS_FF_CACHE_c29tZXRoaW5n',
+        expect.not.stringContaining(JSON.stringify(sampleEvaluations[2]))
+      )
     })
 
-    test('it should return the evaluations that were set', async () => {
-      const evals = primeCache()
+    test('it should try to add new evaluation if it doesnt already exist', async () => {
+      jest.spyOn(storage, 'getItem').mockReturnValue(JSON.stringify(sampleEvaluations))
+      const setItemMock = jest.spyOn(storage, 'setItem')
 
-      expect(loadFromCache(cacheId)).toEqual(evals)
+      const cache = await getCache('something', { storage })
+      const newEvaluation = { flag: 'flag4', value: 'true', kind: 'boolean', identifier: 'true' }
+
+      await cache.updateCachedEvaluation(newEvaluation)
+
+      expect(setItemMock).toHaveBeenCalledWith(
+        'HARNESS_FF_CACHE_c29tZXRoaW5n',
+        expect.stringContaining(JSON.stringify(newEvaluation))
+      )
+      expect(JSON.parse(setItemMock.mock.calls[0][1])).toHaveLength(sampleEvaluations.length + 1)
     })
 
-    test('it should return an empty array if the stored evaluations are malformed', async () => {
-      window.localStorage.setItem(cacheId, 'abc123]{.')
+    test('it should try to remove a specific evaluation if it exists', async () => {
+      jest.spyOn(storage, 'getItem').mockReturnValue(JSON.stringify(sampleEvaluations))
+      const setItemMock = jest.spyOn(storage, 'setItem')
 
-      expect(loadFromCache(cacheId)).toEqual([])
+      const cache = await getCache('something', { storage })
+      const evaluationToDelete = sampleEvaluations[2]
+
+      await cache.removeCachedEvaluation(evaluationToDelete.flag)
+
+      expect(setItemMock).toHaveBeenCalledWith(
+        'HARNESS_FF_CACHE_c29tZXRoaW5n',
+        expect.not.stringContaining(JSON.stringify(evaluationToDelete))
+      )
+      expect(JSON.parse(setItemMock.mock.calls[0][1])).toHaveLength(sampleEvaluations.length - 1)
     })
 
-    test('it should return an empty array if the stored evaluations timestamp exceeds the ttl', async () => {
-      primeCache()
-      window.localStorage.setItem(cacheId + '.ts', '0')
+    test('it should do nothing if the evaluation to remove does not exist', async () => {
+      jest.spyOn(storage, 'getItem').mockReturnValue(JSON.stringify(sampleEvaluations))
+      const setItemMock = jest.spyOn(storage, 'setItem')
 
-      expect(loadFromCache(cacheId, { ttl: 60000 })).toEqual([])
-    })
+      const cache = await getCache('something', { storage })
+      const evaluationToDelete = { flag: 'flag4', value: 'true', kind: 'boolean', identifier: 'true' }
 
-    test('it should return the evaluations if the stored evaluations timestamp does not exceed the ttl', async () => {
-      const evals = primeCache()
-      window.localStorage.setItem(cacheId + '.ts', Date.now().toString())
+      await cache.removeCachedEvaluation(evaluationToDelete.flag)
 
-      expect(loadFromCache(cacheId, { ttl: 60000 })).toEqual(evals)
-    })
-  })
-
-  describe('saveToCache', () => {
-    test('it should persist the passed evaluations', async () => {
-      expect(window.localStorage.getItem(cacheId)).toBeFalsy()
-
-      const evals: Evaluation[] = [{ flag: 'F1', deleted: false, value: 'true', identifier: 'true', kind: 'boolean' }]
-      saveToCache(cacheId, evals)
-
-      expect(window.localStorage.getItem(cacheId)).toBeTruthy()
-    })
-
-    test('it should save the timestamp of when the evaluations were stored', async () => {
-      const now = Date.now()
-      saveToCache(cacheId, [{ flag: 'F1', deleted: false, value: 'true', identifier: 'true', kind: 'boolean' }])
-
-      const timestamp = parseInt(window.localStorage.getItem(cacheId + '.ts'))
-      expect(timestamp / 1000).toBeCloseTo(now / 1000, 0)
-    })
-  })
-
-  describe('updateCachedEvaluation', () => {
-    test('it should update an existing evaluation ', async () => {
-      const evals = primeCache()
-
-      const updatedEval = { ...evals[0], value: 'false', identifier: 'false' }
-      updateCachedEvaluation(cacheId, updatedEval)
-
-      expect(JSON.parse(window.localStorage.getItem(cacheId) as string)).toContainEqual(updatedEval)
-    })
-
-    test('it should append a new evaluation ', async () => {
-      const evals = primeCache()
-
-      const newEval = { flag: 'F2', deleted: false, value: 'false', identifier: 'false', kind: 'boolean' }
-      updateCachedEvaluation(cacheId, newEval)
-
-      const storedEvals = JSON.parse(window.localStorage.getItem(cacheId) as string)
-      expect(storedEvals).toHaveLength(evals.length + 1)
-      expect(storedEvals).toContainEqual(newEval)
-    })
-  })
-
-  describe('removeCachedEvaluation', () => {
-    test('it should remove an existing cached item', async () => {
-      const evals = primeCache()
-
-      removeCachedEvaluation(cacheId, evals[0].flag)
-
-      const storedEvals = JSON.parse(window.localStorage.getItem(cacheId) as string)
-      expect(storedEvals).toHaveLength(evals.length - 1)
-      expect(storedEvals).not.toContainEqual(evals[0])
-    })
-  })
-
-  describe('clearCachedEvaluations', () => {
-    test('it should clear stored evaluations and timestamp', async () => {
-      primeCache()
-      window.localStorage.setItem(cacheId + '.ts', Date.now().toString())
-
-      expect(window.localStorage.getItem(cacheId)).toBeTruthy()
-      expect(window.localStorage.getItem(cacheId + '.ts')).toBeTruthy()
-
-      clearCachedEvaluations(cacheId)
-
-      expect(window.localStorage.getItem(cacheId)).toBeFalsy()
-      expect(window.localStorage.getItem(cacheId + '.ts')).toBeFalsy()
+      expect(setItemMock).not.toHaveBeenCalled()
     })
   })
 })

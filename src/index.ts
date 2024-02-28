@@ -15,14 +15,14 @@ import type {
   VariationValue
 } from './types'
 import { Event } from './types'
-import { defer, getConfiguration, logError, MIN_EVENTS_SYNC_INTERVAL, MIN_POLLING_INTERVAL } from './utils'
-import { getCacheId, loadFromCache, removeCachedEvaluation, saveToCache, updateCachedEvaluation } from './cache'
+import { defer, getConfiguration, logError } from './utils'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
 import { getVariation } from './variation'
 import Poller from './poller'
+import { getCache } from './cache'
 
-const SDK_VERSION = '1.24.0'
+const SDK_VERSION = '1.25.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
@@ -77,27 +77,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   const eventBus = mitt()
   const configurations = getConfiguration(options)
 
-  if (configurations.eventsSyncInterval < MIN_EVENTS_SYNC_INTERVAL) {
-    configurations.eventsSyncInterval = MIN_EVENTS_SYNC_INTERVAL
-  }
-
-  if (configurations.pollingInterval < MIN_POLLING_INTERVAL) {
-    configurations.pollingInterval = MIN_POLLING_INTERVAL
-  }
-
-  if (configurations.streamEnabled) {
-    try {
-      const { Platform } = require("react-native");
-      if  (Platform.OS === 'android') {
-        console.info("SDKCODE:1007 Android React Native detected - streaming will be disabled and polling enabled")
-        configurations.pollingEnabled = true
-        configurations.streamEnabled = false
-      }
-    } catch (e) {
-      // ignore
-    }
-  }
-
   const logDebug = (message: string, ...args: any[]) => {
     if (configurations.debug) {
       // tslint:disable-next-line:no-console
@@ -115,11 +94,45 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
   }
 
-  globalThis.onbeforeunload = () => {
-    if (metrics.length && globalThis.localStorage) {
-      stopMetricsCollector()
-      globalThis.localStorage.HARNESS_FF_METRICS = JSON.stringify(metrics)
-      startMetricsCollector()
+  const initCache = async () => {
+    if (configurations.cache) {
+      try {
+        let initialLoad = true
+
+        const cache = await getCache(
+          target.identifier + apiKey,
+          typeof configurations.cache === 'boolean' ? {} : configurations.cache
+        )
+
+        const cachedEvaluations = await cache.loadFromCache()
+
+        if (!!cachedEvaluations?.length) {
+          defer(() => {
+            logDebug('loading from cache', cachedEvaluations)
+            setEvaluations(cachedEvaluations, false)
+            eventBus.emit(Event.CACHE_LOADED, cachedEvaluations)
+          })
+        }
+
+        on(Event.FLAGS_LOADED, async evaluations => {
+          await cache.saveToCache(evaluations)
+          initialLoad = false
+        })
+
+        on(Event.CHANGED, async evaluation => {
+          if (!initialLoad) {
+            if (evaluation.deleted) {
+              await cache.removeCachedEvaluation(evaluation.flag)
+            } else {
+              await cache.updateCachedEvaluation(evaluation)
+            }
+          }
+        })
+      } catch (error) {
+        logError('Cache error: ', error)
+        eventBus.emit(Event.ERROR_CACHE, error)
+        eventBus.emit(Event.ERROR, error)
+      }
     }
   }
 
@@ -303,85 +316,79 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   let storage: Record<string, any> = createStorage()
 
-  authenticate(apiKey, configurations)
-    .then(async (token: string) => {
-      if (closed) return
+  initCache().then(() =>
+    authenticate(apiKey, configurations)
+      .then(async (token: string) => {
+        if (closed) return
 
-      jwtToken = token
-      const decoded: {
-        environment: string
-        environmentIdentifier: string
-        clusterIdentifier: string
-        accountID: string
-      } = jwt_decode(token)
+        jwtToken = token
+        const decoded: {
+          environment: string
+          environmentIdentifier: string
+          clusterIdentifier: string
+          accountID: string
+        } = jwt_decode(token)
 
-      standardHeaders = {
-        Authorization: `Bearer ${jwtToken}`,
-        'Harness-AccountID': decoded.accountID,
-        'Harness-EnvironmentID': decoded.environmentIdentifier,
-        'Harness-SDK-Info': SDK_INFO
-      }
-
-      if (globalThis.btoa) {
-        const targetHeader = globalThis.btoa(JSON.stringify(target))
-
-        // ensure encoded target is less than 1/4 of 1 MB
-        if (targetHeader.length < 262144) {
-          standardHeaders['Harness-Target'] = targetHeader
+        standardHeaders = {
+          Authorization: `Bearer ${jwtToken}`,
+          'Harness-AccountID': decoded.accountID,
+          'Harness-EnvironmentID': decoded.environmentIdentifier,
+          'Harness-SDK-Info': SDK_INFO
         }
-      }
 
-      logDebug('Authenticated', decoded)
+        if (globalThis.btoa) {
+          const targetHeader = globalThis.btoa(JSON.stringify(target))
 
-      if (globalThis.localStorage && globalThis.localStorage.HARNESS_FF_METRICS) {
-        try {
-          // metrics = JSON.parse(globalThis.localStorage.HARNESS_FF_METRICS)
-          delete globalThis.localStorage.HARNESS_FF_METRICS
-          logDebug('Picking up metrics from previous session')
-        } catch (error) {}
-      }
+          // ensure encoded target is less than 1/4 of 1 MB
+          if (targetHeader.length < 262144) {
+            standardHeaders['Harness-Target'] = targetHeader
+          }
+        }
 
-      metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, configurations.eventsSyncInterval)
+        logDebug('Authenticated', decoded)
 
-      environment = decoded.environment
-      clusterIdentifier = decoded.clusterIdentifier
+        metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, configurations.eventsSyncInterval)
 
-      const hasExistingFlags = !!Object.keys(evaluations).length
+        environment = decoded.environment
+        clusterIdentifier = decoded.clusterIdentifier
 
-      // When authentication is done, fetch all flags
-      const fetchFlagsResult = await fetchFlags()
+        const hasExistingFlags = !!Object.keys(evaluations).length
 
-      if (fetchFlagsResult.type === 'success') {
-        logDebug('Fetch all flags ok', storage)
-      }
+        // When authentication is done, fetch all flags
+        const fetchFlagsResult = await fetchFlags()
 
-      if (closed) return
+        if (fetchFlagsResult.type === 'success') {
+          logDebug('Fetch all flags ok', storage)
+        }
 
-      // Start stream or polling only after we get all evaluations
-      if (configurations.streamEnabled) {
-        logDebug('Streaming mode enabled')
-        startStream()
-      } else if (configurations.pollingEnabled) {
-        logDebug('Polling mode enabled')
-        startPolling()
-      } else {
-        logDebug('Streaming and polling mode disabled')
-      }
+        if (closed) return
 
-      // Emit the ready event only if flags weren't already set using setEvaluations
-      if (!hasExistingFlags) {
-        stopMetricsCollector()
-        const allFlags = { ...storage }
-        startMetricsCollector()
-        eventBus.emit(Event.READY, allFlags)
-      }
-      initialised = true
-    })
-    .catch(error => {
-      logError('Authentication error: ', error)
-      eventBus.emit(Event.ERROR_AUTH, error)
-      eventBus.emit(Event.ERROR, error)
-    })
+        // Start stream or polling only after we get all evaluations
+        if (configurations.streamEnabled) {
+          logDebug('Streaming mode enabled')
+          startStream()
+        } else if (configurations.pollingEnabled) {
+          logDebug('Polling mode enabled')
+          startPolling()
+        } else {
+          logDebug('Streaming and polling mode disabled')
+        }
+
+        // Emit the ready event only if flags weren't already set using setEvaluations
+        if (!hasExistingFlags) {
+          stopMetricsCollector()
+          const allFlags = { ...storage }
+          startMetricsCollector()
+          eventBus.emit(Event.READY, allFlags)
+        }
+        initialised = true
+      })
+      .catch(error => {
+        logError('Authentication error: ', error)
+        eventBus.emit(Event.ERROR_AUTH, error)
+        eventBus.emit(Event.ERROR, error)
+      })
+  )
 
   const fetchFlags = async (): Promise<FetchFlagsResult> => {
     try {
@@ -603,40 +610,6 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         }
       }, doDefer)
     }
-  }
-
-  if (configurations.cache && 'localStorage' in window) {
-    getCacheId(target.identifier + apiKey).then(cacheId => {
-      let initialLoad = true
-
-      const cachedEvaluations = loadFromCache(
-        cacheId,
-        typeof configurations.cache === 'boolean' ? {} : configurations.cache
-      )
-
-      if (!!cachedEvaluations?.length) {
-        defer(() => {
-          logDebug('loading from cache', cachedEvaluations)
-          setEvaluations(cachedEvaluations, false)
-          eventBus.emit(Event.CACHE_LOADED, cachedEvaluations)
-        })
-      }
-
-      on(Event.FLAGS_LOADED, evaluations => {
-        saveToCache(cacheId, evaluations)
-        initialLoad = false
-      })
-
-      on(Event.CHANGED, evaluation => {
-        if (!initialLoad) {
-          if (evaluation.deleted) {
-            removeCachedEvaluation(cacheId, evaluation.flag)
-          } else {
-            updateCachedEvaluation(cacheId, evaluation)
-          }
-        }
-      })
-    })
   }
 
   const registerAPIRequestMiddleware = (middleware: APIRequestMiddleware): void => {

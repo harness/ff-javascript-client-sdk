@@ -24,6 +24,7 @@ export enum Event {
   CACHE_LOADED = 'cache loaded',
   CHANGED = 'changed',
   ERROR = 'error',
+  ERROR_CACHE = 'cache error',
   ERROR_METRICS = 'metrics error',
   ERROR_AUTH = 'auth error',
   ERROR_FETCH_FLAGS = 'fetch flags error',
@@ -95,23 +96,48 @@ type FetchArgs = Parameters<typeof fetch>
 export type APIRequestMiddleware = (req: FetchArgs) => FetchArgs
 
 export interface Options {
+  /**
+   * Override the default base URL for the SDK to communicate with the Harness Feature Flags service.
+   * @default https://config.ff.harness.io/api/1.0
+   */
   baseUrl?: string
+  /**
+   * Override the default metrics URL for the SDK to communicate with the Harness Feature Flags
+   * metrics service.
+   * @default https://events.ff.harness.io/api/1.0
+   */
   eventUrl?: string
+  /**
+   * The interval in milliseconds to sync metrics with the Harness Feature Flags metrics service.
+   * @default 60000
+   */
   eventsSyncInterval?: number
+  /**
+   * The interval in milliseconds to poll the Harness Feature Flags service for updates when polling is enabled
+   * and streaming is disabled.
+   * @default 60000
+   */
   pollingInterval?: number
+  /**
+   * Whether to enable the streaming feature. If set to `false` and polling enabled, the SDK will use polling to
+   * check for updates.
+   * @default true
+   */
   streamEnabled?: boolean
+  /**
+   * Whether to enable polling. If set to `false`, the SDK will not poll for updates.
+   * @default false
+   */
   pollingEnabled?: boolean
   /**
-   * @deprecated This feature was only available during initial alpha builds and was mistakenly not removed from the
-   * API. It will be removed in the next version.
+   * Whether to enable debug logging.
+   * @default false
    */
-  allAttributesPrivate?: boolean
-  /**
-   * @deprecated This feature was only available during initial alpha builds and was mistakenly not removed from the
-   * API. It will be removed in the next version.
-   */
-  privateAttributeNames?: string[]
   debug?: boolean
+  /**
+   * Whether to enable caching.
+   * @default false
+   */
   cache?: boolean | CacheOptions
 }
 
@@ -123,6 +149,27 @@ export interface MetricsInfo {
   lastAccessed: number
 }
 
+export interface SyncStorage {
+  getItem: (key: string) => string | null
+  setItem: (key: string, value: string) => void
+  removeItem: (key: string) => void
+}
+
+export interface AsyncStorage {
+  getItem: (key: string) => Promise<string | null>
+  setItem: (key: string, value: string) => Promise<void>
+  removeItem: (key: string) => Promise<void>
+}
+
 export interface CacheOptions {
+  /**
+   * Time to live in milliseconds
+   * @default Infinity
+   */
   ttl?: number
+  /**
+   * Storage to use for caching
+   * @default localStorage
+   */
+  storage?: AsyncStorage | SyncStorage
 }
