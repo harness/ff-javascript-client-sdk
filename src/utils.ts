@@ -28,19 +28,6 @@ export const getConfiguration = (options: Options): Options => {
     config.pollingInterval = MIN_POLLING_INTERVAL
   }
 
-  if (config.streamEnabled) {
-    try {
-      const { Platform } = require('react-native')
-      if (Platform.OS === 'android') {
-        console.info('SDKCODE:1007 Android React Native detected - streaming will be disabled and polling enabled')
-        config.pollingEnabled = true
-        config.streamEnabled = false
-      }
-    } catch (e) {
-      // ignore
-    }
-  }
-
   return config
 }
 
