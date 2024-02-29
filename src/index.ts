@@ -96,6 +96,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   const initCache = async () => {
     if (configurations.cache) {
+      logDebug('initializing cache')
+
       try {
         let initialLoad = true
 
