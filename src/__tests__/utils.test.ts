@@ -1,18 +1,21 @@
 import { getConfiguration, MIN_EVENTS_SYNC_INTERVAL, MIN_POLLING_INTERVAL } from '../utils'
+import type { Logger } from '../types'
 
 describe('utils', () => {
   describe('getConfiguration', () => {
     test('it should set defaults', async () => {
-      expect(getConfiguration({})).toEqual({
-        debug: false,
-        baseUrl: 'https://config.ff.harness.io/api/1.0',
-        eventUrl: 'https://events.ff.harness.io/api/1.0',
-        eventsSyncInterval: MIN_EVENTS_SYNC_INTERVAL,
-        pollingInterval: MIN_POLLING_INTERVAL,
-        streamEnabled: true,
-        pollingEnabled: true,
-        cache: false
-      })
+      expect(getConfiguration({})).toEqual(
+        expect.objectContaining({
+          debug: false,
+          baseUrl: 'https://config.ff.harness.io/api/1.0',
+          eventUrl: 'https://events.ff.harness.io/api/1.0',
+          eventsSyncInterval: MIN_EVENTS_SYNC_INTERVAL,
+          pollingInterval: MIN_POLLING_INTERVAL,
+          streamEnabled: true,
+          pollingEnabled: true,
+          cache: false
+        })
+      )
     })
 
     test('it should enable polling when streaming is enabled', async () => {
@@ -53,6 +56,25 @@ describe('utils', () => {
 
     test('it should allow pollingInterval to be set above 60s', async () => {
       expect(getConfiguration({ pollingInterval: 100000 })).toHaveProperty('pollingInterval', 100000)
+    })
+
+    test('it should use console as a logger by default', async () => {
+      expect(getConfiguration({})).toHaveProperty('logger', console)
+    })
+
+    test('it should allow the default logger to be overridden', async () => {
+      const logger: Logger = {
+        debug: jest.fn(),
+        error: jest.fn(),
+        info: jest.fn(),
+        warn: jest.fn()
+      }
+
+      const result = getConfiguration({ logger })
+      expect(result).toHaveProperty('logger', logger)
+
+      result.logger.debug('hello')
+      expect(logger.debug).toHaveBeenCalledWith('hello')
     })
   })
 })

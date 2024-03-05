@@ -2,16 +2,19 @@ import Poller from '../poller'
 import type { FetchFlagsResult, Options } from '../types'
 import { getRandom } from '../utils'
 import { Event } from '../types'
+import type { Emitter } from 'mitt'
 
 jest.useFakeTimers()
 
 jest.mock('../utils.ts', () => ({
-  getRandom: jest.fn(),
-  logError: jest.fn()
+  getRandom: jest.fn()
 }))
 
-const mockEventBus = {
-  emit: jest.fn()
+const mockEventBus: Emitter = {
+  emit: jest.fn(),
+  on: jest.fn(),
+  off: jest.fn(),
+  all: new Map()
 }
 
 interface PollerArgs {
@@ -27,6 +30,9 @@ interface TestArgs {
   delayMs: number
 }
 
+const logError = jest.fn()
+const logDebug = jest.fn()
+
 let currentPoller: Poller
 const getPoller = (overrides: Partial<PollerArgs> = {}): Poller => {
   const args: PollerArgs = {
@@ -36,7 +42,7 @@ const getPoller = (overrides: Partial<PollerArgs> = {}): Poller => {
     ...overrides
   }
 
-  currentPoller = new Poller(args.fetchFlags, args.configurations, args.eventBus)
+  currentPoller = new Poller(args.fetchFlags, args.configurations, args.eventBus, logDebug, logError)
 
   return currentPoller
 }
@@ -47,7 +53,7 @@ const getTestArgs = (overrides: Partial<TestArgs> = {}): TestArgs => {
   return {
     delayMs,
     delayFunction: (getRandom as jest.Mock).mockReturnValue(delayMs),
-    logSpy: jest.spyOn(console, 'debug').mockImplementation(() => {}),
+    logSpy: logDebug,
     mockError: new Error('Fetch Error'),
     ...overrides
   }
@@ -58,6 +64,7 @@ describe('Poller', () => {
     currentPoller.stop()
     jest.clearAllMocks()
   })
+
   it('should not start polling if it is already polling', () => {
     getPoller({ configurations: { debug: true } })
     const testArgs = getTestArgs()

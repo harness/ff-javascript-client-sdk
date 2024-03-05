@@ -57,6 +57,7 @@ interface Options {
   streamEnabled?: boolean
   debug?: boolean,
   cache?: boolean | CacheOptions
+  logger?: Logger
 }
 ```
 
@@ -301,6 +302,38 @@ interface Evaluation {
   kind: string // boolean | json | string | int
   deleted?: boolean // mark that feature flag is deleted
 }
+```
+
+## Logging
+By default, the Javascript Client SDK will log errors and debug messages using the `console` object. In some cases, it
+can be useful to instead log to a service or silently fail without logging errors.
+
+```typescript
+const myLogger = {
+  debug: (...data) => {
+    // do something with the logged debug message
+  },
+  info: (...data) => {
+    // do something with the logged info message
+  },
+  error: (...data) => {
+    // do something with the logged error message
+  },
+  warn: (...data) => {
+    // do something with the logged warning message
+  }
+}
+
+const client = initialize(
+  '00000000-1111-2222-3333-444444444444',
+  {
+    identifier: YOUR_TARGET_IDENTIFIER,
+    name: YOUR_TARGET_NAME
+  },
+  {
+    logger: myLogger // override logger
+  }
+)
 ```
 
 ## Import directly from unpkg

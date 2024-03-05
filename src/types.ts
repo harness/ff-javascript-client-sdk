@@ -139,6 +139,11 @@ export interface Options {
    * @default false
    */
   cache?: boolean | CacheOptions
+  /**
+   * Logger to use instead of the default console.log, console.error and console.info functions
+   * @default console
+   */
+  logger?: Logger
 }
 
 export interface MetricsInfo {
@@ -172,4 +177,11 @@ export interface CacheOptions {
    * @default localStorage
    */
   storage?: AsyncStorage | SyncStorage
+}
+
+export interface Logger {
+  debug: (...data: any[]) => void
+  error: (...data: any[]) => void
+  warn: (...data: any[]) => void
+  info: (...data: any[]) => void
 }
