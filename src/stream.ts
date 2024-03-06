@@ -1,32 +1,28 @@
-import { Event, StreamEvent } from './types'
-import { getRandom, logError } from './utils'
+import { Event, type Options, StreamEvent } from './types'
+import { getRandom } from './utils'
 import type Poller from './poller'
+import type { Emitter } from 'mitt'
 
 const SSE_TIMEOUT_MS = 30000
 
 export class Streamer {
-  private readonly eventBus: any
-  private readonly configurations: any
-  private readonly url: string
-  private readonly standardHeaders: any
-  private readonly apiKey: string
-  private readonly eventCallback: any
   private xhr: XMLHttpRequest
   private closed: boolean = false
   private readTimeoutCheckerId: any
-  private fallbackPoller: Poller
   private connectionOpened = false
   private disconnectEventEmitted = false
 
-  constructor(eventBus, configurations, url, apiKey, standardHeaders, fallbackPoller, eventCallback) {
-    this.eventBus = eventBus
-    this.configurations = configurations
-    this.url = url
-    this.apiKey = apiKey
-    this.standardHeaders = standardHeaders
-    this.eventCallback = eventCallback
-    this.fallbackPoller = fallbackPoller
-  }
+  constructor(
+    private eventBus: Emitter,
+    private configurations: Options,
+    private url: string,
+    private apiKey: string,
+    private standardHeaders: Record<string, string>,
+    private fallbackPoller: Poller,
+    private logDebug: (...data: any[]) => void,
+    private logError: (...data: any[]) => void,
+    private eventCallback: (e: StreamEvent) => void
+  ) {}
 
   start() {
     const processData = (data: any): void => {
@@ -36,20 +32,20 @@ export class Streamer {
     const processLine = (line: string): void => {
       if (line.startsWith('data:')) {
         const event: StreamEvent = JSON.parse(line.substring(5))
-        this.logDebug('Received event from stream: ', event)
+        this.logDebugMessage('Received event from stream: ', event)
         this.eventCallback(event)
       }
     }
 
     const onConnected = () => {
-      this.logDebug('Stream connected')
+      this.logDebugMessage('Stream connected')
       this.eventBus.emit(Event.CONNECTED)
     }
 
     const onDisconnect = () => {
       clearInterval(this.readTimeoutCheckerId)
       const reconnectDelayMs = getRandom(1000, 10000)
-      this.logDebug('Stream disconnected, will reconnect in ' + reconnectDelayMs + 'ms')
+      this.logDebugMessage('Stream disconnected, will reconnect in ' + reconnectDelayMs + 'ms')
       if (!this.disconnectEventEmitted) {
         this.eventBus.emit(Event.DISCONNECTED)
         this.disconnectEventEmitted = true
@@ -59,7 +55,7 @@ export class Streamer {
 
     const onFailed = (msg: string) => {
       if (!!msg) {
-        logError('Stream has issue', msg)
+        this.logErrorMessage('Stream has issue', msg)
       }
 
       // Fallback to polling while we have a stream failure
@@ -77,7 +73,7 @@ export class Streamer {
       ...this.standardHeaders
     }
 
-    this.logDebug('SSE HTTP start request', this.url)
+    this.logDebugMessage('SSE HTTP start request', this.url)
 
     this.xhr = new XMLHttpRequest()
     this.xhr.open('GET', this.url)
@@ -91,7 +87,7 @@ export class Streamer {
     }
     this.xhr.onabort = () => {
       this.connectionOpened = false
-      this.logDebug('SSE aborted')
+      this.logDebugMessage('SSE aborted')
       if (!this.closed) {
         onFailed(null)
       }
@@ -132,14 +128,14 @@ export class Streamer {
       lastActivity = Date.now()
       const data = this.xhr.responseText.slice(offset)
       offset += data.length
-      this.logDebug('SSE GOT: ' + data)
+      this.logDebugMessage('SSE GOT: ' + data)
       processData(data)
     }
 
     this.readTimeoutCheckerId = setInterval(() => {
       // this task will kill and restart the SSE connection if no data or heartbeat has arrived in a while
       if (lastActivity < Date.now() - SSE_TIMEOUT_MS) {
-        logError('SSE read timeout')
+        this.logErrorMessage('SSE read timeout')
         this.xhr.abort()
       }
     }, SSE_TIMEOUT_MS)
@@ -163,21 +159,25 @@ export class Streamer {
 
   private fallBackToPolling() {
     if (!this.fallbackPoller.isPolling() && this.configurations.pollingEnabled) {
-      this.logDebug('Falling back to polling mode while stream recovers')
+      this.logDebugMessage('Falling back to polling mode while stream recovers')
       this.fallbackPoller.start()
     }
   }
 
   private stopFallBackPolling() {
     if (this.fallbackPoller.isPolling()) {
-      this.logDebug('Stopping fallback polling mode')
+      this.logDebugMessage('Stopping fallback polling mode')
       this.fallbackPoller.stop()
     }
   }
 
-  private logDebug(message: string, ...args: unknown[]): void {
+  private logDebugMessage(message: string, ...args: unknown[]): void {
     if (this.configurations.debug) {
-      console.debug(`[FF-SDK] Streaming:  ${message}`, ...args)
+      this.logDebug(`Streaming:  ${message}`, ...args)
     }
+  }
+
+  private logErrorMessage(message: string, ...args: unknown[]): void {
+    this.logError(`Streaming:  ${message}`, ...args)
   }
 }

@@ -15,7 +15,7 @@ import type {
   VariationValue
 } from './types'
 import { Event } from './types'
-import { defer, getConfiguration, logError } from './utils'
+import { defer, getConfiguration } from './utils'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
 import { getVariation } from './variation'
@@ -29,29 +29,6 @@ const fetch = globalThis.fetch
 
 // Flag to detect is Proxy is supported (not under IE 11)
 const hasProxy = !!globalThis.Proxy
-
-const convertValue = (evaluation: Evaluation) => {
-  let { value } = evaluation
-
-  try {
-    switch (evaluation.kind.toLowerCase()) {
-      case 'int':
-      case 'number':
-        value = Number(value)
-        break
-      case 'boolean':
-        value = value.toString().toLowerCase() === 'true'
-        break
-      case 'json':
-        value = JSON.parse(value as string)
-        break
-    }
-  } catch (error) {
-    logError(error)
-  }
-
-  return value
-}
 
 const initialize = (apiKey: string, target: Target, options?: Options): Result => {
   let closed = false
@@ -79,10 +56,37 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
   const logDebug = (message: string, ...args: any[]) => {
     if (configurations.debug) {
-      // tslint:disable-next-line:no-console
-      console.debug(`[FF-SDK] ${message}`, ...args)
+      configurations.logger.debug(`[FF-SDK] ${message}`, ...args)
     }
   }
+
+  const logError = (message: string, ...args: any[]) => {
+    configurations.logger.error(`[FF-SDK] ${message}`, ...args)
+  }
+
+  const convertValue = (evaluation: Evaluation) => {
+    let { value } = evaluation
+
+    try {
+      switch (evaluation.kind.toLowerCase()) {
+        case 'int':
+        case 'number':
+          value = Number(value)
+          break
+        case 'boolean':
+          value = value.toString().toLowerCase() === 'true'
+          break
+        case 'json':
+          value = JSON.parse(value as string)
+          break
+      }
+    } catch (error) {
+      logError(error)
+    }
+
+    return value
+  }
+
   const updateMetrics = (metricsInfo: MetricsInfo) => {
     if (metricsCollectorEnabled) {
       const now = Date.now()
@@ -460,7 +464,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   // We instantiate the Poller here so it can be used as a fallback for streaming, but we don't start it yet.
-  poller = new Poller(fetchFlags, configurations, eventBus)
+  poller = new Poller(fetchFlags, configurations, eventBus, logDebug, logError)
 
   const startStream = () => {
     const handleFlagEvent = (event: StreamEvent): void => {
@@ -526,13 +530,23 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
     const url = `${configurations.baseUrl}/stream?cluster=${clusterIdentifier}`
 
-    eventSource = new Streamer(eventBus, configurations, url, apiKey, standardHeaders, poller, event => {
-      if (event.domain === 'flag') {
-        handleFlagEvent(event)
-      } else if (event.domain === 'target-segment') {
-        handleSegmentEvent(event)
+    eventSource = new Streamer(
+      eventBus,
+      configurations,
+      url,
+      apiKey,
+      standardHeaders,
+      poller,
+      logDebug,
+      logError,
+      event => {
+        if (event.domain === 'flag') {
+          handleFlagEvent(event)
+        } else if (event.domain === 'target-segment') {
+          handleSegmentEvent(event)
+        }
       }
-    })
+    )
     eventSource.start()
   }
 

@@ -28,11 +28,12 @@ export const getConfiguration = (options: Options): Options => {
     config.pollingInterval = MIN_POLLING_INTERVAL
   }
 
+  if (!config.logger || !config.logger.debug || !config.logger.error || !config.logger.info || !config.logger.warn) {
+    config.logger = console
+  }
+
   return config
 }
-
-// tslint:disable-next-line:no-console
-export const logError = (message: string, ...args: any[]) => console.error(`[FF-SDK] ${message}`, ...args)
 
 export const defer = (fn: Function, doDefer = true): void => {
   if (doDefer) {
