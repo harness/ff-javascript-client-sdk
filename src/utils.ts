@@ -1,4 +1,4 @@
-import type { Options } from './types'
+import type { Options, Target } from './types'
 
 export const MIN_EVENTS_SYNC_INTERVAL = 60000
 export const MIN_POLLING_INTERVAL = 60000
@@ -46,3 +46,54 @@ export const defer = (fn: Function, doDefer = true): void => {
 export const getRandom = (min: number, max: number): number => {
   return Math.round(Math.random() * (max - min) + min)
 }
+
+export const encodeTarget = (target: Target): string => {
+  const keyStr = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
+
+  let output = ''
+  let pos = 0
+
+  const input = utf8encode(JSON.stringify(target))
+
+  while (pos < input.length) {
+    const chr1 = input.charCodeAt(pos++)
+    const chr2 = input.charCodeAt(pos++)
+    const chr3 = input.charCodeAt(pos++)
+
+    const enc1 = chr1 >> 2
+    const enc2 = ((chr1 & 3) << 4) | (chr2 >> 4)
+    let enc3 = ((chr2 & 15) << 2) | (chr3 >> 6)
+    let enc4 = chr3 & 63
+
+    if (isNaN(chr2)) {
+      enc3 = enc4 = 64
+    } else if (isNaN(chr3)) {
+      enc4 = 64
+    }
+
+    output += keyStr.charAt(enc1) + keyStr.charAt(enc2) + keyStr.charAt(enc3) + keyStr.charAt(enc4)
+  }
+
+  return output
+}
+
+const utf8encode = (str: string): string =>
+  str
+    .replace(/\r\n/g, '\n')
+    .split('')
+    .map(char => {
+      const charCode = char.charCodeAt(0)
+
+      if (charCode < 128) {
+        return String.fromCharCode(charCode)
+      } else if (charCode > 127 && charCode < 2048) {
+        return String.fromCharCode((charCode >> 6) | 192) + String.fromCharCode((charCode & 63) | 128)
+      }
+
+      return (
+        String.fromCharCode((charCode >> 12) | 224) +
+        String.fromCharCode(((charCode >> 6) & 63) | 128) +
+        String.fromCharCode((charCode & 63) | 128)
+      )
+    })
+    .join('')
