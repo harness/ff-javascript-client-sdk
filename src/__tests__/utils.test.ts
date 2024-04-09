@@ -1,4 +1,4 @@
-import { getConfiguration, MIN_EVENTS_SYNC_INTERVAL, MIN_POLLING_INTERVAL } from '../utils'
+import { encodeTarget, getConfiguration, MIN_EVENTS_SYNC_INTERVAL, MIN_POLLING_INTERVAL } from '../utils'
 import type { Logger } from '../types'
 
 describe('utils', () => {
@@ -75,6 +75,28 @@ describe('utils', () => {
 
       result.logger.debug('hello')
       expect(logger.debug).toHaveBeenCalledWith('hello')
+    })
+  })
+
+  describe('encodeTarget', () => {
+    test('it should properly encode with plain latin characters', async () => {
+      expect(
+        encodeTarget({ identifier: 'test-identifier', name: 'Test Name', attributes: { hello: 'world' } })
+      ).toEqual(
+        'eyJpZGVudGlmaWVyIjoidGVzdC1pZGVudGlmaWVyIiwibmFtZSI6IlRlc3QgTmFtZSIsImF0dHJpYnV0ZXMiOnsiaGVsbG8iOiJ3b3JsZCJ9fQ=='
+      )
+    })
+
+    test('it should properly encode with unicode characters', async () => {
+      expect(
+        encodeTarget({
+          identifier: 'test-identifier',
+          name: 'Test Name',
+          attributes: { somethingInJapanese: '日本語で何か' }
+        })
+      ).toEqual(
+        'eyJpZGVudGlmaWVyIjoidGVzdC1pZGVudGlmaWVyIiwibmFtZSI6IlRlc3QgTmFtZSIsImF0dHJpYnV0ZXMiOnsic29tZXRoaW5nSW5KYXBhbmVzZSI6IuaXpeacrOiqnuOBp+S9leOBiyJ9fQ=='
+      )
     })
   })
 })
