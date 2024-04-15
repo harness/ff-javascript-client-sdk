@@ -11,7 +11,7 @@ export class Streamer {
   private readTimeoutCheckerId: any
   private connectionOpened = false
   private disconnectEventEmitted = false
-  private reconnectAttempts = 0;  // Reconnect attempt counter
+  private reconnectAttempts = 0 
 
   constructor(
     private eventBus: Emitter,
@@ -41,20 +41,22 @@ export class Streamer {
     const onConnected = () => {
       this.logDebugMessage('Stream connected')
       this.eventBus.emit(Event.CONNECTED)
-      this.reconnectAttempts = 0;
+      this.reconnectAttempts = 0
     }
 
     const onDisconnect = () => {
       clearInterval(this.readTimeoutCheckerId)
       const reconnectDelayMs = getRandom(1000, 10000)
-      this.reconnectAttempts++;
+      this.reconnectAttempts++
       this.logDebugMessage('Stream disconnected, will reconnect in ' + reconnectDelayMs + 'ms')
       if (!this.disconnectEventEmitted) {
         this.eventBus.emit(Event.DISCONNECTED)
         this.disconnectEventEmitted = true
       }
       if (this.reconnectAttempts >= 5 && this.reconnectAttempts % 5 === 0) {
-        this.logErrorMessage(`Failed to reconnect after ${this.reconnectAttempts} attempts`);
+        this.logErrorMessage(
+          `Reconnection failed after ${this.reconnectAttempts} attempts; attempting further reconnections.`
+        )
       }
       setTimeout(() => this.start(), reconnectDelayMs)
     }
@@ -103,7 +105,7 @@ export class Streamer {
       onFailed('SSE timeout')
     }
 
-    // XMLHttpRequest fires `onload` when a request completes successfully, meaning the entire content has been download.
+    // XMLHttpRequest fires `onload` when a request completes successfully, meaning the entire content has been downloaded.
     // For SSE, if it fires it indicates an invalid state and we should reconnect
     this.xhr.onload = () => {
       onFailed(`Received XMLHttpRequest onLoad event: ${this.xhr.status}`)
