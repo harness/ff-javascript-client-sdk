@@ -11,6 +11,7 @@ export class Streamer {
   private readTimeoutCheckerId: any
   private connectionOpened = false
   private disconnectEventEmitted = false
+  private reconnectAttempts = 0 
 
   constructor(
     private eventBus: Emitter,
@@ -40,22 +41,31 @@ export class Streamer {
     const onConnected = () => {
       this.logDebugMessage('Stream connected')
       this.eventBus.emit(Event.CONNECTED)
+      this.reconnectAttempts = 0
     }
 
     const onDisconnect = () => {
       clearInterval(this.readTimeoutCheckerId)
       const reconnectDelayMs = getRandom(1000, 10000)
+      this.reconnectAttempts++
       this.logDebugMessage('Stream disconnected, will reconnect in ' + reconnectDelayMs + 'ms')
       if (!this.disconnectEventEmitted) {
         this.eventBus.emit(Event.DISCONNECTED)
         this.disconnectEventEmitted = true
       }
+
+      if (this.reconnectAttempts >= 5 && this.reconnectAttempts % 5 === 0) {
+        this.logErrorMessage(
+          `Reconnection failed after ${this.reconnectAttempts} attempts; attempting further reconnections.`
+        )
+      }
+
       setTimeout(() => this.start(), reconnectDelayMs)
     }
 
     const onFailed = (msg: string) => {
       if (!!msg) {
-        this.logErrorMessage('Stream has issue', msg)
+        this.logDebugMessage('Stream has issue', msg)
       }
 
       // Fallback to polling while we have a stream failure
@@ -97,19 +107,11 @@ export class Streamer {
       onFailed('SSE timeout')
     }
 
-    // XMLHttpRequest doesn't fire an `onload` event when used to open an SSE connection, but leaving this listener
-    // here, in case there are some edge cases where it's fired and so need to handle the reconnect.
+    // XMLHttpRequest fires `onload` when a request completes successfully, meaning the entire content has been downloaded.
+    // For SSE, if it fires it indicates an invalid state and we should reconnect
     this.xhr.onload = () => {
-      if (this.xhr.status >= 400 && this.xhr.status <= 599) {
-        onFailed(`HTTP code ${this.xhr.status}`)
-        return
-      }
-
-      if (!this.connectionOpened) {
-        onConnected()
-        this.connectionOpened = true
-        this.disconnectEventEmitted = false
-      }
+      onFailed(`Received XMLHttpRequest onLoad event: ${this.xhr.status}`)
+      return
     }
 
     let offset = 0
@@ -135,7 +137,7 @@ export class Streamer {
     this.readTimeoutCheckerId = setInterval(() => {
       // this task will kill and restart the SSE connection if no data or heartbeat has arrived in a while
       if (lastActivity < Date.now() - SSE_TIMEOUT_MS) {
-        this.logErrorMessage('SSE read timeout')
+        this.logDebugMessage('SSE read timeout')
         this.xhr.abort()
       }
     }, SSE_TIMEOUT_MS)
