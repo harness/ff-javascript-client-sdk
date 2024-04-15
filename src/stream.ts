@@ -53,11 +53,13 @@ export class Streamer {
         this.eventBus.emit(Event.DISCONNECTED)
         this.disconnectEventEmitted = true
       }
+
       if (this.reconnectAttempts >= 5 && this.reconnectAttempts % 5 === 0) {
         this.logErrorMessage(
           `Reconnection failed after ${this.reconnectAttempts} attempts; attempting further reconnections.`
         )
       }
+
       setTimeout(() => this.start(), reconnectDelayMs)
     }
 
