@@ -12,6 +12,7 @@ export class Streamer {
   private connectionOpened = false
   private disconnectEventEmitted = false
   private reconnectAttempts = 0
+  private retriesExhausted: boolean = false
 
   constructor(
     private eventBus: Emitter,
@@ -61,12 +62,24 @@ export class Streamer {
         )
       }
 
-      if (this.reconnectAttempts < this.maxRetries) {
-        setTimeout(() => this.start(), reconnectDelayMs)
+      if (this.reconnectAttempts >= this.maxRetries) {
+        this.retriesExhausted = true
+        if (this.configurations.pollingEnabled) {
+          this.logErrorMessage('Max streaming retries reached. Staying in polling mode.')
+        } else {
+          this.logErrorMessage('Max streaming retries reached.')
+        }
+        return
       }
+
+      setTimeout(() => this.start(), reconnectDelayMs)
     }
 
     const onFailed = (msg: string) => {
+      if (this.retriesExhausted) {
+        return
+      }
+
       if (!!msg) {
         this.logDebugMessage('Stream has issue', msg)
       }
