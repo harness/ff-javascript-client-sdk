@@ -13,7 +13,6 @@ export class Streamer {
   private disconnectEventEmitted = false
   private reconnectAttempts = 0
 
-
   constructor(
     private eventBus: Emitter,
     private configurations: Options,
@@ -25,8 +24,7 @@ export class Streamer {
     private logError: (...data: any[]) => void,
     private eventCallback: (e: StreamEvent) => void,
     private maxRetries: number
-
-) {}
+  ) {}
 
   start() {
     const processData = (data: any): void => {
@@ -63,7 +61,9 @@ export class Streamer {
         )
       }
 
-      setTimeout(() => this.start(), reconnectDelayMs)
+      if (this.reconnectAttempts < this.maxRetries) {
+        setTimeout(() => this.start(), reconnectDelayMs)
+      }
     }
 
     const onFailed = (msg: string) => {
