@@ -1,7 +1,7 @@
 import { Streamer } from '../stream'
 import type { Options } from '../types'
 import { Event } from '../types'
-import { getRandom } from '../utils'
+import {getRandom} from '../utils'
 import type { Emitter } from 'mitt'
 import type Poller from "../poller";
 
@@ -37,7 +37,7 @@ global.XMLHttpRequest = jest.fn(() => mockXHR) as unknown as jest.MockedClass<ty
 const logError = jest.fn()
 const logDebug = jest.fn()
 
-const getStreamer = (overrides: Partial<Options> = {}): Streamer => {
+const getStreamer = (maxRetries: number, overrides: Partial<Options> = {}): Streamer => {
   const options: Options = {
     baseUrl: 'http://test',
     eventUrl: 'http://event',
@@ -58,7 +58,7 @@ const getStreamer = (overrides: Partial<Options> = {}): Streamer => {
       logDebug,
       logError,
       jest.fn(),
-      3
+      maxRetries
   )
 }
 
@@ -68,7 +68,7 @@ describe('Streamer', () => {
   })
 
   it('should connect and emit CONNECTED event', () => {
-    const streamer = getStreamer()
+    const streamer = getStreamer(3)
 
     streamer.start()
     expect(mockXHR.open).toHaveBeenCalledWith('GET', 'http://test/stream')
@@ -79,7 +79,7 @@ describe('Streamer', () => {
   })
 
   it('should retry connecting on error and eventually fallback to polling', () => {
-    const streamer = getStreamer()
+    const streamer = getStreamer(3)
 
     streamer.start()
     expect(mockXHR.send).toHaveBeenCalled()
@@ -94,7 +94,7 @@ describe('Streamer', () => {
   })
 
   it('should not retry after max retries are exhausted', () => {
-    const streamer = getStreamer()
+    const streamer = getStreamer(3)
 
     streamer.start()
     expect(mockXHR.send).toHaveBeenCalled()
@@ -122,7 +122,7 @@ describe('Streamer', () => {
         logDebug,
         logError,
         jest.fn(),
-        3
+        Infinity,
     )
 
     streamer.start()
@@ -136,7 +136,11 @@ describe('Streamer', () => {
   })
 
   it('should stop polling when close is called if in fallback polling mode', () => {
-    const poller = { start: jest.fn(), stop: jest.fn(), isPolling: jest.fn().mockReturnValue(true) } as unknown as Poller
+    const poller = { start: jest.fn(), stop: jest.fn(), isPolling: jest.fn() } as unknown as Poller
+    ;(poller.isPolling as jest.Mock)
+        .mockImplementationOnce(() => false)
+        .mockImplementationOnce(() => true)
+
     const streamer = new Streamer(
         mockEventBus,
         { baseUrl: 'http://test', eventUrl: 'http://event', pollingEnabled: true, streamEnabled: true, debug: true },
@@ -153,10 +157,9 @@ describe('Streamer', () => {
     streamer.start()
     expect(mockXHR.send).toHaveBeenCalled()
 
-    mockXHR.onerror({} as ProgressEvent)
     // Simulate stream failure and fallback to polling
     mockXHR.onerror({} as ProgressEvent)
-    // jest.advanceTimersByTime(getRandom(1000, 10000))
+    jest.advanceTimersByTime(getRandom(1000, 10000))
 
     // Ensure polling has started
     expect(poller.start).toHaveBeenCalled()
@@ -190,5 +193,38 @@ describe('Streamer', () => {
     expect(mockXHR.abort).toHaveBeenCalled()
     expect(poller.stop).not.toHaveBeenCalled()
     expect(mockEventBus.emit).toHaveBeenCalledWith(Event.STOPPED)
+  })
+
+  it('should retry indefinitely if maxRetries is set to Infinity', () => {
+    const streamer = getStreamer(Infinity)
+
+    streamer.start()
+    expect(mockXHR.send).toHaveBeenCalled()
+
+    for (let i = 0; i < 100; i++) {
+      mockXHR.onerror({} as ProgressEvent)
+      jest.advanceTimersByTime(getRandom(1000, 10000))
+    }
+
+    expect(logError).not.toHaveBeenCalledWith('Streaming:  Max streaming retries reached. Staying in polling mode.')
+    expect(mockXHR.send).toHaveBeenCalledTimes(101)
+  })
+
+  it('should reconnect successfully after multiple failures', () => {
+    const streamer = getStreamer(5)
+
+    streamer.start()
+    expect(mockXHR.send).toHaveBeenCalled()
+
+    for (let i = 0; i < 3; i++) {
+      mockXHR.onerror({} as ProgressEvent)
+      jest.advanceTimersByTime(getRandom(1000, 10000))
+    }
+
+    // Simulate a successful connection on the next attempt
+    mockXHR.onprogress({} as ProgressEvent)
+
+    expect(mockEventBus.emit).toHaveBeenCalledWith(Event.CONNECTED)
+    expect(mockXHR.send).toHaveBeenCalledTimes(4) // Should attempt to reconnect 3 times before succeeding
   })
 })
