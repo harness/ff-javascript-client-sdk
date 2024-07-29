@@ -543,7 +543,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         } else if (event.domain === 'target-segment') {
           handleSegmentEvent(event)
         }
-      }
+      },
+      configurations.maxStreamingRetries
     )
     eventSource.start()
   }

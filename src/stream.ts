@@ -11,7 +11,8 @@ export class Streamer {
   private readTimeoutCheckerId: any
   private connectionOpened = false
   private disconnectEventEmitted = false
-  private reconnectAttempts = 0 
+  private reconnectAttempts = 0
+
 
   constructor(
     private eventBus: Emitter,
@@ -22,8 +23,10 @@ export class Streamer {
     private fallbackPoller: Poller,
     private logDebug: (...data: any[]) => void,
     private logError: (...data: any[]) => void,
-    private eventCallback: (e: StreamEvent) => void
-  ) {}
+    private eventCallback: (e: StreamEvent) => void,
+    private maxRetries: number
+
+) {}
 
   start() {
     const processData = (data: any): void => {

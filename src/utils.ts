@@ -10,7 +10,8 @@ export const defaultOptions: Options = {
   eventsSyncInterval: MIN_EVENTS_SYNC_INTERVAL,
   pollingInterval: MIN_POLLING_INTERVAL,
   streamEnabled: true,
-  cache: false
+  cache: false,
+  maxStreamingRetries: Infinity
 }
 
 export const getConfiguration = (options: Options): Options => {
