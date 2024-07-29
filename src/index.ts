@@ -544,7 +544,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           handleSegmentEvent(event)
         }
       },
-      configurations.maxStreamingRetries
+      configurations.maxStreamRetries
     )
     eventSource.start()
   }

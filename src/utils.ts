@@ -11,7 +11,7 @@ export const defaultOptions: Options = {
   pollingInterval: MIN_POLLING_INTERVAL,
   streamEnabled: true,
   cache: false,
-  maxStreamingRetries: Infinity
+  maxStreamRetries: Infinity
 }
 
 export const getConfiguration = (options: Options): Options => {
