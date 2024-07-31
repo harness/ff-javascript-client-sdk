@@ -67,7 +67,9 @@ export class Streamer {
         if (this.configurations.pollingEnabled) {
           this.logErrorMessage('Max streaming retries reached. Staying in polling mode.')
         } else {
-          this.logErrorMessage('Max streaming retries reached.')
+          this.logErrorMessage(
+            'Max streaming retries reached. Polling mode is disabled and will receive no further flag updates until SDK client is restarted.'
+          )
         }
         return
       }
