@@ -11,7 +11,8 @@ export class Streamer {
   private readTimeoutCheckerId: any
   private connectionOpened = false
   private disconnectEventEmitted = false
-  private reconnectAttempts = 0 
+  private reconnectAttempts = 0
+  private retriesExhausted: boolean = false
 
   constructor(
     private eventBus: Emitter,
@@ -22,7 +23,8 @@ export class Streamer {
     private fallbackPoller: Poller,
     private logDebug: (...data: any[]) => void,
     private logError: (...data: any[]) => void,
-    private eventCallback: (e: StreamEvent) => void
+    private eventCallback: (e: StreamEvent) => void,
+    private maxRetries: number
   ) {}
 
   start() {
@@ -60,10 +62,26 @@ export class Streamer {
         )
       }
 
+      if (this.reconnectAttempts >= this.maxRetries) {
+        this.retriesExhausted = true
+        if (this.configurations.pollingEnabled) {
+          this.logErrorMessage('Max streaming retries reached. Staying in polling mode.')
+        } else {
+          this.logErrorMessage(
+            'Max streaming retries reached. Polling mode is disabled and will receive no further flag updates until SDK client is restarted.'
+          )
+        }
+        return
+      }
+
       setTimeout(() => this.start(), reconnectDelayMs)
     }
 
     const onFailed = (msg: string) => {
+      if (this.retriesExhausted) {
+        return
+      }
+
       if (!!msg) {
         this.logDebugMessage('Stream has issue', msg)
       }

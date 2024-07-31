@@ -119,6 +119,32 @@ const client = initialize(
 )
 ```
 
+Max Stream Retries
+You can configure the maximum number of streaming retries before the SDK stops attempting to reconnect or falls back to polling (if enabled). The maxRetries option can be set to any positive number or Infinity for unlimited retries (which is the default).
+
+```typescript
+const options = {
+  maxRetries: 5, // Set the maximum number of retries for streaming. Default is Infinity.
+  streamEnabled: true, 
+  pollingEnabled: true, 
+  pollingInterval: 60000, 
+}
+
+const client = initialize(
+    'YOUR_SDK_KEY',
+    {
+      identifier: 'Harness1',
+      attributes: {
+        lastUpdated: Date(),
+        host: location.href
+      }
+    },
+    options
+)
+
+```
+If maxRetries is reached and pollingEnabled is true, the SDK will stay in polling mode. If pollingEnabled is false, the SDK will not poll, and evaluations will not be updated until the SDK Client is initialized again, for example if the app or page is restarted.
+
 ## Listening to events from the `client` instance.
 
 ```typescript

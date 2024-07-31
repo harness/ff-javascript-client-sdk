@@ -144,6 +144,12 @@ export interface Options {
    * @default console
    */
   logger?: Logger
+
+  /**
+   * By default, the stream will attempt to reconnect indefinitely if it disconnects. Use this option to limit
+   * the number of attempts it will make.
+   */
+  maxStreamRetries?: number
 }
 
 export interface MetricsInfo {
