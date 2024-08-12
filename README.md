@@ -119,7 +119,7 @@ const client = initialize(
 )
 ```
 
-Max Stream Retries
+### Max Stream Retries
 You can configure the maximum number of streaming retries before the SDK stops attempting to reconnect or falls back to polling (if enabled). The maxRetries option can be set to any positive number or Infinity for unlimited retries (which is the default).
 
 ```typescript
