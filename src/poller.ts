@@ -32,8 +32,12 @@ export default class Poller {
   }
 
   private poll(): void {
+    if (!this.isRunning) return
     this.attemptFetch().finally(() => {
-      this.timeoutId = setTimeout(() => this.poll(), this.configurations.pollingInterval)
+      // Check if poller is still running before setting the next timeout
+      if (this.isRunning) {
+        this.timeoutId = setTimeout(() => this.poll(), this.configurations.pollingInterval)
+      }
     })
   }
 
@@ -70,9 +74,9 @@ export default class Poller {
 
   public stop(): void {
     if (this.timeoutId) {
+      this.isRunning = false
       clearTimeout(this.timeoutId)
       this.timeoutId = undefined
-      this.isRunning = false
       this.eventBus.emit(Event.POLLING_STOPPED)
       this.logDebugMessage('Polling stopped')
     }
