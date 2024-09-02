@@ -334,7 +334,7 @@ interface Evaluation {
 
 The `authRequestReadTimeout` option allows you to specify a timeout in milliseconds for the authentication request. If the request takes longer than this timeout, it will be aborted. This is useful for preventing hanging requests due to network issues or slow responses.
 
-If the request is aborted due to this timeout, an ERROR_AUTH event will be emitted, indicating that the authentication failed. Additionally, an ERROR event will be emitted to signal that a general error has occurred.
+If the request is aborted due to this timeout the SDK will fail to initialize and an `ERROR_AUTH` and `ERROR` event will be emitted.
 
 **This only applies to the authentiaction request. If you wish to set a read timeout on the remaining requests made by the SDK, you may register [API Middleware](#api-middleware)
 
@@ -375,7 +375,7 @@ function abortControllerMiddleware([url, options]) {
 // Register the middleware
 client.registerAPIRequestMiddleware(abortControllerMiddleware);
 ```
-This middleware will automatically attach an AbortController to each request, which will abort the request if it takes longer than the specified timeout. You can also customize the middleware to perform other actions, such as logging or modifying headers.
+This example middleware will automatically attach an AbortController to each request, which will abort the request if it takes longer than the specified timeout. You can also customize the middleware to perform other actions, such as logging or modifying headers.
 
 
 ## Logging
