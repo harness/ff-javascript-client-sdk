@@ -133,6 +133,12 @@ export interface Options {
    * Whether to enable debug logging.
    * @default false
    */
+  authRequestReadTimeout?: number
+  /**
+   * The timeout in milliseconds for the authentication request to read the response.
+   * If the request takes longer than this timeout, it will be aborted and the SDK will fail to initialize, and `ERROR_AUTH` and `ERROR` events will be emitted.
+   * @default 0 (no timeout)
+   */
   debug?: boolean
   /**
    * Whether to enable caching.

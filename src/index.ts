@@ -64,6 +64,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     configurations.logger.error(`[FF-SDK] ${message}`, ...args)
   }
 
+  const logWarn = (message: string, ...args: any[]) => {
+    configurations.logger.warn(`[FF-SDK] ${message}`, ...args)
+  }
+
   const convertValue = (evaluation: Evaluation) => {
     let { value } = evaluation
 
@@ -143,18 +147,58 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const authenticate = async (clientID: string, configuration: Options): Promise<string> => {
-    const response = await fetch(`${configuration.baseUrl}/client/auth`, {
+    const url = `${configuration.baseUrl}/client/auth`
+    const requestOptions: RequestInit = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Harness-SDK-Info': SDK_INFO },
       body: JSON.stringify({
         apiKey: clientID,
         target: { ...target, identifier: String(target.identifier) }
       })
-    })
+    }
 
-    const data: { authToken: string } = await response.json()
+    let timeoutId: any;
 
-    return data.authToken
+    if (window.AbortController) {
+      const abortController = new AbortController()
+      requestOptions.signal = abortController.signal
+
+      if (configurations.authRequestReadTimeout > 0){
+         timeoutId = setTimeout(() => abortController.abort(), configuration.authRequestReadTimeout)
+      }
+
+      try {
+        const response = await fetch(url, requestOptions)
+
+        if (!response.ok) {
+          throw new Error(`Http error: ${response.status}: ${response.statusText}`)
+        }
+
+        const data: { authToken: string } = await response.json()
+        return data.authToken
+      } catch (error) {
+        if (abortController.signal.aborted) {
+          throw new Error('Request timed out')
+        }
+
+        throw error
+      } finally {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+      }
+    } else {
+      logWarn('AbortController is not available, auth request will not timeout')
+
+      const response = await fetch(url, requestOptions)
+
+      if (!response.ok) {
+        throw new Error(`Http error: ${response.status}: ${response.statusText}`)
+      }
+
+      const data: { authToken: string } = await response.json()
+      return data.authToken
+    }
   }
 
   let failedMetricsCallCount = 0
