@@ -157,14 +157,14 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       })
     }
 
-    let timeoutId: any;
+    let timeoutId: any
 
     if (window.AbortController) {
       const abortController = new AbortController()
       requestOptions.signal = abortController.signal
 
-      if (configurations.authRequestReadTimeout > 0){
-         timeoutId = setTimeout(() => abortController.abort(), configuration.authRequestReadTimeout)
+      if (configurations.authRequestReadTimeout > 0) {
+        timeoutId = setTimeout(() => abortController.abort(), configuration.authRequestReadTimeout)
       }
 
       try {
@@ -184,11 +184,13 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         throw error
       } finally {
         if (timeoutId) {
-          clearTimeout(timeoutId);
+          clearTimeout(timeoutId)
         }
       }
     } else {
-      logWarn('AbortController is not available, auth request will not timeout')
+      if (configurations.authRequestReadTimeout > 0) {
+        logWarn('AbortController is not available, auth request will not timeout')
+      }
 
       const response = await fetch(url, requestOptions)
 
