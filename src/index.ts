@@ -173,16 +173,19 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       const response = await fetch(url, requestOptions)
 
       if (!response.ok) {
-        throw new Error(`Http error: ${response.status}: ${response.statusText}`)
+        throw new Error(`${response.status}: ${response.statusText}`)
       }
 
       const data: { authToken: string } = await response.json()
       return data.authToken
     } catch (error) {
       if (abortController && abortController.signal.aborted) {
-        throw new Error(`Request to ${url} failed: Request timeout via configured authRequestTimeout of ${configurations.authRequestReadTimeout}`)
+        throw new Error(
+          `Request to ${url} failed: Request timeout via configured authRequestTimeout of ${configurations.authRequestReadTimeout}`
+        )
       }
-      throw new Error(`Request to ${url} failed: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      throw new Error(`Request to ${url} failed: ${errorMessage}`)
     } finally {
       if (timeoutId) {
         clearTimeout(timeoutId)
