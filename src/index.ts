@@ -157,41 +157,19 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       })
     }
 
-    let timeoutId: any
+    let timeoutId: number | undefined
+    let abortController: AbortController | undefined
 
-    if (window.AbortController) {
-      const abortController = new AbortController()
+    if (window.AbortController && configurations.authRequestReadTimeout > 0) {
+      abortController = new AbortController()
       requestOptions.signal = abortController.signal
 
-      if (configurations.authRequestReadTimeout > 0) {
-        timeoutId = setTimeout(() => abortController.abort(), configuration.authRequestReadTimeout)
-      }
+      timeoutId = window.setTimeout(() => abortController.abort(), configuration.authRequestReadTimeout)
+    } else if (configuration.authRequestReadTimeout > 0) {
+      logWarn('AbortController is not available, auth request will not timeout')
+    }
 
-      try {
-        const response = await fetch(url, requestOptions)
-
-        if (!response.ok) {
-          throw new Error(`Http error: ${response.status}: ${response.statusText}`)
-        }
-
-        const data: { authToken: string } = await response.json()
-        return data.authToken
-      } catch (error) {
-        if (abortController.signal.aborted) {
-          throw new Error('Request timed out')
-        }
-
-        throw error
-      } finally {
-        if (timeoutId) {
-          clearTimeout(timeoutId)
-        }
-      }
-    } else {
-      if (configurations.authRequestReadTimeout > 0) {
-        logWarn('AbortController is not available, auth request will not timeout')
-      }
-
+    try {
       const response = await fetch(url, requestOptions)
 
       if (!response.ok) {
@@ -200,6 +178,15 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
       const data: { authToken: string } = await response.json()
       return data.authToken
+    } catch (error) {
+      if (abortController && abortController.signal.aborted) {
+        throw new Error(`Request to ${url} failed: Request timeout via configured authRequestTimeout of ${configurations.authRequestReadTimeout}`)
+      }
+      throw new Error(`Request to ${url} failed: ${error.message}`);
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
     }
   }
 
