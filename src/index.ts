@@ -64,6 +64,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     configurations.logger.error(`[FF-SDK] ${message}`, ...args)
   }
 
+  const logWarn = (message: string, ...args: any[]) => {
+    configurations.logger.warn(`[FF-SDK] ${message}`, ...args)
+  }
+
   const convertValue = (evaluation: Evaluation) => {
     let { value } = evaluation
 
@@ -143,18 +147,50 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const authenticate = async (clientID: string, configuration: Options): Promise<string> => {
-    const response = await fetch(`${configuration.baseUrl}/client/auth`, {
+    const url = `${configuration.baseUrl}/client/auth`
+    const requestOptions: RequestInit = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Harness-SDK-Info': SDK_INFO },
       body: JSON.stringify({
         apiKey: clientID,
         target: { ...target, identifier: String(target.identifier) }
       })
-    })
+    }
 
-    const data: { authToken: string } = await response.json()
+    let timeoutId: number | undefined
+    let abortController: AbortController | undefined
 
-    return data.authToken
+    if (window.AbortController && configurations.authRequestReadTimeout > 0) {
+      abortController = new AbortController()
+      requestOptions.signal = abortController.signal
+
+      timeoutId = window.setTimeout(() => abortController.abort(), configuration.authRequestReadTimeout)
+    } else if (configuration.authRequestReadTimeout > 0) {
+      logWarn('AbortController is not available, auth request will not timeout')
+    }
+
+    try {
+      const response = await fetch(url, requestOptions)
+
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`)
+      }
+
+      const data: { authToken: string } = await response.json()
+      return data.authToken
+    } catch (error) {
+      if (abortController && abortController.signal.aborted) {
+        throw new Error(
+          `Request to ${url} failed: Request timeout via configured authRequestTimeout of ${configurations.authRequestReadTimeout}`
+        )
+      }
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      throw new Error(`Request to ${url} failed: ${errorMessage}`)
+    } finally {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+    }
   }
 
   let failedMetricsCallCount = 0

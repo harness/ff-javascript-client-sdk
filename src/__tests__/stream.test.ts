@@ -3,7 +3,7 @@ import type { Options } from '../types'
 import { Event } from '../types'
 import { getRandom } from '../utils'
 import type { Emitter } from 'mitt'
-import type Poller from "../poller";
+import type Poller from '../poller'
 
 jest.useFakeTimers()
 
@@ -49,16 +49,16 @@ const getStreamer = (overrides: Partial<Options> = {}, maxRetries: number = Infi
   }
 
   return new Streamer(
-      mockEventBus,
-      options,
-      `${options.baseUrl}/stream`,
-      'test-api-key',
-      { 'Test-Header': 'value' },
-      { start: jest.fn(), stop: jest.fn(), isPolling: jest.fn() } as unknown as Poller,
-      logDebug,
-      logError,
-      jest.fn(),
-      maxRetries
+    mockEventBus,
+    options,
+    `${options.baseUrl}/stream`,
+    'test-api-key',
+    { 'Test-Header': 'value' },
+    { start: jest.fn(), stop: jest.fn(), isPolling: jest.fn() } as unknown as Poller,
+    logDebug,
+    logError,
+    jest.fn(),
+    maxRetries
   )
 }
 
@@ -130,16 +130,16 @@ describe('Streamer', () => {
   it('should fallback to polling on stream failure', () => {
     const poller = { start: jest.fn(), stop: jest.fn(), isPolling: jest.fn() } as unknown as Poller
     const streamer = new Streamer(
-        mockEventBus,
-        { baseUrl: 'http://test', eventUrl: 'http://event', pollingEnabled: true, streamEnabled: true, debug: true },
-        'http://test/stream',
-        'test-api-key',
-        { 'Test-Header': 'value' },
-        poller,
-        logDebug,
-        logError,
-        jest.fn(),
-        Infinity
+      mockEventBus,
+      { baseUrl: 'http://test', eventUrl: 'http://event', pollingEnabled: true, streamEnabled: true, debug: true },
+      'http://test/stream',
+      'test-api-key',
+      { 'Test-Header': 'value' },
+      poller,
+      logDebug,
+      logError,
+      jest.fn(),
+      Infinity
     )
 
     streamer.start()
@@ -154,21 +154,19 @@ describe('Streamer', () => {
 
   it('should stop polling when close is called if in fallback polling mode', () => {
     const poller = { start: jest.fn(), stop: jest.fn(), isPolling: jest.fn() } as unknown as Poller
-    ;(poller.isPolling as jest.Mock)
-        .mockImplementationOnce(() => false)
-        .mockImplementationOnce(() => true)
+    ;(poller.isPolling as jest.Mock).mockImplementationOnce(() => false).mockImplementationOnce(() => true)
 
     const streamer = new Streamer(
-        mockEventBus,
-        { baseUrl: 'http://test', eventUrl: 'http://event', pollingEnabled: true, streamEnabled: true, debug: true },
-        'http://test/stream',
-        'test-api-key',
-        { 'Test-Header': 'value' },
-        poller,
-        logDebug,
-        logError,
-        jest.fn(),
-        3
+      mockEventBus,
+      { baseUrl: 'http://test', eventUrl: 'http://event', pollingEnabled: true, streamEnabled: true, debug: true },
+      'http://test/stream',
+      'test-api-key',
+      { 'Test-Header': 'value' },
+      poller,
+      logDebug,
+      logError,
+      jest.fn(),
+      3
     )
 
     streamer.start()
@@ -190,18 +188,22 @@ describe('Streamer', () => {
   })
 
   it('should stop streaming but not call poller.stop if not in fallback polling mode when close is called', () => {
-    const poller = { start: jest.fn(), stop: jest.fn(), isPolling: jest.fn().mockReturnValue(false) } as unknown as Poller
+    const poller = {
+      start: jest.fn(),
+      stop: jest.fn(),
+      isPolling: jest.fn().mockReturnValue(false)
+    } as unknown as Poller
     const streamer = new Streamer(
-        mockEventBus,
-        { baseUrl: 'http://test', eventUrl: 'http://event', pollingEnabled: true, streamEnabled: true, debug: true },
-        'http://test/stream',
-        'test-api-key',
-        { 'Test-Header': 'value' },
-        poller,
-        logDebug,
-        logError,
-        jest.fn(),
-        3
+      mockEventBus,
+      { baseUrl: 'http://test', eventUrl: 'http://event', pollingEnabled: true, streamEnabled: true, debug: true },
+      'http://test/stream',
+      'test-api-key',
+      { 'Test-Header': 'value' },
+      poller,
+      logDebug,
+      logError,
+      jest.fn(),
+      3
     )
 
     streamer.start()

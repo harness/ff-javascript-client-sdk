@@ -330,6 +330,54 @@ interface Evaluation {
 }
 ```
 
+## Authentication Request Timeout
+
+The `authRequestReadTimeout` option allows you to specify a timeout in milliseconds for the authentication request. If the request takes longer than this timeout, it will be aborted. This is useful for preventing hanging requests due to network issues or slow responses.
+
+If the request is aborted due to this timeout the SDK will fail to initialize and an `ERROR_AUTH` and `ERROR` event will be emitted.
+
+**This only applies to the authentiaction request. If you wish to set a read timeout on the remaining requests made by the SDK, you may register [API Middleware](#api-middleware)
+
+```typescript
+const options = {
+  authRequestReadTimeout: 30000, // Timeout in milliseconds (default: 30000)
+};
+
+const client = initialize(
+  'YOUR_API_KEY',
+  {
+    identifier: 'Harness1',
+    attributes: {
+      lastUpdated: Date(),
+      host: location.href,
+    },
+  },
+  options
+);
+```
+
+## API Middleware
+The `registerAPIRequestMiddleware` function allows you to register a middleware function to manipulate the payload (URL, body and headers) of API requests after the AUTH call has successfully completed
+
+```typescript
+function abortControllerMiddleware([url, options]) {
+  if (window.AbortController) {
+    const abortController = new AbortController();
+    options.signal = abortController.signal;
+
+    // Set a timeout to automatically abort the request after 30 seconds
+    setTimeout(() => abortController.abort(), 30000);
+  }
+
+  return [url, options]; // Return the modified or original arguments
+}
+
+// Register the middleware
+client.registerAPIRequestMiddleware(abortControllerMiddleware);
+```
+This example middleware will automatically attach an AbortController to each request, which will abort the request if it takes longer than the specified timeout. You can also customize the middleware to perform other actions, such as logging or modifying headers.
+
+
 ## Logging
 By default, the Javascript Client SDK will log errors and debug messages using the `console` object. In some cases, it
 can be useful to instead log to a service or silently fail without logging errors.
