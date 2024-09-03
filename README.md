@@ -336,11 +336,13 @@ The `authRequestReadTimeout` option allows you to specify a timeout in milliseco
 
 If the request is aborted due to this timeout the SDK will fail to initialize and an `ERROR_AUTH` and `ERROR` event will be emitted.
 
+The default value if not specified is `0` which means that no timeout will occur.
+
 **This only applies to the authentiaction request. If you wish to set a read timeout on the remaining requests made by the SDK, you may register [API Middleware](#api-middleware)
 
 ```typescript
 const options = {
-  authRequestReadTimeout: 30000, // Timeout in milliseconds (default: 30000)
+  authRequestReadTimeout: 30000, // Timeout in milliseconds (default: 0 - no timeout)
 };
 
 const client = initialize(
