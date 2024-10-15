@@ -73,7 +73,7 @@ export interface EventCallbackMapping {
   [Event.ERROR_FETCH_FLAG]: (error: unknown) => void
   [Event.ERROR_STREAM]: (error: unknown) => void
   [Event.ERROR_METRICS]: (error: unknown) => void
-  [Event.ERROR_DEFAULT_VARIATION_RETURNED]: (payload: { flag: string; defaultVariation: VariationValue }) => void
+  [Event.ERROR_DEFAULT_VARIATION_RETURNED]: (payload: DefaultVariationEventPayload) => void
 }
 
 export type EventOnBinding = <K extends keyof EventCallbackMapping>(event: K, callback: EventCallbackMapping[K]) => void
