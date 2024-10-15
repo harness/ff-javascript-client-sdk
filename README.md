@@ -213,7 +213,7 @@ client.on(Event.ERROR_STREAM, error => {
 
 ### Getting value for a particular feature flag
 
-If you would like to know that the default variation was returned when getting the value, for example, if the provided flag identifier wasn't found then pass true for the third argument withDebug:
+If you would like to know that the default variation was returned when getting the value, for example, if the provided flag wasn't found in the cache then pass true for the third argument withDebug:
 ```typescript
 const result = client.variation('Dark_Theme', false, true);
 ```
@@ -248,6 +248,23 @@ For the example above:
 
 - If the flag identifier 'Dark_Theme' exists in storage, variationValue would be the stored value for that identifier.
 - If the flag identifier 'Dark_Theme' does not exist, variationValue would be the default value provided, in this case, false
+
+* Note the reasons for the default variation being returned can be
+  1. SDK Not Initialized Yet
+  2. Typo in Flag Identifier
+  3. Wrong project API key being used
+
+#### Listening for the `ERROR_DEFAULT_VARIATION_RETURNED` event
+You can also listen for the `ERROR_DEFAULT_VARIATION_RETURNED` event, which is emitted whenever a default variation is returned because the flag has not been found in the cache. This is useful for logging or taking other action when a flag is not found. 
+
+Example of listening for the event:
+
+```typescript
+client.on(Event.ERROR_DEFAULT_VARIATION_RETURNED, ({ flag, valueReturned }) => {
+  console.warn(`Default variation returned for flag: ${flag}, value: ${valueReturned}`)
+})
+```
+
 ### Cleaning up
 
 Remove a listener of an event by `client.off`.

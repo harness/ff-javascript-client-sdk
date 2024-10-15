@@ -29,7 +29,8 @@ export enum Event {
   ERROR_AUTH = 'auth error',
   ERROR_FETCH_FLAGS = 'fetch flags error',
   ERROR_FETCH_FLAG = 'fetch flag error',
-  ERROR_STREAM = 'stream error'
+  ERROR_STREAM = 'stream error',
+  ERROR_DEFAULT_VARIATION_RETURNED = 'default variation returned'
 }
 
 export type VariationValue = boolean | string | number | object | undefined

@@ -678,7 +678,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const variation = (identifier: string, defaultValue: any, withDebug = false) => {
-    return getVariation(identifier, defaultValue, storage, handleMetrics, withDebug)
+    return getVariation(identifier, defaultValue, storage, handleMetrics, eventBus, withDebug)
   }
 
   return {
