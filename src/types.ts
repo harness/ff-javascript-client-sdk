@@ -42,6 +42,11 @@ export interface VariationValueWithDebug {
   isDefaultValue: boolean
 }
 
+export interface DefaultVariationEventPayload {
+  flag: string
+  defaultVariation: VariationValue
+}
+
 export interface Evaluation {
   flag: string // Feature flag identifier
   identifier: string // variation identifier
