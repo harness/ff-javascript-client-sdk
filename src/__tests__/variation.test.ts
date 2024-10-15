@@ -1,6 +1,6 @@
 import { getVariation } from '../variation'
 import type { Emitter } from 'mitt'
-import { Event } from '../types'
+import {type DefaultVariationEventPayload, Event} from '../types'
 
 describe('getVariation', () => {
   describe('without debug', () => {
@@ -37,10 +37,9 @@ describe('getVariation', () => {
       expect(result).toBe(defaultValue)
       expect(mockMetricsHandler).not.toHaveBeenCalled()
 
-      expect(mockEventBus.emit).toHaveBeenCalledWith(Event.ERROR_DEFAULT_VARIATION_RETURNED, {
-        flag: 'testFlag',
-        defaultVariation: defaultValue
-      })
+      const expectedEvent: DefaultVariationEventPayload = { flag: 'testFlag', defaultVariation: defaultValue }
+
+      expect(mockEventBus.emit).toHaveBeenCalledWith(Event.ERROR_DEFAULT_VARIATION_RETURNED, expectedEvent)
     })
   })
 
@@ -79,10 +78,10 @@ describe('getVariation', () => {
 
       expect(result).toEqual({ value: defaultValue, isDefaultValue: true })
       expect(mockMetricsHandler).not.toHaveBeenCalled()
-      expect(mockEventBus.emit).toHaveBeenCalledWith(Event.ERROR_DEFAULT_VARIATION_RETURNED, {
-        flag: 'testFlag',
-        defaultVariation: defaultValue
-      })
+
+      const expectedEvent: DefaultVariationEventPayload = { flag: 'testFlag', defaultVariation: defaultValue }
+
+      expect(mockEventBus.emit).toHaveBeenCalledWith(Event.ERROR_DEFAULT_VARIATION_RETURNED, expectedEvent)
     })
   })
 })
