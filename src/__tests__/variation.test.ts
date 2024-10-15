@@ -1,6 +1,6 @@
 import { getVariation } from '../variation'
 import type { Emitter } from 'mitt'
-import {Event} from "../types";
+import { Event } from '../types'
 
 describe('getVariation', () => {
   describe('without debug', () => {
@@ -31,7 +31,7 @@ describe('getVariation', () => {
         all: new Map()
       }
 
-      const defaultValue = false;
+      const defaultValue = false
       const result = getVariation('testFlag', defaultValue, storage, mockMetricsHandler, mockEventBus)
 
       expect(result).toBe(defaultValue)
@@ -74,7 +74,7 @@ describe('getVariation', () => {
         all: new Map()
       }
 
-      const defaultValue = false;
+      const defaultValue = false
       const result = getVariation('testFlag', defaultValue, storage, mockMetricsHandler, mockEventBus, true)
 
       expect(result).toEqual({ value: defaultValue, isDefaultValue: true })

@@ -1,5 +1,5 @@
-import {Event, type VariationValue, type VariationValueWithDebug} from './types'
-import type {Emitter} from "mitt";
+import { Event, type VariationValue, type VariationValueWithDebug } from './types'
+import type { Emitter } from 'mitt'
 
 export function getVariation(
   identifier: string,
