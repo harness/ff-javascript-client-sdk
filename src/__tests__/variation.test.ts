@@ -39,7 +39,7 @@ describe('getVariation', () => {
 
       expect(mockEventBus.emit).toHaveBeenCalledWith(Event.ERROR_DEFAULT_VARIATION_RETURNED, {
         flag: 'testFlag',
-        valueReturned: defaultValue
+        defaultVariation: defaultValue
       })
     })
   })
@@ -81,7 +81,7 @@ describe('getVariation', () => {
       expect(mockMetricsHandler).not.toHaveBeenCalled()
       expect(mockEventBus.emit).toHaveBeenCalledWith(Event.ERROR_DEFAULT_VARIATION_RETURNED, {
         flag: 'testFlag',
-        valueReturned: defaultValue
+        defaultVariation: defaultValue
       })
     })
   })
