@@ -260,8 +260,8 @@ You can also listen for the `ERROR_DEFAULT_VARIATION_RETURNED` event, which is e
 Example of listening for the event:
 
 ```typescript
-client.on(Event.ERROR_DEFAULT_VARIATION_RETURNED, ({ flag, valueReturned }) => {
-  console.warn(`Default variation returned for flag: ${flag}, value: ${valueReturned}`)
+client.on(Event.ERROR_DEFAULT_VARIATION_RETURNED, ({ flag, defaultVariation }) => {
+  console.warn(`Default variation returned for flag: ${flag}, value: ${defaultVariation}`)
 })
 ```
 
