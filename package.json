@@ -20,7 +20,8 @@
     "format": "prettier --write \"src/**/*.ts\"",
     "type": "tsc ./src/*.ts --declaration --emitDeclarationOnly --outDir dist --lib ES2015,DOM",
     "clean": "rm -rf ./dist",
-    "test": "jest"
+    "test": "jest",
+    "prepare": "npm run build"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
