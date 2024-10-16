@@ -29,7 +29,8 @@ export enum Event {
   ERROR_AUTH = 'auth error',
   ERROR_FETCH_FLAGS = 'fetch flags error',
   ERROR_FETCH_FLAG = 'fetch flag error',
-  ERROR_STREAM = 'stream error'
+  ERROR_STREAM = 'stream error',
+  ERROR_DEFAULT_VARIATION_RETURNED = 'default variation returned'
 }
 
 export type VariationValue = boolean | string | number | object | undefined
@@ -39,6 +40,11 @@ export type VariationValue = boolean | string | number | object | undefined
 export interface VariationValueWithDebug {
   value: VariationValue
   isDefaultValue: boolean
+}
+
+export interface DefaultVariationEventPayload {
+  flag: string
+  defaultVariation: VariationValue
 }
 
 export interface Evaluation {
@@ -67,6 +73,7 @@ export interface EventCallbackMapping {
   [Event.ERROR_FETCH_FLAG]: (error: unknown) => void
   [Event.ERROR_STREAM]: (error: unknown) => void
   [Event.ERROR_METRICS]: (error: unknown) => void
+  [Event.ERROR_DEFAULT_VARIATION_RETURNED]: (payload: DefaultVariationEventPayload) => void
 }
 
 export type EventOnBinding = <K extends keyof EventCallbackMapping>(event: K, callback: EventCallbackMapping[K]) => void
