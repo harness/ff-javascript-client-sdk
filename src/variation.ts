@@ -1,4 +1,4 @@
-import {type DefaultVariationEventPayload, Event, type VariationValue, type VariationValueWithDebug} from './types'
+import { type DefaultVariationEventPayload, Event, type VariationValue, type VariationValueWithDebug } from './types'
 import type { Emitter } from 'mitt'
 
 export function getVariation(
@@ -16,7 +16,8 @@ export function getVariation(
     metricsHandler(identifier, value)
   } else {
     const payload: DefaultVariationEventPayload = { flag: identifier, defaultVariation: defaultValue }
-    eventBus.emit(Event.ERROR_DEFAULT_VARIATION_RETURNED, payload)  }
+    eventBus.emit(Event.ERROR_DEFAULT_VARIATION_RETURNED, payload)
+  }
 
   return !withDebug ? value : { value, isDefaultValue: !identifierExists }
 }

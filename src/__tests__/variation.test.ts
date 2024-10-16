@@ -1,6 +1,6 @@
 import { getVariation } from '../variation'
 import type { Emitter } from 'mitt'
-import {type DefaultVariationEventPayload, Event} from '../types'
+import { type DefaultVariationEventPayload, Event } from '../types'
 
 describe('getVariation', () => {
   describe('without debug', () => {

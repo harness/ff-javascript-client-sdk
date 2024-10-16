@@ -12,7 +12,8 @@ import type {
   StreamEvent,
   Target,
   VariationFn,
-  VariationValue
+  VariationValue,
+  DefaultVariationEventPayload
 } from './types'
 import { Event } from './types'
 import { defer, encodeTarget, getConfiguration } from './utils'
@@ -702,5 +703,6 @@ export {
   EventOffBinding,
   Result,
   Evaluation,
-  VariationValue
+  VariationValue,
+  DefaultVariationEventPayload
 }
