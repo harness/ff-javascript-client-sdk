@@ -442,7 +442,7 @@ In case you want to import this library directly (without having to use npm or y
 If you need to support old browsers which don't support ES Module:
 
 ```html
-<script src="https://unpkg.com/@harnessio/ff-javascript-client-sdk/dist/sdk.client.js"></script>
+<script src="https://unpkg.com/@harnessio/ff-javascript-client-sdk/dist/sdk.client-iife.js"></script>
 <script>
   var initialize = HarnessFFSDK.initialize
   var Event = HarnessFFSDK.Event
