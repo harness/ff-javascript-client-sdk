@@ -1,4 +1,4 @@
-import type { AsyncStorage, CacheOptions, Evaluation, SyncStorage } from './types'
+import type { AsyncStorage, CacheOptions, Evaluation, SyncStorage, Target } from './types'
 
 export interface GetCacheResponse {
   loadFromCache: () => Promise<Evaluation[]>
@@ -74,6 +74,28 @@ async function removeCachedEvaluation(cacheId: string, storage: AsyncStorage, fl
 
     await saveToCache(cacheId, storage, cachedEvals)
   }
+}
+
+export function createCacheIdSeed(target: Target, apiKey: string, config: CacheOptions = {}) {
+  if (!config.deriveKeyFromTargetAttributes) return target.identifier + apiKey
+
+  return (
+    JSON.stringify(
+      Object.keys(target.attributes || {})
+        .sort()
+        .filter(
+          attribute =>
+            !Array.isArray(config.deriveKeyFromTargetAttributes) ||
+            config.deriveKeyFromTargetAttributes.includes(attribute)
+        )
+        .reduce(
+          (filteredAttributes, attribute) => ({ ...filteredAttributes, [attribute]: target.attributes[attribute] }),
+          {}
+        )
+    ) +
+    target.identifier +
+    apiKey
+  )
 }
 
 async function getCacheId(seed: string): Promise<string> {

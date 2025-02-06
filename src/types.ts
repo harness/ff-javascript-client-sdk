@@ -196,6 +196,14 @@ export interface CacheOptions {
    * @default localStorage
    */
   storage?: AsyncStorage | SyncStorage
+  /**
+   * Use target attributes when deriving the cache key
+   * When set to `false` or omitted, the key will be formed using only the target identifier and SDK key
+   * When set to `true`, all target attributes with be used in addition to the target identifier and SDK key
+   * Can be set to an array of target attributes to use a subset in addition to the target identifier and SDK key
+   * @default false
+   */
+  deriveKeyFromTargetAttributes?: boolean | string[]
 }
 
 export interface Logger {

@@ -21,7 +21,7 @@ import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
 import { getVariation } from './variation'
 import Poller from './poller'
-import { getCache } from './cache'
+import { createCacheIdSeed, getCache } from './cache'
 
 const SDK_VERSION = '1.26.1'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
@@ -110,10 +110,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       try {
         let initialLoad = true
 
-        const cache = await getCache(
-          target.identifier + apiKey,
-          typeof configurations.cache === 'boolean' ? {} : configurations.cache
-        )
+        const cacheConfig = typeof configurations.cache === 'boolean' ? {} : configurations.cache
+
+        const cache = await getCache(createCacheIdSeed(target, apiKey, cacheConfig), cacheConfig)
 
         const cachedEvaluations = await cache.loadFromCache()
 
