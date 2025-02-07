@@ -314,6 +314,14 @@ interface CacheOptions {
   // storage mechanism to use, conforming to the Web Storage API standard, can be either synchronous or asynchronous
   // defaults to localStorage
   storage?: AsyncStorage | SyncStorage
+  /**
+   * use target attributes when deriving the cache key
+   * when set to `false` or omitted, the key will be formed using only the target identifier and SDK key
+   * when set to `true`, all target attributes with be used in addition to the target identifier and SDK key
+   * can be set to an array of target attributes to use a subset in addition to the target identifier and SDK key
+   * defaults to false
+   */
+  deriveKeyFromTargetAttributes?: boolean | string[]
 }
 ```
 
@@ -355,7 +363,7 @@ If the request is aborted due to this timeout the SDK will fail to initialize an
 
 The default value if not specified is `0` which means that no timeout will occur.
 
-**This only applies to the authentiaction request. If you wish to set a read timeout on the remaining requests made by the SDK, you may register [API Middleware](#api-middleware)
+**This only applies to the authentication request. If you wish to set a read timeout on the remaining requests made by the SDK, you may register [API Middleware](#api-middleware)
 
 ```typescript
 const options = {
