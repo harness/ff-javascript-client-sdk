@@ -16,7 +16,7 @@ import type {
   DefaultVariationEventPayload
 } from './types'
 import { Event } from './types'
-import { defer, encodeTarget, getConfiguration } from './utils'
+import { defer, encodeTarget, getConfiguration, sortEvaluations } from './utils'
 import { addMiddlewareToFetch } from './request'
 import { Streamer } from './stream'
 import { getVariation } from './variation'
@@ -440,7 +440,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
       )
 
       if (res.ok) {
-        const data = await res.json()
+        const data = sortEvaluations(await res.json())
         data.forEach(registerEvaluation)
         eventBus.emit(Event.FLAGS_LOADED, data)
         return { type: 'success', data: data }

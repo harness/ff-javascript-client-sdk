@@ -1,4 +1,5 @@
 import type { AsyncStorage, CacheOptions, Evaluation, SyncStorage, Target } from './types'
+import { sortEvaluations } from './utils'
 
 export interface GetCacheResponse {
   loadFromCache: () => Promise<Evaluation[]>
@@ -48,7 +49,7 @@ async function clearCachedEvaluations(cacheId: string, storage: AsyncStorage): P
 }
 
 async function saveToCache(cacheId: string, storage: AsyncStorage, evaluations: Evaluation[]): Promise<void> {
-  await storage.setItem(cacheId, JSON.stringify(evaluations))
+  await storage.setItem(cacheId, JSON.stringify(sortEvaluations(evaluations)))
   await storage.setItem(cacheId + '.ts', Date.now().toString())
 }
 
