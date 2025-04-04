@@ -23,7 +23,7 @@ import { getVariation } from './variation'
 import Poller from './poller'
 import { createCacheIdSeed, getCache } from './cache'
 
-const SDK_VERSION = '1.30.1'
+const SDK_VERSION = '1.31.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
@@ -43,17 +43,14 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
   let lastCacheRefreshTime = 0
   let initialised = false
-
-
-  let metrics: MetricsInfo[] = []
-  const eventBus = mitt()
-  const configurations = getConfiguration(options)
-
-  const enableAnalytics = configurations.enableAnalytics
-
-  // We need to pause metrics in certain situations, such as when we are doing the initial flag load, and when
-  // we are setting initial evaluations.
+  // We need to pause metrics in certain situations, such as when we are doing the initial evaluation load, and when
+  // setEvaluations() is used to manually inject evaluations.
   let metricsCollectorPaused = false
+  let metrics: MetricsInfo[] = []
+
+  const configurations = getConfiguration(options)
+  const enableAnalytics = configurations.enableAnalytics
+  const eventBus = mitt()
 
   const stopMetricsCollector = () => {
     metricsCollectorPaused = true
