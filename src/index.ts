@@ -23,7 +23,7 @@ import { getVariation } from './variation'
 import Poller from './poller'
 import { createCacheIdSeed, getCache } from './cache'
 
-const SDK_VERSION = '1.26.1'
+const SDK_VERSION = '1.31.0'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
@@ -39,21 +39,29 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let poller: Poller
   let jwtToken: string
   let metricsSchedulerId: number
-  let metricsCollectorEnabled = true
   let standardHeaders: Record<string, string> = {}
   let fetchWithMiddleware = addMiddlewareToFetch(args => args)
   let lastCacheRefreshTime = 0
   let initialised = false
+  // We need to pause metrics in certain situations, such as when we are doing the initial evaluation load, and when
+  // setEvaluations() is used to manually inject evaluations.
+  let metricsCollectorPaused = false
+  let metrics: MetricsInfo[] = []
+
+  const configurations = getConfiguration(options)
+  const enableAnalytics = configurations.enableAnalytics
+  const eventBus = mitt()
 
   const stopMetricsCollector = () => {
-    metricsCollectorEnabled = false
+    metricsCollectorPaused = true
   }
   const startMetricsCollector = () => {
-    metricsCollectorEnabled = true
+    metricsCollectorPaused = false
   }
-  let metrics: MetricsInfo[] = []
-  const eventBus = mitt()
-  const configurations = getConfiguration(options)
+
+  const canCollectMetrics = (): boolean => {
+    return enableAnalytics && !metricsCollectorPaused
+  }
 
   const logDebug = (message: string, ...args: any[]) => {
     if (configurations.debug) {
@@ -93,7 +101,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const updateMetrics = (metricsInfo: MetricsInfo) => {
-    if (metricsCollectorEnabled) {
+    if (canCollectMetrics()) {
       const now = Date.now()
 
       if (now - metricsInfo.lastAccessed > METRICS_VALID_COUNT_INTERVAL) {
@@ -196,6 +204,10 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let failedMetricsCallCount = 0
 
   const scheduleSendingMetrics = () => {
+    if (!canCollectMetrics()) {
+      return
+    }
+
     if (metrics.length) {
       logDebug('Sending metrics...', { metrics, evaluations })
       const payload = {
@@ -275,7 +287,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
         Event.CHANGED,
         new Proxy(evaluation, {
           get(_flagInfo, property) {
-            if (metricsCollectorEnabled && _flagInfo.hasOwnProperty(property) && property === 'value') {
+            if (canCollectMetrics() && _flagInfo.hasOwnProperty(property) && property === 'value') {
               // only track metric when value is read
               const featureIdentifier = _flagInfo.flag
               const featureValue = evaluation.value
@@ -319,7 +331,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
             get(_storage, property) {
               const _value = _storage[property]
 
-              if (metricsCollectorEnabled && _storage.hasOwnProperty(property)) {
+              if (canCollectMetrics() && _storage.hasOwnProperty(property)) {
                 const featureValue = _storage[property]
                 // TODO/BUG: This logic to collect metrics will fail when two variations have the same value
                 // Need to find a better way
@@ -387,7 +399,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
 
         logDebug('Authenticated', decoded)
 
-        metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, configurations.eventsSyncInterval)
+        if (canCollectMetrics()) {
+          metricsSchedulerId = window.setTimeout(scheduleSendingMetrics, configurations.eventsSyncInterval)
+        }
 
         environment = decoded.environment
         clusterIdentifier = decoded.clusterIdentifier
@@ -601,7 +615,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const handleMetrics = (flag: string, value: any) => {
-    if (!metricsCollectorEnabled || hasProxy || value === undefined) return
+    if (!canCollectMetrics() || hasProxy || value === undefined) return
 
     const featureValue = value
     const featureIdentifier = flag
