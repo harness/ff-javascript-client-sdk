@@ -58,6 +58,8 @@ interface Options {
   debug?: boolean,
   cache?: boolean | CacheOptions
   logger?: Logger
+  maxStreamRetries?: number
+  enableAnalytics?: boolean
 }
 ```
 
