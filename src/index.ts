@@ -23,7 +23,7 @@ import { getVariation } from './variation'
 import Poller from './poller'
 import { createCacheIdSeed, getCache } from './cache'
 
-const SDK_VERSION = '1.31.0'
+const SDK_VERSION = '1.31.1'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 const fetch = globalThis.fetch
@@ -178,7 +178,7 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
     }
 
     try {
-      const response = await fetch(url, requestOptions)
+      const response = await fetchWithMiddleware(url, requestOptions)
 
       if (!response.ok) {
         throw new Error(`${response.status}: ${response.statusText}`)
