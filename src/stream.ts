@@ -1,4 +1,4 @@
-import { Event, type Options, StreamEvent } from './types'
+import { APIRequestMiddleware, Event, type Options, StreamEvent } from './types'
 import { getRandom } from './utils'
 import type Poller from './poller'
 import type { Emitter } from 'mitt'
@@ -24,8 +24,13 @@ export class Streamer {
     private logDebug: (...data: any[]) => void,
     private logError: (...data: any[]) => void,
     private eventCallback: (e: StreamEvent) => void,
-    private maxRetries: number
+    private maxRetries: number,
+    private middleware?: APIRequestMiddleware
   ) {}
+
+  registerAPIRequestMiddleware(middleware: APIRequestMiddleware): void {
+    this.middleware = middleware
+  };
 
   start() {
     const processData = (data: any): void => {
@@ -94,11 +99,17 @@ export class Streamer {
       onDisconnect()
     }
 
-    const sseHeaders: Record<string, string> = {
+    let sseHeaders: Record<string, string> = {
       'Cache-Control': 'no-cache',
       Accept: 'text/event-stream',
       'API-Key': this.apiKey,
       ...this.standardHeaders
+    }
+
+    if (this.middleware) {
+      const [url, options] = this.middleware([this.url, { headers: sseHeaders }])
+      this.url = url as string
+      sseHeaders = options?.headers as Record<string, string> || {}
     }
 
     this.logDebugMessage('SSE HTTP start request', this.url)

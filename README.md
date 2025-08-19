@@ -81,21 +81,21 @@ const client = initialize('00000000-1111-2222-3333-444444444444', {
 By default, Harness Feature Flags SDK has streaming enabled and polling enabled. Both modes can be toggled according to your preference using the SDK's configuration.
 
 ### Streaming Mode
-Streaming mode establishes a continuous connection between your application and the Feature Flags service. 
-This allows for real-time updates on feature flags without requiring periodic checks. 
+Streaming mode establishes a continuous connection between your application and the Feature Flags service.
+This allows for real-time updates on feature flags without requiring periodic checks.
 If an error occurs while streaming and `pollingEnabled` is set to `true`,
-the SDK will automatically fall back to polling mode until streaming can be reestablished. 
+the SDK will automatically fall back to polling mode until streaming can be reestablished.
 If `pollingEnabled` is `false`, streaming will attempt to reconnect without falling back to polling.
 
 ### Polling Mode
 In polling mode, the SDK will periodically check with the Feature Flags service to retrieve updates for feature flags. The frequency of these checks can be adjusted using the SDK's configurations.
 
 ### No Streaming or Polling
-If both streaming and polling modes are disabled (`streamEnabled: false` and `pollingEnabled: false`), 
-the SDK will not automatically fetch feature flag updates after the initial fetch. 
+If both streaming and polling modes are disabled (`streamEnabled: false` and `pollingEnabled: false`),
+the SDK will not automatically fetch feature flag updates after the initial fetch.
 This means that after the initial load, any changes made to the feature flags on the Harness server will not be reflected in the application until the SDK is re-initialized or one of the modes is re-enabled.
 
-This configuration might be useful in specific scenarios where you want to ensure a consistent set of feature flags 
+This configuration might be useful in specific scenarios where you want to ensure a consistent set of feature flags
 for a session or when the application operates in an environment where regular updates are not necessary. However, it's essential to be aware that this configuration can lead to outdated flag evaluations if the flags change on the server.
 
 To configure the modes:
@@ -127,9 +127,9 @@ You can configure the maximum number of streaming retries before the SDK stops a
 ```typescript
 const options = {
   maxRetries: 5, // Set the maximum number of retries for streaming. Default is Infinity.
-  streamEnabled: true, 
-  pollingEnabled: true, 
-  pollingInterval: 60000, 
+  streamEnabled: true,
+  pollingEnabled: true,
+  pollingInterval: 60000,
 }
 
 const client = initialize(
@@ -173,7 +173,7 @@ client.on(Event.DISCONNECTED, () => {
 })
 
 client.on(Event.CONNECTED, () => {
-  // Event happens when connection has been lost and reestablished 
+  // Event happens when connection has been lost and reestablished
 })
 
 client.on(Event.POLLING, () => {
@@ -238,7 +238,7 @@ For the example above, if the flag identifier 'Dark_Theme' is not found, result 
 }
 ```
 
-If you do not need to know the default variation was returned: 
+If you do not need to know the default variation was returned:
 
 ```typescript
 const variationValue = client.variation('Dark_Theme', false) // second argument is default value when variation does not exist
@@ -257,7 +257,7 @@ For the example above:
   3. Wrong project API key being used
 
 #### Listening for the `ERROR_DEFAULT_VARIATION_RETURNED` event
-You can also listen for the `ERROR_DEFAULT_VARIATION_RETURNED` event, which is emitted whenever a default variation is returned because the flag has not been found in the cache. This is useful for logging or taking other action when a flag is not found. 
+You can also listen for the `ERROR_DEFAULT_VARIATION_RETURNED` event, which is emitted whenever a default variation is returned because the flag has not been found in the cache. This is useful for logging or taking other action when a flag is not found.
 
 Example of listening for the event:
 
@@ -386,7 +386,7 @@ const client = initialize(
 ```
 
 ## API Middleware
-The `registerAPIRequestMiddleware` function allows you to register a middleware function to manipulate the payload (URL, body and headers) of API requests after the AUTH call has successfully completed
+The `registerAPIRequestMiddleware` function allows you to register a middleware function to manipulate the payload (URL, body and headers) of API requests.
 
 ```typescript
 function abortControllerMiddleware([url, options]) {
