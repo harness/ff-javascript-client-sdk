@@ -23,10 +23,9 @@ import { getVariation } from './variation'
 import Poller from './poller'
 import { createCacheIdSeed, getCache } from './cache'
 
-const SDK_VERSION = '1.31.1'
+const SDK_VERSION = '1.31.2'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
-const fetch = globalThis.fetch
 
 // Flag to detect is Proxy is supported (not under IE 11)
 const hasProxy = !!globalThis.Proxy
@@ -35,12 +34,13 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   let closed = false
   let environment: string
   let clusterIdentifier: string
-  let eventSource: any
+  let eventSource: Streamer | undefined
   let poller: Poller
   let jwtToken: string
   let metricsSchedulerId: number
   let standardHeaders: Record<string, string> = {}
-  let fetchWithMiddleware = addMiddlewareToFetch(args => args)
+  let defaultMiddleware: APIRequestMiddleware = args => args
+  let fetchWithMiddleware = addMiddlewareToFetch(defaultMiddleware)
   let lastCacheRefreshTime = 0
   let initialised = false
   // We need to pause metrics in certain situations, such as when we are doing the initial evaluation load, and when
@@ -594,7 +594,8 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
           handleSegmentEvent(event)
         }
       },
-      configurations.maxStreamRetries
+      configurations.maxStreamRetries,
+      defaultMiddleware
     )
     eventSource.start()
   }
@@ -678,7 +679,9 @@ const initialize = (apiKey: string, target: Target, options?: Options): Result =
   }
 
   const registerAPIRequestMiddleware = (middleware: APIRequestMiddleware): void => {
+    defaultMiddleware = middleware
     fetchWithMiddleware = addMiddlewareToFetch(middleware)
+    if (eventSource) eventSource.registerAPIRequestMiddleware(middleware)
   }
 
   const refreshEvaluations = () => {
