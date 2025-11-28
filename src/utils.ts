@@ -9,6 +9,7 @@ export const defaultOptions: Options = {
   eventUrl: 'https://events.ff.harness.io/api/1.0',
   eventsSyncInterval: MIN_EVENTS_SYNC_INTERVAL,
   pollingInterval: MIN_POLLING_INTERVAL,
+  enableAnalytics: true,
   streamEnabled: true,
   cache: false,
   authRequestReadTimeout: 0,
