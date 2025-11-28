@@ -137,14 +137,14 @@ export interface Options {
    */
   pollingEnabled?: boolean
   /**
-   * Whether to enable debug logging.
-   * @default false
-   */
-  authRequestReadTimeout?: number
-  /**
    * The timeout in milliseconds for the authentication request to read the response.
    * If the request takes longer than this timeout, it will be aborted and the SDK will fail to initialize, and `ERROR_AUTH` and `ERROR` events will be emitted.
    * @default 0 (no timeout)
+   */
+  authRequestReadTimeout?: number
+  /**
+   * Whether to enable debug logging.
+   * @default false
    */
   debug?: boolean
   /**
@@ -161,8 +161,15 @@ export interface Options {
   /**
    * By default, the stream will attempt to reconnect indefinitely if it disconnects. Use this option to limit
    * the number of attempts it will make.
+   * @default Infinity
    */
   maxStreamRetries?: number
+
+  /**
+   * Whether to enable analytics/metrics collection. When set to false, the SDK will not collect or send any metrics.
+   * @default true
+   */
+  enableAnalytics?: boolean
 }
 
 export interface MetricsInfo {
@@ -196,6 +203,14 @@ export interface CacheOptions {
    * @default localStorage
    */
   storage?: AsyncStorage | SyncStorage
+  /**
+   * Use target attributes when deriving the cache key
+   * When set to `false` or omitted, the key will be formed using only the target identifier and SDK key
+   * When set to `true`, all target attributes with be used in addition to the target identifier and SDK key
+   * Can be set to an array of target attributes to use a subset in addition to the target identifier and SDK key
+   * @default false
+   */
+  deriveKeyFromTargetAttributes?: boolean | string[]
 }
 
 export interface Logger {
