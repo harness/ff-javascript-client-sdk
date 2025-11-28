@@ -1,5 +1,5 @@
-import type { AsyncStorage, Evaluation, SyncStorage } from '../types'
-import { getCache } from '../cache'
+import type { AsyncStorage, Evaluation, SyncStorage, Target } from '../types'
+import { createCacheIdSeed, getCache } from '../cache'
 
 const sampleEvaluations: Evaluation[] = [
   { flag: 'flag1', value: 'false', kind: 'boolean', identifier: 'false' },
@@ -147,5 +147,40 @@ describe('getCache', () => {
 
       expect(setItemMock).not.toHaveBeenCalled()
     })
+  })
+})
+
+describe('createCacheIdSeed', () => {
+  const apiKey = 'abc123'
+  const target: Target = {
+    name: 'Test Name',
+    identifier: 'test-identifier',
+    attributes: {
+      a: 'bcd',
+      b: 123,
+      c: ['x', 'y', 'z']
+    }
+  }
+
+  test('it should return the target id and api key when deriveKeyFromTargetAttributes is omitted', async () => {
+    expect(createCacheIdSeed(target, apiKey)).toEqual(target.identifier + apiKey)
+  })
+
+  test('it should return the target id and api key when deriveKeyFromTargetAttributes is false', async () => {
+    expect(createCacheIdSeed(target, apiKey, { deriveKeyFromTargetAttributes: false })).toEqual(
+      target.identifier + apiKey
+    )
+  })
+
+  test('it should return the target id and api key with all attributes when deriveKeyFromTargetAttributes is true', async () => {
+    expect(createCacheIdSeed(target, apiKey, { deriveKeyFromTargetAttributes: true })).toEqual(
+      '{"a":"bcd","b":123,"c":["x","y","z"]}test-identifierabc123'
+    )
+  })
+
+  test('it should return the target id and api key with a subset of attributes when deriveKeyFromTargetAttributes is an array', async () => {
+    expect(createCacheIdSeed(target, apiKey, { deriveKeyFromTargetAttributes: ['a', 'c'] })).toEqual(
+      '{"a":"bcd","c":["x","y","z"]}test-identifierabc123'
+    )
   })
 })
