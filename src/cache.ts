@@ -1,4 +1,5 @@
-import type { AsyncStorage, CacheOptions, Evaluation, SyncStorage } from './types'
+import type { AsyncStorage, CacheOptions, Evaluation, SyncStorage, Target } from './types'
+import { sortEvaluations } from './utils'
 
 export interface GetCacheResponse {
   loadFromCache: () => Promise<Evaluation[]>
@@ -48,7 +49,7 @@ async function clearCachedEvaluations(cacheId: string, storage: AsyncStorage): P
 }
 
 async function saveToCache(cacheId: string, storage: AsyncStorage, evaluations: Evaluation[]): Promise<void> {
-  await storage.setItem(cacheId, JSON.stringify(evaluations))
+  await storage.setItem(cacheId, JSON.stringify(sortEvaluations(evaluations)))
   await storage.setItem(cacheId + '.ts', Date.now().toString())
 }
 
@@ -74,6 +75,28 @@ async function removeCachedEvaluation(cacheId: string, storage: AsyncStorage, fl
 
     await saveToCache(cacheId, storage, cachedEvals)
   }
+}
+
+export function createCacheIdSeed(target: Target, apiKey: string, config: CacheOptions = {}) {
+  if (!config.deriveKeyFromTargetAttributes) return target.identifier + apiKey
+
+  return (
+    JSON.stringify(
+      Object.keys(target.attributes || {})
+        .sort()
+        .filter(
+          attribute =>
+            !Array.isArray(config.deriveKeyFromTargetAttributes) ||
+            config.deriveKeyFromTargetAttributes.includes(attribute)
+        )
+        .reduce(
+          (filteredAttributes, attribute) => ({ ...filteredAttributes, [attribute]: target.attributes[attribute] }),
+          {}
+        )
+    ) +
+    target.identifier +
+    apiKey
+  )
 }
 
 async function getCacheId(seed: string): Promise<string> {

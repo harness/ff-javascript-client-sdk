@@ -1,4 +1,4 @@
-import type { Options, Target } from './types'
+import type { Evaluation, Options, Target } from './types'
 
 export const MIN_EVENTS_SYNC_INTERVAL = 60000
 export const MIN_POLLING_INTERVAL = 60000
@@ -9,6 +9,7 @@ export const defaultOptions: Options = {
   eventUrl: 'https://events.ff.harness.io/api/1.0',
   eventsSyncInterval: MIN_EVENTS_SYNC_INTERVAL,
   pollingInterval: MIN_POLLING_INTERVAL,
+  enableAnalytics: true,
   streamEnabled: true,
   cache: false,
   authRequestReadTimeout: 0,
@@ -99,3 +100,7 @@ const utf8encode = (str: string): string =>
       )
     })
     .join('')
+
+export function sortEvaluations(evaluations: Evaluation[]): Evaluation[] {
+  return [...evaluations].sort(({ flag: flagA }, { flag: flagB }) => (flagA < flagB ? -1 : 1))
+}
