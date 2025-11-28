@@ -137,14 +137,14 @@ export interface Options {
    */
   pollingEnabled?: boolean
   /**
-   * Whether to enable debug logging.
-   * @default false
-   */
-  authRequestReadTimeout?: number
-  /**
    * The timeout in milliseconds for the authentication request to read the response.
    * If the request takes longer than this timeout, it will be aborted and the SDK will fail to initialize, and `ERROR_AUTH` and `ERROR` events will be emitted.
    * @default 0 (no timeout)
+   */
+  authRequestReadTimeout?: number
+  /**
+   * Whether to enable debug logging.
+   * @default false
    */
   debug?: boolean
   /**

@@ -246,4 +246,29 @@ describe('Streamer', () => {
     expect(mockEventBus.emit).toHaveBeenCalledWith(Event.CONNECTED)
     expect(mockXHR.send).toHaveBeenCalledTimes(4) // Should attempt to reconnect 3 times before succeeding
   })
+
+  it('should apply middleware to requests', () => {
+    const streamer = getStreamer()
+
+    const newHeader: string = 'header-value'
+
+    streamer.registerAPIRequestMiddleware(args => {
+      args[0] = 'http://test/stream2'
+      args[1].headers = { ...args[1].headers, newHeader }
+      return args
+    })
+
+    streamer.start()
+    expect(mockXHR.open).toHaveBeenCalledWith('GET', 'http://test/stream2')
+    expect(mockXHR.setRequestHeader).toHaveBeenCalledTimes(5)
+    expect(mockXHR.setRequestHeader).toHaveBeenCalledWith('Test-Header', 'value')
+    expect(mockXHR.setRequestHeader).toHaveBeenCalledWith('Cache-Control', 'no-cache')
+    expect(mockXHR.setRequestHeader).toHaveBeenCalledWith('Accept', 'text/event-stream')
+    expect(mockXHR.setRequestHeader).toHaveBeenCalledWith('API-Key', 'test-api-key')
+    expect(mockXHR.setRequestHeader).toHaveBeenCalledWith('newHeader', 'header-value')
+    expect(mockXHR.send).toHaveBeenCalled()
+
+    mockXHR.onprogress({} as ProgressEvent)
+    expect(mockEventBus.emit).toHaveBeenCalledWith(Event.CONNECTED)
+  })
 })
