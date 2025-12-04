@@ -53,7 +53,7 @@ export class Streamer {
 
     const onDisconnect = () => {
       clearInterval(this.readTimeoutCheckerId)
-      const reconnectDelayMs = getRandom(1000, 10000)
+      const reconnectDelayMs = getRandom(1000, 30000)
       this.reconnectAttempts++
       this.logDebugMessage('Stream disconnected, will reconnect in ' + reconnectDelayMs + 'ms')
       if (!this.disconnectEventEmitted) {
