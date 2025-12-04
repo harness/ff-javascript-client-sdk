@@ -23,7 +23,7 @@ import { getVariation } from './variation'
 import Poller from './poller'
 import { createCacheIdSeed, getCache } from './cache'
 
-const SDK_VERSION = '1.31.3'
+const SDK_VERSION = '1.31.4'
 const SDK_INFO = `Javascript ${SDK_VERSION} Client`
 const METRICS_VALID_COUNT_INTERVAL = 500
 
