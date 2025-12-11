@@ -6,9 +6,11 @@ software. A feature flag is like a powerful if statement.
 
 For more information, see https://harness.io/products/feature-flags/
 
-To read more, see https://ngdocs.harness.io/category/vjolt35atg-feature-flags
+To read more, see https://developer.harness.io/docs/feature-flags/
 
 To sign up, https://app.harness.io/auth/#/signup/
+
+npm release page, see https://www.npmjs.com/package/@harnessio/ff-javascript-client-sdk
 
 # Harness Feature Flags Client SDK for JavaScript
 
